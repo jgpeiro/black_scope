@@ -1,0 +1,4 @@
+../Nuklear/nuklear_pool.c:10:1:nk_pool_init	24	static
+../Nuklear/nuklear_pool.c:21:1:nk_pool_free	24	static
+../Nuklear/nuklear_pool.c:34:1:nk_pool_init_fixed	24	static
+../Nuklear/nuklear_pool.c:46:1:nk_pool_alloc	24	static

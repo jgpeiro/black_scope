@@ -1,0 +1,4 @@
+../Nuklear/nuklear_pool.c:10:1:nk_pool_init	1
+../Nuklear/nuklear_pool.c:21:1:nk_pool_free	4
+../Nuklear/nuklear_pool.c:34:1:nk_pool_init_fixed	2
+../Nuklear/nuklear_pool.c:46:1:nk_pool_alloc	5

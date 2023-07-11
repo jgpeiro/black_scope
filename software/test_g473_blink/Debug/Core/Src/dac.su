@@ -1,0 +1,4 @@
+../Core/Src/dac.c:33:6:MX_DAC1_Init	56	static
+../Core/Src/dac.c:82:6:MX_DAC2_Init	56	static
+../Core/Src/dac.c:124:6:HAL_DAC_MspInit	56	static
+../Core/Src/dac.c:208:6:HAL_DAC_MspDeInit	16	static

@@ -1,0 +1,5 @@
+../Nuklear/nuklear_color_picker.c:10:1:nk_color_picker_behavior	48	static
+../Nuklear/nuklear_color_picker.c:62:1:nk_draw_color_picker	152	static
+../Nuklear/nuklear_color_picker.c:121:1:nk_do_color_picker	128	static
+../Nuklear/nuklear_color_picker.c:167:1:nk_color_pick	88	static
+../Nuklear/nuklear_color_picker.c:195:1:nk_color_picker	72	static

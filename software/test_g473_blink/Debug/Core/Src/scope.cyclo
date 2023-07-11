@@ -1,0 +1,16 @@
+../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_adc.h:7850:22:LL_ADC_EnableIT_AWD1	1
+../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_adc.h:7861:22:LL_ADC_EnableIT_AWD2	1
+../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_adc.h:7971:22:LL_ADC_DisableIT_AWD1	1
+../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_adc.h:7982:22:LL_ADC_DisableIT_AWD2	1
+../Core/Src/scope.c:12:6:scope_init	1
+../Core/Src/scope.c:60:6:scope_reset	1
+../Core/Src/scope.c:66:6:scope_start	2
+../Core/Src/scope.c:112:6:scope_stop	1
+../Core/Src/scope.c:124:9:scope_is_busy	1
+../Core/Src/scope.c:129:9:scope_get_trigger	1
+../Core/Src/scope.c:137:6:HAL_ADC_ConvHalfCpltCallback	1
+../Core/Src/scope.c:144:6:HAL_ADC_ConvCpltCallback	3
+../Core/Src/scope.c:182:6:HAL_ADC_LevelOutOfWindowCallback	3
+../Core/Src/scope.c:200:6:HAL_ADCEx_LevelOutOfWindow2Callback	3
+../Core/Src/scope.c:227:6:HAL_TIM_OC_DelayElapsedCallback	3
+../Core/Src/scope.c:270:6:test_scope	37

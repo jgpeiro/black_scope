@@ -1,0 +1,16 @@
+../Nuklear/nuklear_selectable.c:10:1:nk_draw_selectable	12
+../Nuklear/nuklear_selectable.c:66:1:nk_do_selectable	11
+../Nuklear/nuklear_selectable.c:102:1:nk_do_selectable_image	13
+../Nuklear/nuklear_selectable.c:149:1:nk_do_selectable_symbol	13
+../Nuklear/nuklear_selectable.c:197:1:nk_selectable_text	8
+../Nuklear/nuklear_selectable.c:226:1:nk_selectable_image_text	8
+../Nuklear/nuklear_selectable.c:255:1:nk_selectable_symbol_text	8
+../Nuklear/nuklear_selectable.c:284:1:nk_selectable_symbol_label	1
+../Nuklear/nuklear_selectable.c:289:16:nk_select_text	1
+../Nuklear/nuklear_selectable.c:294:16:nk_selectable_label	1
+../Nuklear/nuklear_selectable.c:298:16:nk_selectable_image_label	1
+../Nuklear/nuklear_selectable.c:303:16:nk_select_label	1
+../Nuklear/nuklear_selectable.c:307:16:nk_select_image_label	1
+../Nuklear/nuklear_selectable.c:312:16:nk_select_image_text	1
+../Nuklear/nuklear_selectable.c:318:1:nk_select_symbol_text	1
+../Nuklear/nuklear_selectable.c:324:1:nk_select_symbol_label	1

@@ -1,0 +1,7 @@
+../Nuklear/nuklear_9slice.c:10:1:nk_sub9slice_ptr	1
+../Nuklear/nuklear_9slice.c:25:1:nk_sub9slice_id	1
+../Nuklear/nuklear_9slice.c:40:1:nk_sub9slice_handle	1
+../Nuklear/nuklear_9slice.c:55:1:nk_nine_slice_handle	1
+../Nuklear/nuklear_9slice.c:70:1:nk_nine_slice_ptr	1
+../Nuklear/nuklear_9slice.c:86:1:nk_nine_slice_id	1
+../Nuklear/nuklear_9slice.c:101:1:nk_nine_slice_is_sub9slice	3

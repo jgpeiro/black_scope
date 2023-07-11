@@ -1,0 +1,12 @@
+../Core/Src/psram.c:21:6:HAL_QSPI_TxCpltCallback	16	static
+../Core/Src/psram.c:25:6:HAL_QSPI_RxCpltCallback	16	static
+../Core/Src/psram.c:30:9:qspi_command	80	static
+../Core/Src/psram.c:84:6:psram_init	16	static
+../Core/Src/psram.c:90:6:psram_deinit	16	static
+../Core/Src/psram.c:96:9:psram_reset	48	static
+../Core/Src/psram.c:131:9:psram_read_id	56	static
+../Core/Src/psram.c:158:9:psram_quad_enable	48	static
+../Core/Src/psram.c:175:9:psram_quad_disable	48	static
+../Core/Src/psram.c:192:9:psram_read	56	static
+../Core/Src/psram.c:209:9:psram_write	56	static
+../Core/Src/psram.c:229:9:psram_test	16440	static

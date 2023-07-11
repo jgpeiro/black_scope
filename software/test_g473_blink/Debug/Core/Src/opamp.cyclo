@@ -1,0 +1,6 @@
+../Core/Src/opamp.c:33:6:MX_OPAMP1_Init	2
+../Core/Src/opamp.c:62:6:MX_OPAMP3_Init	2
+../Core/Src/opamp.c:91:6:MX_OPAMP5_Init	2
+../Core/Src/opamp.c:120:6:MX_OPAMP6_Init	2
+../Core/Src/opamp.c:149:6:HAL_OPAMP_MspInit	5
+../Core/Src/opamp.c:241:6:HAL_OPAMP_MspDeInit	5

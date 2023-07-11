@@ -1,0 +1,5 @@
+../Nuklear/nuklear_tooltip.c:10:1:nk_tooltip_begin	64	static
+../Nuklear/nuklear_tooltip.c:49:1:nk_tooltip_end	16	static
+../Nuklear/nuklear_tooltip.c:59:1:nk_tooltip	40	static
+../Nuklear/nuklear_tooltip.c:95:1:nk_tooltipf	28	static
+../Nuklear/nuklear_tooltip.c:103:1:nk_tooltipfv	280	static

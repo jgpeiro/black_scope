@@ -1,0 +1,14 @@
+../Nuklear/nuklear_buffer.c:35:1:nk_buffer_init	4
+../Nuklear/nuklear_buffer.c:52:1:nk_buffer_init_fixed	4
+../Nuklear/nuklear_buffer.c:66:1:nk_buffer_align	4
+../Nuklear/nuklear_buffer.c:96:1:nk_buffer_realloc	8
+../Nuklear/nuklear_buffer.c:134:1:nk_buffer_alloc	15
+../Nuklear/nuklear_buffer.c:186:1:nk_buffer_push	2
+../Nuklear/nuklear_buffer.c:194:1:nk_buffer_mark	3
+../Nuklear/nuklear_buffer.c:204:1:nk_buffer_reset	5
+../Nuklear/nuklear_buffer.c:225:1:nk_buffer_clear	2
+../Nuklear/nuklear_buffer.c:235:1:nk_buffer_free	5
+../Nuklear/nuklear_buffer.c:245:1:nk_buffer_info	3
+../Nuklear/nuklear_buffer.c:257:1:nk_buffer_memory	2
+../Nuklear/nuklear_buffer.c:264:1:nk_buffer_memory_const	2
+../Nuklear/nuklear_buffer.c:271:1:nk_buffer_total	2

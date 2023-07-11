@@ -1,0 +1,6 @@
+../Nuklear/nuklear_popup.c:10:1:nk_popup_begin	80	static
+../Nuklear/nuklear_popup.c:106:1:nk_nonblock_begin	104	static
+../Nuklear/nuklear_popup.c:189:1:nk_popup_close	24	static
+../Nuklear/nuklear_popup.c:201:1:nk_popup_end	40	static
+../Nuklear/nuklear_popup.c:233:1:nk_popup_get_scroll	32	static
+../Nuklear/nuklear_popup.c:250:1:nk_popup_set_scroll	32	static

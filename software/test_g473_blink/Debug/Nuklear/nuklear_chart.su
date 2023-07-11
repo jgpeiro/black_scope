@@ -1,0 +1,11 @@
+../Nuklear/nuklear_chart.c:10:1:nk_chart_begin_colored	96	static
+../Nuklear/nuklear_chart.c:76:1:nk_chart_begin	40	static
+../Nuklear/nuklear_chart.c:83:1:nk_chart_add_slot_colored	40	static
+../Nuklear/nuklear_chart.c:106:1:nk_chart_add_slot	40	static
+../Nuklear/nuklear_chart.c:113:1:nk_chart_push_line	104	static
+../Nuklear/nuklear_chart.c:183:1:nk_chart_push_column	80	static
+../Nuklear/nuklear_chart.c:229:1:nk_chart_push_slot	32	static
+../Nuklear/nuklear_chart.c:255:1:nk_chart_push	16	static
+../Nuklear/nuklear_chart.c:260:1:nk_chart_end	24	static
+../Nuklear/nuklear_chart.c:276:1:nk_plot	40	static
+../Nuklear/nuklear_chart.c:301:1:nk_plot_function	40	static
