@@ -47,4 +47,12 @@ void framebuf_circle(const tFramebuf *fb, int xc, int yc, int radius, uint32_t c
 void framebuf_fill_circle(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col );
 void framebuf_text( const tFramebuf *fb, int x0, int y0, char *str, uint32_t col );
 
+#define QUADRANT_0   0x01
+#define QUADRANT_90  0x02
+#define QUADRANT_180 0x04
+#define QUADRANT_270 0x08
+void framebuf_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col, uint8_t quadrant);
+void framebuf_fill_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col, uint8_t quadrant );
+
+
 #endif /* FRAMEBUF_H_ */

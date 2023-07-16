@@ -5,14 +5,20 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../Lib/Framebuf/FontUbuntuBookRNormal12.c \
+../Lib/Framebuf/FontUbuntuBookRNormal16.c \
 ../Lib/Framebuf/font_petme128_8x8.c \
 ../Lib/Framebuf/framebuf.c 
 
 OBJS += \
+./Lib/Framebuf/FontUbuntuBookRNormal12.o \
+./Lib/Framebuf/FontUbuntuBookRNormal16.o \
 ./Lib/Framebuf/font_petme128_8x8.o \
 ./Lib/Framebuf/framebuf.o 
 
 C_DEPS += \
+./Lib/Framebuf/FontUbuntuBookRNormal12.d \
+./Lib/Framebuf/FontUbuntuBookRNormal16.d \
 ./Lib/Framebuf/font_petme128_8x8.d \
 ./Lib/Framebuf/framebuf.d 
 
@@ -24,7 +30,7 @@ Lib/Framebuf/%.o Lib/Framebuf/%.su Lib/Framebuf/%.cyclo: ../Lib/Framebuf/%.c Lib
 clean: clean-Lib-2f-Framebuf
 
 clean-Lib-2f-Framebuf:
-	-$(RM) ./Lib/Framebuf/font_petme128_8x8.cyclo ./Lib/Framebuf/font_petme128_8x8.d ./Lib/Framebuf/font_petme128_8x8.o ./Lib/Framebuf/font_petme128_8x8.su ./Lib/Framebuf/framebuf.cyclo ./Lib/Framebuf/framebuf.d ./Lib/Framebuf/framebuf.o ./Lib/Framebuf/framebuf.su
+	-$(RM) ./Lib/Framebuf/FontUbuntuBookRNormal12.cyclo ./Lib/Framebuf/FontUbuntuBookRNormal12.d ./Lib/Framebuf/FontUbuntuBookRNormal12.o ./Lib/Framebuf/FontUbuntuBookRNormal12.su ./Lib/Framebuf/FontUbuntuBookRNormal16.cyclo ./Lib/Framebuf/FontUbuntuBookRNormal16.d ./Lib/Framebuf/FontUbuntuBookRNormal16.o ./Lib/Framebuf/FontUbuntuBookRNormal16.su ./Lib/Framebuf/font_petme128_8x8.cyclo ./Lib/Framebuf/font_petme128_8x8.d ./Lib/Framebuf/font_petme128_8x8.o ./Lib/Framebuf/font_petme128_8x8.su ./Lib/Framebuf/framebuf.cyclo ./Lib/Framebuf/framebuf.d ./Lib/Framebuf/framebuf.o ./Lib/Framebuf/framebuf.su
 
 .PHONY: clean-Lib-2f-Framebuf
 

@@ -13,4 +13,4 @@
 ../Core/Src/scope.c:182:6:HAL_ADC_LevelOutOfWindowCallback	3
 ../Core/Src/scope.c:200:6:HAL_ADCEx_LevelOutOfWindow2Callback	3
 ../Core/Src/scope.c:227:6:HAL_TIM_OC_DelayElapsedCallback	3
-../Core/Src/scope.c:270:6:test_scope	37
+../Core/Src/scope.c:270:6:test_scope	40

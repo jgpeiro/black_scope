@@ -272,7 +272,8 @@ void test_scope( void )
 	// test scope
 
 	uint16_t start = 0;
-
+	  static int trigger_bck = 0;
+	  static int i = 0;
 
 	if( _scope_init == 0 )
 	{
@@ -298,13 +299,38 @@ void test_scope( void )
 		//htim1.Instance->ARR = 0x54;
 		//htim1.Instance->CNT = 0x2A;
 		//HAL_TIM_Base_Start( &htim1 );
+
+
 		_scope_init = 1;
 	}
 
-	  static int trigger_bck = 0;
-	  static int i = 0;
+
 
 	{
+
+		static int dd = 0;
+		if( dd<10 )
+		{
+			dd++;
+		}
+		else
+		{
+			dd = 0;
+			for( int d = 0 ; d < 480 ; d += 40 )
+			{
+				lcd_rect( d, 0, 1, 320, 0x55555555 );
+			}
+			lcd_rect( 480, 0, 1, 320, 0x55555555 );
+			for( int d = 0 ; d < 320 ; d += 40 )
+			{
+				lcd_rect( 0, d, 480, 1, 0x55555555 );
+			}
+			lcd_rect( 0, 320, 480, 1, 0x55555555 );
+
+			lcd_rect( 0, 320-((2048+768)*320)/4096, 480, 1, 0xFFFFFF00 );
+
+		}
+
 
 		scope_init( &scope, 2048, 1000000,
 				(i&0x01)?buffer1:buffer5,
@@ -316,21 +342,7 @@ void test_scope( void )
 		while( scope_is_busy( &scope ) );
 		scope_stop( &scope );
 
-
-
-
-		int _x0 = 0;
-		int x0 = 0;
-		int y0 = 0;
-		int x1 = 480-1;
-		int y1 = 320-1;
-
-
-
 		int32_t trigger = scope_get_trigger( &scope ) - BUFFER_LEN/2;
-
-
-
 
 		//printf( "data%d = np.array( [", i );
 		for( int jj = 0; jj < 480; jj++ )
@@ -359,30 +371,34 @@ void test_scope( void )
 			}
 			//printf( "%d, ", buffer[n] );
 
-
+			int x0, y0, y1;
 			x0 = jj;//(j*480)/BUFFER_LEN;
-			y0 = (((i&0x01)?buffer5[n2]:buffer1[n2])*320)/4096;
-			y1 = (((i&0x01)?buffer1[n]:buffer5[n])*320)/4096;
+			y0 = 320-(((i&0x01)?buffer5[n2]:buffer1[n2])*320)/4096;
+			y1 = 320-(((i&0x01)?buffer1[n]:buffer5[n])*320)/4096;
 			extern void lcd_set_pixel( int16_t x, int16_t y, uint32_t color );
+			lcd_set_pixel( x0, y0, 0x00000000 );
+			lcd_set_pixel( x0, y1, 0x0001C007 );
+
+			y0 = 320-(((i&0x01)?buffer6[n2]:buffer2[n2])*320)/4096;
+			y1 = 320-(((i&0x01)?buffer2[n]:buffer6[n])*320)/4096;
 			lcd_set_pixel( x0, y0, 0x00000000 );
 			lcd_set_pixel( x0, y1, 0x00003F00 );
 
-			y0 = (((i&0x01)?buffer6[n2]:buffer2[n2])*320)/4096;
-			y1 = (((i&0x01)?buffer2[n]:buffer6[n])*320)/4096;
-			lcd_set_pixel( x0, y0, 0x00000000 );
-			lcd_set_pixel( x0, y1, 0x01C00007 );
-
-			y0 = (((i&0x01)?buffer7[n2]:buffer3[n2])*320)/4096;
-			y1 = (((i&0x01)?buffer3[n]:buffer7[n])*320)/4096;
+			y0 = 320-(((i&0x01)?buffer7[n2]:buffer3[n2])*320)/4096;
+			y1 = 320-(((i&0x01)?buffer3[n]:buffer7[n])*320)/4096;
 			lcd_set_pixel( x0, y0, 0x00000000 );
 			lcd_set_pixel( x0, y1, 0x000001F8 );
 
-			y0 = (((i&0x01)?buffer8[n2]:buffer4[n2])*320)/4096;
-			y1 = (((i&0x01)?buffer4[n]:buffer8[n])*320)/4096;
+			y0 = 320-(((i&0x01)?buffer8[n2]:buffer4[n2])*320)/4096;
+			y1 = 320-(((i&0x01)?buffer4[n]:buffer8[n])*320)/4096;
 			lcd_set_pixel( x0, y0, 0x00000000 );
 			lcd_set_pixel( x0, y1, 0xFFFFFFFF );
 
+
+
 		}
+
+		//lcd_rect( 240, 0, 1, 320, 0xFFFFFF00 );
 		//printf( "], dtype=np.float32 )\n" );
 		i += 1;
 		trigger_bck = trigger;

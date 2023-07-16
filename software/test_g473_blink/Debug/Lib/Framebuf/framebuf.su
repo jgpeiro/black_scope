@@ -12,5 +12,7 @@
 ../Lib/Framebuf/framebuf.c:91:6:line	56	static
 ../Lib/Framebuf/framebuf.c:151:6:framebuf_line	32	static
 ../Lib/Framebuf/framebuf.c:233:6:framebuf_circle	40	static
-../Lib/Framebuf/framebuf.c:258:6:framebuf_fill_circle	48	static
-../Lib/Framebuf/framebuf.c:287:6:framebuf_text	48	static
+../Lib/Framebuf/framebuf.c:261:6:framebuf_circle_quadrant	40	static
+../Lib/Framebuf/framebuf.c:294:6:framebuf_fill_circle	48	static
+../Lib/Framebuf/framebuf.c:322:6:framebuf_fill_circle_quadrant	48	static
+../Lib/Framebuf/framebuf.c:367:6:framebuf_text	48	static

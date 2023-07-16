@@ -254,6 +254,42 @@ void framebuf_circle(const tFramebuf *fb, int xc, int yc, int radius, uint32_t c
         x++;
     }
 }
+#define QUADRANT_0   0x01
+#define QUADRANT_90  0x02
+#define QUADRANT_180 0x04
+#define QUADRANT_270 0x08
+void framebuf_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col, uint8_t quadrant) {
+    int x = 0;
+    int y = radius;
+    int d = 3 - 2 * radius;
+
+    while (x <= y) {
+        if (quadrant & QUADRANT_0) {
+            framebuf_pixel(fb, xc + x, yc + y, col);
+            framebuf_pixel(fb, xc + y, yc + x, col);
+        }
+        if (quadrant & QUADRANT_90) {
+            framebuf_pixel(fb, xc - x, yc + y, col);
+            framebuf_pixel(fb, xc - y, yc + x, col);
+        }
+        if (quadrant & QUADRANT_180) {
+            framebuf_pixel(fb, xc - x, yc - y, col);
+            framebuf_pixel(fb, xc - y, yc - x, col);
+        }
+        if (quadrant & QUADRANT_270) {
+            framebuf_pixel(fb, xc + x, yc - y, col);
+            framebuf_pixel(fb, xc + y, yc - x, col);
+        }
+
+        if (d < 0) {
+            d = d + 4 * x + 6;
+        } else {
+            d = d + 4 * (x - y) + 10;
+            y--;
+        }
+        x++;
+    }
+}
 
 void framebuf_fill_circle(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col) {
     framebuf_hline(fb, xc - radius, yc, 2 * radius, col);
@@ -282,6 +318,50 @@ void framebuf_fill_circle(const tFramebuf *fb, int xc, int yc, int radius, uint3
         x++;
     }
 }
+
+void framebuf_fill_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col, uint8_t quadrant) {
+    framebuf_hline(fb, xc - radius, yc, 2 * radius, col);
+
+    int x = 0;
+    int y = radius;
+    int d = 3 - 2 * radius;
+
+    while (x <= y) {
+        if (quadrant & QUADRANT_0) {
+            if (y > 0) {
+                framebuf_hline(fb, xc + x, yc - y, 2 * x, col);
+                framebuf_hline(fb, xc + x, yc + y, 2 * x, col);
+            }
+        }
+        if (quadrant & QUADRANT_90) {
+            if (x > 0) {
+                framebuf_hline(fb, xc - y, yc - x, 2 * y, col);
+                framebuf_hline(fb, xc - y, yc + x, 2 * y, col);
+            }
+        }
+        if (quadrant & QUADRANT_180) {
+            if (y > 0) {
+                framebuf_hline(fb, xc - x, yc - y, 2 * x, col);
+                framebuf_hline(fb, xc - x, yc + y, 2 * x, col);
+            }
+        }
+        if (quadrant & QUADRANT_270) {
+            if (x > 0) {
+                framebuf_hline(fb, xc + y, yc - x, 2 * y, col);
+                framebuf_hline(fb, xc + y, yc + x, 2 * y, col);
+            }
+        }
+
+        if (d < 0) {
+            d = d + 4 * x + 6;
+        } else {
+            d = d + 4 * (x - y) + 10;
+            y--;
+        }
+        x++;
+    }
+}
+
 extern const uint8_t font_petme128_8x8[];
 
 void framebuf_text( const tFramebuf *fb, int x0, int y0, char *str, uint32_t col ) {

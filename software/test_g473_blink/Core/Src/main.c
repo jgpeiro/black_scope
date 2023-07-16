@@ -37,9 +37,12 @@
 #include <limits.h>
 #include <time.h>
 
+#include "nuklear.h"
+#include "framebuf.h"
+#include "tsc2046.h"
 #include "psram.h"
 
-#define NK_INCLUDE_STANDARD_VARARGS (1)
+//#define NK_INCLUDE_STANDARD_VARARGS (1)
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -81,277 +84,42 @@ int _write(int file, char *ptr, int len)
     return len;
 }
 
-extern DMA_HandleTypeDef hdma_adc1;
-uint8_t scope_filled = 0;
-int scope_trigger_location = 0;
-uint8_t scope_done = 0;
-
-#define BUFFER_LEN (1024)
-
-uint32_t micros(void) {
-  return HAL_GetTick() * 1000 + (1000 - SysTick->VAL) / 170;
+int32_t get_systick()
+{
+	return SysTick->VAL;
 }
 
-uint32_t scope_t0 = 0;
-uint32_t scope_t1 = 0;
-uint32_t scope_t2 = 0;
-uint32_t scope_t3 = 0;
-uint32_t scope_t4 = 0;
-
-uint32_t scope_x0 = 0;
-uint32_t scope_y0 = 0;
-uint32_t scope_x1 = 0;
-uint32_t scope_y1 = 0;
-uint32_t scope_x2 = 0;
-uint32_t scope_y2 = 0;
-uint32_t scope_x3 = 0;
-uint32_t scope_y3 = 0;
-uint32_t scope_x4 = 0;
-uint32_t scope_y4 = 0;
-uint32_t scope_trigger_location2 = 0;
-void _HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
+int32_t diff_systick( int32_t b, int32_t a )
 {
-	if( htim == &htim2 )
+	int d = 0;
+	if( b < a )
 	{
-		HAL_TIM_Base_Stop( &htim1 );
-		//scope_trigger_location = hdma_adc1.Instance->CNDTR;
-		scope_done = 1;
-		HAL_TIM_OnePulse_Stop_IT(&htim2, TIM_CHANNEL_1);
-		HAL_TIM_Base_Stop( &htim2 );
-		HAL_ADC_Stop_DMA(&hadc1 );
-
-		scope_x4 = BUFFER_LEN-hdma_adc1.Instance->CNDTR;
-		scope_y4 = hadc1.Instance->DR;
-		scope_t4 = micros();
-		scope_y4 += 0;
+	  d = a-b;
 	}
-}
-
-void _HAL_ADCEx_LevelOutOfWindow2Callback(ADC_HandleTypeDef *hadc)
-{
-	scope_trigger_location = BUFFER_LEN-hdma_adc1.Instance->CNDTR;
-	HAL_TIM_Base_Start( &htim2 );
-	__HAL_TIM_CLEAR_FLAG(&htim2, TIM_IT_CC1);
-	HAL_TIM_OnePulse_Start_IT( &htim2, TIM_CHANNEL_1 );
-	LL_ADC_DisableIT_AWD1( hadc->Instance );
-	LL_ADC_DisableIT_AWD2( hadc->Instance );
-	__HAL_ADC_CLEAR_FLAG(&hadc1, ADC_FLAG_AWD1);
-	__HAL_ADC_CLEAR_FLAG(&hadc1, ADC_FLAG_AWD2);
-	scope_x3 = BUFFER_LEN-hdma_adc1.Instance->CNDTR;
-	scope_y3 = hadc1.Instance->DR;
-	scope_t3 = micros();
-	scope_y3 += 0;
-}
-
-void _HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc)
-{
-
-	LL_ADC_DisableIT_AWD1( hadc->Instance );
-	__HAL_ADC_CLEAR_FLAG(&hadc1, ADC_FLAG_AWD1);
-	__HAL_ADC_CLEAR_FLAG(&hadc1, ADC_FLAG_AWD2);
-	LL_ADC_EnableIT_AWD2( hadc->Instance );
-	scope_x2 = BUFFER_LEN-hdma_adc1.Instance->CNDTR;
-	scope_y2 = hadc1.Instance->DR;
-	scope_t2 = micros();
-	scope_y2 += 0;
-}
-uint8_t scope_stop();
-int cnt_conv_cplt = 0;
-void _HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
-{
-	if( hadc == &hadc1 )
+	else
 	{
-		//scope_filled = 2;
-		if( !scope_filled )
-		{
-			__HAL_ADC_CLEAR_FLAG(&hadc1, ADC_FLAG_AWD1);
-			__HAL_ADC_CLEAR_FLAG(&hadc1, ADC_FLAG_AWD2);
-			LL_ADC_EnableIT_AWD1( hadc1.Instance );
-			scope_filled = 1;
-			scope_x1 = BUFFER_LEN-hdma_adc1.Instance->CNDTR;
-			scope_y1 = hadc1.Instance->DR;
-			scope_t1 = micros();
-			scope_y1 += 0;
-		}
-		if( cnt_conv_cplt < 2 )
-		{
-			cnt_conv_cplt += 1;
-		}
-		else
-		{
-			//scope_stop();
-		}
+	  d = a+(SysTick->LOAD-b);
 	}
+	return d;
 }
-void _HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc)
+#include "FontUbuntuBookRNormal16.h"
+struct sRectangle
 {
-	if( hadc == &hadc1 )
-	{
+	int16_t x;
+	int16_t y;
+	int16_t width;
+	int16_t height;
+};
+typedef struct sRectangle tRectangle;
+extern const tFont fontUbuntuBookRNormal16;
+void draw_char( const tFramebuf *fb, const tFont *pFont, int16_t x0, int16_t y0, uint8_t c, uint32_t color );
+tRectangle get_char_rect( const tFont *pFont, uint8_t c );
+tRectangle get_text_rect( const tFont *pFont, char *pString );
 
-	}
-}
-
-uint8_t _scope_start( uint16_t *buffer, uint16_t len, uint32_t sample_rate, uint16_t trigger_level )
-{
-	scope_filled = 0;
-	scope_done = 0;
-	scope_trigger_location = 0;
-	scope_trigger_location2 = 0;
-	cnt_conv_cplt = 0;
-	float vcc = 3.256;
-
-	__HAL_DBGMCU_FREEZE_TIM1();
-	__HAL_DBGMCU_FREEZE_TIM2();
-
-	HAL_DAC_SetValue(&hdac2, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (vcc/2.0)/vcc*4095);
-	HAL_DAC_Start(&hdac2, DAC_CHANNEL_1);
-
-	HAL_OPAMP_Start(&hopamp1);
-
-	HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
-
-
-	LL_ADC_DisableIT_AWD1( hadc1.Instance );
-	LL_ADC_DisableIT_AWD2( hadc1.Instance );
-	__HAL_ADC_CLEAR_FLAG(&hadc1, ADC_FLAG_AWD1);
-	__HAL_ADC_CLEAR_FLAG(&hadc1, ADC_FLAG_AWD2);
-
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)buffer, len );
-	HAL_TIM_Base_Start( &htim1 );
-
-	scope_x0 = BUFFER_LEN-hdma_adc1.Instance->CNDTR;
-	scope_y0 = hadc1.Instance->DR;
-	scope_t0 = micros();
-	scope_y0 += 0;
-}
-
-uint8_t _scope_is_done()
-{
-	return scope_done;
-}
-
-uint8_t _scope_stop()
-{
-	HAL_TIM_Base_Stop( &htim1 );
-	HAL_TIM_OnePulse_Stop_IT(&htim2, TIM_CHANNEL_1);
-	HAL_TIM_Base_Stop( &htim2 );
-	HAL_ADC_Stop_DMA(&hadc1 );
-	scope_done = 1;
-}
-
-uint16_t scope_get_trigger_location()
-{
-	return scope_trigger_location;
-}
-#include <math.h>
-float get_mean( uint16_t *data, uint16_t len )
-{
-	int i;
-	float sum;
-
-	sum = 0;
-	for( i = 0; i < len; i++ )
-	{
-		sum += data[i];
-	}
-
-	return sum / len;
-}
-
-float get_std( uint16_t *data, uint16_t len )
-{
-    int i;
-    float mean;
-    float err;
-    float sum;
-
-    mean = get_mean( data, len );
-
-    sum = 0;
-    for( i = 0; i < len; i++ )
-    {
-    	err = data[i] - mean;
-    	sum += err*err;
-    }
-
-    return sqrtf(sum/len);
-}
-float std_mean = 0;
-uint8_t N = 1;
-uint8_t M = 20;
-uint8_t scope_test()
-{
-	uint16_t buffer[ BUFFER_LEN ] = {0};
-	uint32_t sample_rate = 1000;
-	uint16_t trigger_level = 2048;
-	ITM->TCR |= ITM_TCR_ITMENA_Msk;
-
-	for( int i = 0 ; i < M ; i++ )
-	{
-		_scope_start( buffer, BUFFER_LEN, sample_rate, trigger_level );
-		while( !_scope_is_done() );
-		scope_get_trigger_location();
-		_scope_stop();
-
-		//printf("#%d, %d, %d\n", scope_t0, scope_x0, scope_y0 );
-		//printf("#%d, %d, %d\n", scope_t1-scope_t0, scope_x1, scope_y1 );
-		//printf("#%d, %d, %d\n", scope_t2-scope_t0, scope_x2, scope_y2 );
-		//printf("#%d, %d, %d\n", scope_t3-scope_t0, scope_x3, scope_y3 );
-		//printf("#%d, %d, %d\n", scope_t4-scope_t0, scope_x4, scope_y4 );
-
-		/*printf("%d, %d, %d, %d, %d, %d\n",
-				scope_y0>2200,
-				scope_y1>2200,
-				scope_y2>2200,
-				scope_y3>2200,
-				scope_y4>2200,
-				scope_trigger_location>512,
-				scope_t4-scope_t3<20
-		);*/
-
-		if( scope_t4-scope_t3>20 )
-		{
-			printf( "data%d = np.array( [", i );
-
-			for( int j = -BUFFER_LEN/2 ; j < BUFFER_LEN/2 ; j++ )
-			{
-				int n = scope_trigger_location + j;
-				if( n < 0 )
-				{
-					n += BUFFER_LEN;
-				}
-				else if( n >= BUFFER_LEN )
-				{
-					n -= BUFFER_LEN;
-				}
-				printf( "%d, ", buffer[n] );
-			}
-			printf( "], dtype=np.float32 )\n" );
-		}
-
-		/*if( std_mean == 0 )
-		{
-			std_mean = get_std( buffer, BUFFER_LEN );
-		}
-		else
-		{
-			std_mean = std_mean*0.99 + get_std( buffer, BUFFER_LEN )*0.01;
-		}
-
-		if( (i&0x1F) == 0 )
-			printf( "%f, %f\n", get_mean( buffer, BUFFER_LEN ), std_mean );
-		*/
-		HAL_Delay( 100 );
-	}
-	printf( "print(\"done\")\n" );
-	return 1;
-}
-
-
-#include "nuklear.h"
 float text_width_f( nk_handle handle, float h, const char* t, int len )
 {
-    return 8*len;
+
+	return get_text_rect( &fontUbuntuBookRNormal16, t ).width;
 }
 
 #define LCD_CMD_ADDR	(0x60000000)
@@ -507,14 +275,155 @@ void lcd_set_pixel( int16_t x, int16_t y, uint32_t color )
 	*addr_data = (y1>>0)&0xFF;
 
 	*addr_cmd = 0x2C;
-	//for( int i = 0 ; i < n ; i++ )
-	{
-		*addr_data = color_l;
-		*addr_data = color_h;
-	}
+	*addr_data = color_l;
+	*addr_data = color_h;
 }
 
-void lcd_text( uint16_t x0, uint16_t y0, char *str, uint32_t color )
+
+int32_t lcd_set_pixel_bench( int16_t x, int16_t y, uint32_t color )
+{
+	int32_t a, b, d;
+	int16_t x0 = x;
+	int16_t y0 = y;
+	int16_t x1 = x + 4;
+	int16_t y1 = y + 4;
+	uint16_t color_l = (color>>0)&0x1FF;
+	uint16_t color_h = (color>>9)&0x1FF;
+
+	*addr_cmd = 0x2A;
+	*addr_data = (x0>>8)&0xFF;
+	*addr_data = (x0>>0)&0xFF;
+	*addr_data = (x1>>8)&0xFF;
+	*addr_data = (x1>>0)&0xFF;
+
+	*addr_cmd = 0x2B;
+	*addr_data = (y0>>8)&0xFF;
+	*addr_data = (y0>>0)&0xFF;
+	*addr_data = (y1>>8)&0xFF;
+	*addr_data = (y1>>0)&0xFF;
+
+	a = get_systick();
+	*addr_cmd = 0x2C;
+	*addr_data = color_l;
+	*addr_data = color_h;
+	*addr_data = color_l;
+	*addr_data = color_h;
+	*addr_data = color_l;
+	*addr_data = color_h;
+	*addr_data = color_l;
+	*addr_data = color_h;
+
+	*addr_data = color_l;
+	*addr_data = color_h;
+	*addr_data = color_l;
+	*addr_data = color_h;
+	*addr_data = color_l;
+	*addr_data = color_h;
+	*addr_data = color_l;
+	*addr_data = color_h;
+
+	*addr_data = color_l;
+	*addr_data = color_h;
+	*addr_data = color_l;
+	*addr_data = color_h;
+	*addr_data = color_l;
+	*addr_data = color_h;
+	*addr_data = color_l;
+	*addr_data = color_h;
+
+	*addr_data = color_l;
+	*addr_data = color_h;
+	*addr_data = color_l;
+	*addr_data = color_h;
+	*addr_data = color_l;
+	*addr_data = color_h;
+	*addr_data = color_l;
+	*addr_data = color_h;
+	b = get_systick();
+	d = diff_systick(b,a);
+	return d;
+}
+void lcd_text( const tFramebuf *fb, uint16_t x0, uint16_t y0, char *str, uint32_t color )
+{
+	for(; *str; ++str) {
+	        // get char and make sure its in range of font
+	        int chr = *(uint8_t *)str;
+	        if (chr < 32 || chr > 127) {
+	            chr = 127;
+	        }
+	        draw_char( fb, &fontUbuntuBookRNormal16, x0, y0, chr, color );
+	        x0 += get_char_rect( &fontUbuntuBookRNormal16, chr ).width;
+	}
+}
+void draw_char( const tFramebuf *fb, const tFont *pFont, int16_t x0, int16_t y0, uint8_t c, uint32_t color )
+{
+    int16_t x, y, w, bitmap, b;
+    int16_t px, py;
+    const tGlyph *pGlyph;
+
+    pGlyph = pFont->pGlyphs[c-32];
+
+    y0 += pFont->bbxh;
+    y0 -= pFont->descent;
+    y0 -= pGlyph->bbxh;
+    y0 -= pGlyph->bbxy;
+
+    for( y = 0 ; y < pGlyph->bbxh ; y++ )
+    {
+        py = y0+y;
+
+        w = (pGlyph->bbxw-1)/8+1;
+
+        int16_t yw = y*w;
+        for( x = 0 ; x < pGlyph->bbxw ; x+=8 )
+        {
+            bitmap = pGlyph->pBitmap[yw+x/8];
+
+            for( b = 0 ; b < 8 ; b++ )
+            {
+                if( x+b >= pGlyph->bbxw )
+                {
+                    break;
+                }
+
+                px = x0+x+b;
+
+                if( bitmap & (0x80>>b) )
+                {
+                    //set_pixel( px, py, color );
+                    //lcd_rect( px, py, 1, 1, color);
+                	setpixel_checked(fb, px, py, color, 1);
+                }
+            }
+        }
+    }
+}
+
+
+tRectangle get_char_rect( const tFont *pFont, uint8_t c )
+{
+    tRectangle rect = {0};
+
+    rect.width = pFont->pGlyphs[c-32]->dwidthx;
+    rect.height = pFont->bbxh;
+    return rect;
+}
+
+tRectangle get_text_rect( const tFont *pFont, char *pString )
+{
+	uint8_t i;
+	tRectangle rect = {0};
+
+	rect.height = pFont->bbxh;
+	for( i = 0 ; pString[i] != '\0' ; i++ )
+	{
+		rect.width += get_char_rect( pFont, pString[i] ).width;
+    }
+
+    return rect;
+}
+
+void __lcd_text( uint16_t x0, uint16_t y0, char *str, uint32_t color )
 {
 	for(; *str; ++str) {
 	        // get char and make sure its in range of font
@@ -622,61 +531,13 @@ void lcd_bmp( int16_t x, int16_t y, int16_t w, int16_t h, uint8_t *buf )
 	*addr_cmd = 0x2C;
 	for( i = 0 ; i < n ; i++ )
 	{
-		*addr_data = buf[2*i+1];
-		*addr_data = buf[2*i+0];
+		*addr_data = *buf;
+		buf++;
+		*addr_data = *buf;
+		buf++;
 	}
 }
 
-void nk_scope( struct nk_context *ctx )
-{
-    if( nk_begin(ctx, "STM32G4 Scope", nk_rect(10, 10, 480-10, 320-10), 0 ) )
-    {
-        if( nk_tree_push( ctx, NK_TREE_TAB, "Acquire", NK_MAXIMIZED) )
-        {
-            nk_layout_row_static(ctx, 30, 100, 4);
-            if( nk_button_label(ctx, "Run") )
-            {
-            }
-            if( nk_button_label(ctx, "Stop") )
-            {
-            }
-            if( nk_button_label(ctx, "Single") )
-            {
-            }
-            if( nk_button_label(ctx, "Draw") )
-            {
-            }
-            nk_tree_pop(ctx);
-        }
-
-        if( nk_tree_push( ctx, NK_TREE_TAB, "Horizontal", NK_MINIMIZED) )
-        {
-            static int int_slider1 = 0;
-            static int int_slider2 = 0;
-            nk_layout_row_static(ctx, 20, 100, 4 );
-            nk_label( ctx, "Offset", NK_TEXT_LEFT );
-            if( nk_button_label(ctx, "+") )
-            {
-            }
-            nk_slider_int(ctx, 0, &int_slider1, 10, 1);
-            if( nk_button_label(ctx, "-") )
-            {
-            }
-
-            nk_layout_row_static(ctx, 20, 100, 4 );
-            nk_label( ctx, "Scale", NK_TEXT_LEFT );
-            if( nk_button_label(ctx, "+") )
-            {
-            }
-            nk_slider_int(ctx, 0, &int_slider2, 10, 1);
-            if( nk_button_label(ctx, "-") )
-            {
-            }
-            nk_tree_pop(ctx);
-        }
-    }
-    nk_end(ctx);
-}
 
 #define CHANNEL_COUNT 4
 #define WAVEFORM_COUNT 2
@@ -775,26 +636,87 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
                     osc->draw_signals = 0;
                 }
             }
-
-            nk_button_label(ctx, "...");
             nk_tree_pop(ctx);
         }
 
         {
         	if( nk_tree_push( ctx, NK_TREE_TAB, "Horizontal", NK_MINIMIZED) ){
-        		nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){60, 60});
-                osc->horizontal_offset = nk_slider_float(ctx, -10.0f, &osc->horizontal_offset, 10.0f, 1.0f);
-                osc->horizontal_scale = nk_slider_float(ctx, 1.0f, &osc->horizontal_scale, 1000.0f, 1.0f);
+        		nk_layout_row(ctx, NK_STATIC, 30, 4, (float[]){60, 30, 60, 30});
+        		nk_label( ctx, "Offset", NK_TEXT_ALIGN_LEFT );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
+        		{
+        			osc->horizontal_offset -= 1;
+        		}
+        		char combo_buffer[32];
+        		sprintf(combo_buffer, "%.2f", osc->horizontal_offset);
+        		nk_label( ctx, combo_buffer, NK_TEXT_ALIGN_CENTERED );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
+        		{
+        			osc->horizontal_offset += 1;
+        		}
+
+        		nk_label( ctx, "Scale", NK_TEXT_ALIGN_LEFT );
+				nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+				if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
+				{
+					osc->horizontal_scale -= 1;
+				}
+				//char combo_buffer[32];
+				sprintf(combo_buffer, "%.2f", osc->horizontal_scale);
+				nk_label( ctx, combo_buffer, NK_TEXT_ALIGN_CENTERED );
+				nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+				if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
+				{
+					osc->horizontal_scale += 1;
+				}
                 nk_tree_pop(ctx);
             }
 
         	if( nk_tree_push( ctx, NK_TREE_TAB, "Vertical", NK_MINIMIZED) ){
-                osc->channel_selected = nk_combo(ctx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, CHANNEL_COUNT, osc->channel_selected, 20, nk_vec2(60, 200));
-                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){60, 60});
+        		nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){100});
+        		osc->channel_selected = nk_combo(ctx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, CHANNEL_COUNT, osc->channel_selected, 20, nk_vec2(100, 100));
+        		nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){100, 100});
                 osc->channels[osc->channel_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->channels[osc->channel_selected].enabled, 20, nk_vec2(60, 200));
                 osc->channels[osc->channel_selected].coupling = nk_combo(ctx, (const char*[]){"DC", "AC", "Gnd"}, 3, osc->channels[osc->channel_selected].coupling, 20, nk_vec2(60, 200));
-                osc->channels[osc->channel_selected].offset = nk_slider_float(ctx, -10.0f, &osc->channels[osc->channel_selected].offset, 10.0f, 1.0f);
-                osc->channels[osc->channel_selected].scale = nk_slider_float(ctx, -10.0f, &osc->channels[osc->channel_selected].scale, 10.0f, 1.0f);
+                //osc->channels[osc->channel_selected].offset = nk_slider_float(ctx, -10.0f, &osc->channels[osc->channel_selected].offset, 10.0f, 1.0f);
+                //osc->channels[osc->channel_selected].scale = nk_slider_float(ctx, -10.0f, &osc->channels[osc->channel_selected].scale, 10.0f, 1.0f);
+
+                nk_layout_row(ctx, NK_STATIC, 30, 4, (float[]){60, 30, 60, 30});
+        		nk_label( ctx, "Offset", NK_TEXT_ALIGN_LEFT );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
+        		{
+        			osc->channels[osc->channel_selected].offset -= 1;
+        		}
+        		char combo_buffer[32];
+        		sprintf(combo_buffer, "%.2f", osc->channels[osc->channel_selected].offset);
+        		nk_label( ctx, combo_buffer, NK_TEXT_ALIGN_CENTERED );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
+        		{
+        			osc->channels[osc->channel_selected].offset += 1;
+        		}
+
+        		nk_label( ctx, "Scale", NK_TEXT_ALIGN_LEFT );
+				nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+				if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
+				{
+					osc->channels[osc->channel_selected].scale -= 1;
+				}
+				//char combo_buffer[32];
+				sprintf(combo_buffer, "%.2f", osc->channels[osc->channel_selected].scale);
+				nk_label( ctx, combo_buffer, NK_TEXT_ALIGN_CENTERED );
+				nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+				if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
+				{
+					osc->channels[osc->channel_selected].scale += 1;
+				}
+
+
+
+
                 nk_tree_pop(ctx);
             }
 
@@ -852,20 +774,118 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
 	nk_end(ctx);
 }
 
-#include "framebuf.h"
-void test_framebuf()
+
+
+int quadrant = 0x01;
+void nk_draw_fb( struct nk_context *ctx, const tFramebuf *pfb )
 {
-	uint8_t fb_buf[480*64*2];
-	tFramebuf fb;
+	  for( int y0 = 0 ; y0 < 320 ; y0 += 40 )
+	  {
+	framebuf_fill( pfb, 0x00000000 );
 
-	framebuf_init( &fb, 480, 64, fb_buf );
-	framebuf_fill( &fb, 0x00000000 );
-	framebuf_text( &fb, 10, 10, "Hello World", 0x003FFFF );
+	  //lcd_rect( 0, 0, 480, 320, 0x0000 );
+	  {
+		  const struct nk_command *cmd = NULL;
+		  nk_foreach(cmd, ctx)
+		  {
+			  //printf( "cmd->type = %d\n", cmd->type );
+			  switch (cmd->type) {
+			  case NK_COMMAND_NOP: break;
+			  case NK_COMMAND_SCISSOR: {
+				  const struct nk_command_scissor *s = (const struct nk_command_scissor*)cmd;
+			  } break;
+			  case NK_COMMAND_LINE: {
+				  const struct nk_command_line *l = (const struct nk_command_line*)cmd;
+				  if( l->begin.y == l->end.y )
+				  {
+					  framebuf_hline( pfb, l->begin.x, l->begin.y-y0, l->end.x-l->begin.x, nk_colot_to_rgb666( l->color ) );
+				  }
+				  else if( l->begin.x == l->end.x )
+				  {
+					  framebuf_vline( pfb, l->begin.x, l->begin.y-y0, l->end.y-l->begin.y, nk_colot_to_rgb666( l->color ) );
+				  }
+				  else
+				  {
+					  framebuf_line( pfb, l->begin.x, l->begin.y-y0, l->end.x, l->end.y-y0, nk_colot_to_rgb666( l->color ) );
+				  }
+			  } break;
+			  case NK_COMMAND_RECT: {
+				  const struct nk_command_rect *r = (const struct nk_command_rect*)cmd;
+				  //printf( "NK_COMMAND_RECT x: %d, y: %d, width: %d, height: %d, rounding: %d, thickness: %d\n", r->x, r->y, r->w, r->h, r->rounding, r->line_thickness );
+				  //framebuf_rect( pfb, r->x, r->y-y0, r->w, r->h, nk_colot_to_rgb666( r->color ) );
+				  int rad = 4;//r->rounding;
+                    framebuf_circle_quadrant( pfb, r->x+r->w-rad, r->y-y0+r->h-rad, rad, nk_colot_to_rgb666( r->color ), QUADRANT_0 );
+                    framebuf_circle_quadrant( pfb, r->x+rad, r->y-y0+r->h-rad, rad, nk_colot_to_rgb666( r->color ), QUADRANT_90 );
+                    framebuf_circle_quadrant( pfb, r->x+rad, r->y-y0+rad, rad, nk_colot_to_rgb666( r->color ), QUADRANT_180 );
+                    framebuf_circle_quadrant( pfb, r->x+r->w-rad, r->y-y0+rad, rad, nk_colot_to_rgb666( r->color ), QUADRANT_270 );
+                    framebuf_hline( pfb, r->x+rad, r->y-y0, r->w-rad-rad, nk_colot_to_rgb666( r->color ) );
+                    framebuf_hline( pfb, r->x+rad, r->y-y0+r->h, r->w-rad-rad, nk_colot_to_rgb666( r->color ) );
+                    framebuf_vline( pfb, r->x, r->y-y0+rad, r->h-rad-rad, nk_colot_to_rgb666( r->color ) );
+                    framebuf_vline( pfb, r->x+r->w, r->y-y0+rad, r->h-rad-rad, nk_colot_to_rgb666( r->color ) );
+			  } break;
+			  case NK_COMMAND_RECT_FILLED: {
+				  const struct nk_command_rect_filled *r = (const struct nk_command_rect_filled*)cmd;
+				  //framebuf_fill_rect( pfb, r->x, r->y-y0, r->w, r->h, nk_colot_to_rgb666( r->color ) );
+                  int rad = 4;//r->rounding;
+                  struct nk_color r_color = r->color;
+                  if( r_color.r == 50 )
+                  {
+                	  r_color.r = 40;
+                	  r_color.g = 40;
+                	  r_color.b = 40;
+                	  r_color.a = 255;
+                  }
+                    framebuf_fill_circle_quadrant( pfb, r->x+r->w-rad, r->y-y0+r->h-rad, rad, nk_colot_to_rgb666( r_color ), QUADRANT_90 );
+                    framebuf_fill_circle_quadrant( pfb, r->x+rad, r->y-y0+r->h-rad, rad, nk_colot_to_rgb666( r_color ), QUADRANT_90 );
+                    framebuf_fill_circle_quadrant( pfb, r->x+rad, r->y-y0+rad, rad, nk_colot_to_rgb666( r_color ), QUADRANT_90 );
+                    framebuf_fill_circle_quadrant( pfb, r->x+r->w-rad, r->y-y0+rad, rad, nk_colot_to_rgb666( r_color ), QUADRANT_90 );
+                    // up and down
+                    framebuf_fill_rect( pfb, r->x+rad, r->y-y0, r->w-rad-rad, r->h, nk_colot_to_rgb666( r_color ) );
+                    // middle
+                    framebuf_fill_rect(  pfb, r->x, r->y-y0+rad, r->w, r->h-rad-rad, nk_colot_to_rgb666( r_color ) );
+			 } break;
+			  case NK_COMMAND_CIRCLE: {
+				  const struct nk_command_circle *c = (const struct nk_command_circle*)cmd;
+				  framebuf_circle( pfb, c->x+(c->w+c->h)/4, c->y-y0+(c->w+c->h)/4, (c->w+c->h)/4, nk_colot_to_rgb666( c->color ) );
+			  } break;
+			  case NK_COMMAND_CIRCLE_FILLED: {
+				  const struct nk_command_circle_filled *c = (const struct nk_command_circle_filled *)cmd;
+				  framebuf_fill_circle( pfb, c->x+(c->w+c->h)/4, c->y-y0+(c->w+c->h)/4, (c->w+c->h)/4, nk_colot_to_rgb666( c->color ) );
+			  } break;
+			  case NK_COMMAND_TEXT: {
+				  const struct nk_command_text *t = (const struct nk_command_text*)cmd;
+				  //framebuf_text( pfb, t->x, t->y-y0, (char *)t->string, nk_colot_to_rgb666( t->foreground ) );
+				  lcd_text( pfb,  t->x, t->y-y0, (char *)t->string, 0xFFFF );
+			  } break;
+			  case NK_COMMAND_IMAGE: {
+				  const struct nk_command_image *i = (const struct nk_command_image*)cmd;
+				  framebuf_fill_rect( pfb, i->x, i->y-y0, i->w, i->h, 0x0003FFFF );
+			  } break;
+			  case NK_COMMAND_TRIANGLE_FILLED: {
+				  const struct nk_command_triangle_filled *t = (const struct nk_command_triangle_filled*)cmd;
+				  struct nk_color t_color = t->color;
+				if( 1 )
+				{
+				  t_color.r = 175;
+				  t_color.g = 175;
+				  t_color.b = 175;
+				  t_color.a = 255;
+				}
 
-	lcd_config();
-	lcd_bmp( 0, 0, 480, 64, fb_buf );
+				  framebuf_line( pfb, t->a.x, t->a.y-y0, t->b.x, t->b.y-y0, 0xFFFF );
+				  framebuf_line( pfb, t->b.x, t->b.y-y0, t->c.x, t->c.y-y0, 0xFFFF );
+				  framebuf_line( pfb, t->c.x, t->c.y-y0, t->a.x, t->a.y-y0, 0xFFFF );
+			  } break;
+			  default: break;
+			  }
+		  }
+	  }
 
+		lcd_bmp( 0, y0, 480, 40, pfb->buf );
+	  }
 }
+
+
 
 /* USER CODE END 0 */
 
@@ -916,42 +936,22 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-  //test_framebuf();
-  //test_scope();
-
   float ax = 250/989.0;
   float bx = -15800/989.0;
   float ay = 250/1407.0;
   float by = -1150/67.0;
-  uint16_t x, y;
+  uint16_t x = 0, y = 0;
+  uint16_t x_bck = 0, y_bck = 0;
 
-#include "tsc2046.h"
+
 
   tTsc2046 tsc;
   tsc2046_init( &tsc, &hspi3, GPIOA, GPIO_PIN_15, ax, bx, ay, by);
 
-  for( int qqq = 0 ; qqq < 100 ; qqq++ )
-  {
-	  tsc2046_read( &tsc, &x, &y );
-	  //printf( "%d %d\n", x, y );
-  }
-
   lcd_config();
-  for( int qqq = 0 ; qqq < 16 ; qqq++ )
-  {
-	  lcd_rect( 10, qqq*20, 460, 5, 0x3FFFF );
-  }
-
-  lcd_rect( 50, 50, 1, 1, 0x3FFFF );
-  lcd_rect( 300, 300, 1, 1, 0x0003F );
-  for( int qqq = 0 ; qqq < 100 ; qqq++ )
-  {
-	  tsc2046_read( &tsc, &x, &y );
-	  //printf( "%d %d\n", x, y );
-  }
-
-  lcd_rect( 0, 0, 480, 320, 0x0000 );
-
+  int d = 0;
+  d = lcd_set_pixel_bench( 100, 100, 0xFFFF );
+  d = d+1;
   static struct nk_context ctx;
   static struct nk_buffer cmds;
   static struct nk_buffer pool;
@@ -962,119 +962,58 @@ int main(void)
   nk_buffer_init_fixed( &cmds, buf_cmds, 1024*8 );
   nk_buffer_init_fixed( &pool, buf_pool, 1024*8 );
 
-  font.height = 8;
+  font.height = fontUbuntuBookRNormal16.bbxh;
   font.width = text_width_f;
   nk_init_custom( &ctx, &cmds, &pool, &font );
-  int pressed = 1;
-  int pressed_bck = 0;
-  struct nk_colorf bg;
-  bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
-
 
 	static uint8_t fb_buf[480*40*2];
 	tFramebuf fb;
 
 	framebuf_init( &fb, 480, 40, fb_buf );
-	lcd_config();
 
+	  int pressed = 1;
+	  int pressed_bck = 0;
+	  int pressed_bck2 = 0;
 	static struct Oscilloscope osc = {0};
   while( 1 )
   {
+	  x_bck = x;
+	  y_bck = y;
+	  tsc2046_read( &tsc, &x, &y );
 
-  tsc2046_read( &tsc, &x, &y );
+	  pressed_bck2 = pressed_bck;
+	  pressed_bck = pressed;
+	  pressed = (x!=0);
 
-  pressed_bck = pressed;
-  pressed = x != 0;
+	  if( (pressed || pressed_bck || pressed_bck2) )// && (pressed != pressed_bck) )
+	  {
+		  nk_input_begin( &ctx );
+		  if( pressed )
+		  {
+			  nk_input_motion( &ctx, x, y );
+			  nk_input_button( &ctx, 0, x, y, 1 );
+		  }
+		  else if( pressed_bck )
+		  {
+			  nk_input_motion( &ctx, x_bck, y_bck );
+			  nk_input_button( &ctx, 0, x_bck, y_bck, 0 );
+		  }
+		  nk_input_end( &ctx );
+		  oscilloscope_process(&osc, &ctx);
+		  //if( pressed || pressed_bck )
+		  {
+			  nk_draw_fb( &ctx, &fb );
 
-  nk_input_begin( &ctx );
-  nk_input_motion( &ctx, x, y );
-  nk_input_button( &ctx, 0, x, y, x!=0 );
-  nk_input_end( &ctx );
-
-  oscilloscope_process(&osc, &ctx);
-
-  if( (pressed || pressed_bck) && (pressed != pressed_bck) )
-  {
-	  ;
-  }
-  else
-  {
-	    //HAL_Delay( 1 );
-
-	  //if( visible == 0 )
+		  }
+		  nk_clear(&ctx);
+		  //HAL_Delay(10);
+	  }
+	  else if( nk_window_is_collapsed( &ctx, "STM32G4 Scope" ) )
 	  {
 		  test_scope();
-		  nk_clear(&ctx);
-		  continue;
 	  }
-  }
 
-  for( int y0 = 0 ; y0 < 320 ; y0 += 40 )
-  {
-framebuf_fill( &fb, 0x00000000 );
 
-  //lcd_rect( 0, 0, 480, 320, 0x0000 );
-  {
-	  const struct nk_command *cmd = NULL;
-	  nk_foreach(cmd, &ctx)
-	  {
-		  switch (cmd->type) {
-		  case NK_COMMAND_NOP: break;
-		  case NK_COMMAND_SCISSOR: {
-			  const struct nk_command_scissor *s = (const struct nk_command_scissor*)cmd;
-		  } break;
-		  case NK_COMMAND_LINE: {
-			  const struct nk_command_line *l = (const struct nk_command_line*)cmd;
-			  if( l->begin.y == l->end.y )
-			  {
-				  framebuf_hline( &fb, l->begin.x, l->begin.y-y0, l->end.x-l->begin.x, nk_colot_to_rgb666( l->color ) );
-			  }
-			  else if( l->begin.x == l->end.x )
-			  {
-				  framebuf_vline( &fb, l->begin.x, l->begin.y-y0, l->end.y-l->begin.y, nk_colot_to_rgb666( l->color ) );
-			  }
-			  else
-			  {
-				  framebuf_line( &fb, l->begin.x, l->begin.y-y0, l->end.x, l->end.y-y0, nk_colot_to_rgb666( l->color ) );
-			  }
-		  } break;
-		  case NK_COMMAND_RECT: {
-			  const struct nk_command_rect *r = (const struct nk_command_rect*)cmd;
-			  framebuf_rect( &fb, r->x, r->y-y0, r->w, r->h, nk_colot_to_rgb666( r->color ) );
-		  } break;
-		  case NK_COMMAND_RECT_FILLED: {
-			  const struct nk_command_rect_filled *r = (const struct nk_command_rect_filled*)cmd;
-			  framebuf_fill_rect( &fb, r->x, r->y-y0, r->w, r->h, nk_colot_to_rgb666( r->color ) );
-		  } break;
-		  case NK_COMMAND_CIRCLE: {
-			  const struct nk_command_circle *c = (const struct nk_command_circle*)cmd;
-			  framebuf_circle( &fb, c->x+(c->w+c->h)/4, c->y-y0+(c->w+c->h)/4, (c->w+c->h)/4, nk_colot_to_rgb666( c->color ) );
-		  } break;
-		  case NK_COMMAND_CIRCLE_FILLED: {
-			  const struct nk_command_circle_filled *c = (const struct nk_command_circle_filled *)cmd;
-			  framebuf_fill_circle( &fb, c->x+(c->w+c->h)/4, c->y-y0+(c->w+c->h)/4, (c->w+c->h)/4, nk_colot_to_rgb666( c->color ) );
-		  } break;
-		  case NK_COMMAND_TEXT: {
-			  const struct nk_command_text *t = (const struct nk_command_text*)cmd;
-			  framebuf_text( &fb, t->x, t->y-y0, t->string, nk_colot_to_rgb666( t->foreground ) );
-		  } break;
-		  case NK_COMMAND_IMAGE: {
-			  const struct nk_command_image *i = (const struct nk_command_image*)cmd;
-			  framebuf_fill_rect( &fb, i->x, i->y-y0, i->w, i->h, 0x0003FFFF );
-		  } break;
-		  default: break;
-		  }
-	  }
-  }
-
-	lcd_bmp( 0, y0, 480, 40, fb_buf );
-  }
-
-  nk_clear(&ctx);
-
-  test_scope();
-
-  //HAL_Delay( 100 );
   }
   /*
 
@@ -1100,166 +1039,8 @@ modawg
 	write( channel, buf, len )
 
   */
-  //scope_test();
-  test_scope();
-  //while( 1 );
+
   psram_test();
-
-#define LCD_CMD_ADDR	(0x60000000)
-#define LCD_DATA_ADDR	(0x60000002) // 0x60000001 ??
-  uint16_t *addr_cmd = (uint16_t*) LCD_CMD_ADDR;
-  uint16_t *addr_data = (uint16_t*) LCD_DATA_ADDR;
-  uint8_t buf_cmd[1] = {0x11};
-  uint16_t buf_data[4] = {0};
-  uint8_t cmd = 1;
-  uint16_t data = 1;
-  *addr_cmd = cmd;
-  *addr_data = 0x00FF;
-  *addr_data = 0xFF00;
-  for( int jj = 0 ; jj < 4 ; jj++ )
-  {
-	  *addr_cmd = cmd;
-	  for( int ii = 0 ; ii < 4 ; ii++ )
-	  {
-		  *addr_data = ii;
-	  }
-  }
-  HAL_GPIO_WritePin( GPIOA, GPIO_PIN_8, GPIO_PIN_SET );
-  HAL_GPIO_WritePin( GPIOA, GPIO_PIN_9, GPIO_PIN_RESET );
-  HAL_Delay( 10 );
-  HAL_GPIO_WritePin( GPIOA, GPIO_PIN_9, GPIO_PIN_SET );
-  HAL_Delay( 100 );
-
-  *addr_cmd = 0x01;
-  HAL_Delay( 100 );
-  *addr_cmd = 0x11;
-  HAL_Delay( 10 );
-  *addr_cmd = 0x3A;
-  *addr_data = 0x05;
-  *addr_cmd = 0x36;
-  *addr_data = (0x00<<5)|(0x01<<4)|(0x01<<7);
-  *addr_cmd = 0x29;
-  HAL_Delay( 10 );
-
-  *addr_cmd = 0x2A;
-  *addr_data = 0x00;
-  *addr_data = 0x00;
-  *addr_data = (480>>8)&0xFF;
-  *addr_data = (480>>0)&0xFF;
-
-  *addr_cmd = 0x2B;
-  *addr_data = 0x00;
-  *addr_data = 0x00;
-  *addr_data = (320>>8)&0xFF;
-  *addr_data = (320>>0)&0xFF;
-
-  *addr_cmd = 0x2C;
-  for( int ii = 0 ; ii < 320*480 ; ii++ )
-  {
-	  *addr_data = 0x0000;
-  }
-  uint16_t color = 0x001F;
-  *addr_cmd = 0x2C;
-  for( int ii = 0 ; ii < 320*480 ; ii++ )
-  {
-	  *addr_data = color;
-  }
-
-
-
-  //HAL_SRAM_Write_8b( &hsram1, addr_cmd, buf_cmd, 1 );
-  //HAL_SRAM_Write_16b( &hsram1, addr_data, buf_data, 4 );
-
-float vcc = 3.256;
-HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
-HAL_ADCEx_Calibration_Start(&hadc3, ADC_SINGLE_ENDED);
-HAL_ADCEx_Calibration_Start(&hadc5, ADC_SINGLE_ENDED);
-HAL_ADCEx_Calibration_Start(&hadc4, ADC_SINGLE_ENDED);
-
-HAL_OPAMP_SelfCalibrate(&hopamp1);
-HAL_OPAMP_SelfCalibrate(&hopamp3);
-HAL_OPAMP_SelfCalibrate(&hopamp5);
-HAL_OPAMP_SelfCalibrate(&hopamp6);
-
-// Set the DAC1 OUT1 to 1.0V and OUT2 to 2.0V
-
-// Measure VCC with the ADC internal channel.
-
-// Configure the internal channel
-//ADC_ChannelConfTypeDef sConfig = {0};
-//sConfig.Channel = ADC_CHANNEL_VREFINT;
-//sConfig.Rank = ADC_REGULAR_RANK_1;
-//sConfig.SamplingTime = ADC_SAMPLETIME_640CYCLES_5;
-//HAL_ADC_ConfigChannel(&hadc1, &sConfig);
-
-// Start the ADC
-//HAL_ADC_Start(&hadc1);
-
-// Read the ADC value
-//HAL_ADC_PollForConversion(&hadc1, 100);
-//uint32_t adc_value = HAL_ADC_GetValue(&hadc1);
-//printf("ADC value: %lu\n", adc_value);
-
-// Stop the ADC
-//HAL_ADC_Stop(&hadc1);
-
-// Configure ADC for OPAMP1 channel
-//sConfig.Channel = ADC_CHANNEL_VOPAMP1;
-//sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
-//HAL_ADC_ConfigChannel(&hadc1, &sConfig);
-
-  // Set DAC1 OUT 1 to 1.0 V
-  // Set DAC1 OUT 2 to 2.0 V
-  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 1.0/vcc*4095);
-  HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
-
-  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, 1.0/vcc*4095);
-  HAL_DAC_Start(&hdac1, DAC_CHANNEL_2);
-
-    // Set the DAC2 OUT1 to 1.66V
-
-  HAL_DAC_SetValue(&hdac2, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (vcc/2.0)/vcc*4095);
-  HAL_DAC_Start(&hdac2, DAC_CHANNEL_1);
-
-  HAL_OPAMP_Start(&hopamp1);
-  HAL_OPAMP_Start(&hopamp3);
-  HAL_OPAMP_Start(&hopamp5);
-  HAL_OPAMP_Start(&hopamp6);
-
-  int i, j;
-  for( i = 0 ; i < 30 ; i++ )
-  {
-
-	  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, i*0.1/vcc*4095);
-     // Read the ADC1 ADC_CHANNEL_VOPAMP1 and print the value
-      HAL_Delay( 10 );
-      for( j = 0 ; j < 1 ; j++ )
-      {
-		  HAL_ADC_Start(&hadc1);
-		  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-		  uint32_t adc_value1 = HAL_ADC_GetValue(&hadc1);
-		  HAL_ADC_Stop(&hadc1);
-
-		  HAL_ADC_Start(&hadc3);
-		  HAL_ADC_PollForConversion(&hadc3, HAL_MAX_DELAY);
-		  uint32_t adc_value3 = HAL_ADC_GetValue(&hadc3);
-		  HAL_ADC_Stop(&hadc3);
-
-		  HAL_ADC_Start(&hadc5);
-		  HAL_ADC_PollForConversion(&hadc5, HAL_MAX_DELAY);
-		  uint32_t adc_value5 = HAL_ADC_GetValue(&hadc5);
-		  HAL_ADC_Stop(&hadc5);
-
-		  HAL_ADC_Start(&hadc4);
-		  HAL_ADC_PollForConversion(&hadc4, HAL_MAX_DELAY);
-		  uint32_t adc_value4 = HAL_ADC_GetValue(&hadc4);
-		  HAL_ADC_Stop(&hadc4);
-
-		 printf("%d, %f, %f, %f, %f, %f\n", i, i*0.1/vcc*4095*vcc/4095, adc_value1*vcc/4095, adc_value3*vcc/4095, adc_value5*vcc/4095, adc_value4*vcc/4095 );
-  	  }
-  }
-  printf("\n");
-
 
   /* USER CODE END 2 */
 

@@ -43,6 +43,8 @@
 "./Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_tim_ex.o"
 "./Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_adc.o"
 "./Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_fmc.o"
+"./Lib/Framebuf/FontUbuntuBookRNormal12.o"
+"./Lib/Framebuf/FontUbuntuBookRNormal16.o"
 "./Lib/Framebuf/font_petme128_8x8.o"
 "./Lib/Framebuf/framebuf.o"
 "./Nuklear/nuklear_9slice.o"
