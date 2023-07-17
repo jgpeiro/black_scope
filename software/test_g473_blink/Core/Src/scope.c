@@ -283,7 +283,7 @@ void test_scope( void )
 		{
 			dac1_buffer[i] = sinf(freq*2*M_PI*i/BUFFER_LEN)*1023 + 2048;
 			//dac2_buffer[i] = sinf(freq*2*M_PI*i/BUFFER_LEN)*2000 + 2048;
-			dac2_buffer[i] = 1024+((i*8)%2048);
+			dac2_buffer[i] = 1024+(((BUFFER_LEN-i-1)*8)%2048);
 		}
 		extern DAC_HandleTypeDef hdac1;
 		extern TIM_HandleTypeDef htim2;

@@ -529,7 +529,7 @@ void lcd_bmp( int16_t x, int16_t y, int16_t w, int16_t h, uint8_t *buf )
 	*addr_data = (y1>>0)&0xFF;
 
 	*addr_cmd = 0x2C;
-	for( i = 0 ; i < n ; i++ )
+	for( i = n ; i ; i-- )
 	{
 		*addr_data = *buf;
 		buf++;
@@ -677,11 +677,11 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
         	if( nk_tree_push( ctx, NK_TREE_TAB, "Vertical", NK_MINIMIZED) ){
         		nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){100});
         		//nk_style_push_style_item(&ctx, &ctx->style.combo.button.text_background, nk_style_item_color(nk_rgb(255,0,0)));
-        		osc->channel_selected = nk_combo(ctx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, CHANNEL_COUNT, osc->channel_selected, 20, nk_vec2(100, 100));
+        		osc->channel_selected = nk_combo(ctx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, CHANNEL_COUNT, osc->channel_selected, 30, nk_vec2(100, 160));
         		//nk_style_pop_style_item(&ctx);
         		nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){100, 100});
-                osc->channels[osc->channel_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->channels[osc->channel_selected].enabled, 20, nk_vec2(60, 200));
-                osc->channels[osc->channel_selected].coupling = nk_combo(ctx, (const char*[]){"DC", "AC", "Gnd"}, 3, osc->channels[osc->channel_selected].coupling, 20, nk_vec2(60, 200));
+                osc->channels[osc->channel_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->channels[osc->channel_selected].enabled, 30, nk_vec2(100, 120));
+                osc->channels[osc->channel_selected].coupling = nk_combo(ctx, (const char*[]){"DC", "AC", "Gnd"}, 3, osc->channels[osc->channel_selected].coupling, 30, nk_vec2(100, 120));
                 //osc->channels[osc->channel_selected].offset = nk_slider_float(ctx, -10.0f, &osc->channels[osc->channel_selected].offset, 10.0f, 1.0f);
                 //osc->channels[osc->channel_selected].scale = nk_slider_float(ctx, -10.0f, &osc->channels[osc->channel_selected].scale, 10.0f, 1.0f);
 
@@ -715,40 +715,140 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
 				{
 					osc->channels[osc->channel_selected].scale += 1;
 				}
-
-
-
-
                 nk_tree_pop(ctx);
             }
 
             if( nk_tree_push( ctx, NK_TREE_TAB, "Trigger", NK_MINIMIZED) ){
-                osc->trigger_source = nk_combo(ctx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, CHANNEL_COUNT, osc->trigger_source, 20, nk_vec2(60, 200));
-                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){60, 60});
-                osc->trigger_mode = nk_combo(ctx, (const char*[]){"Normal", "Auto"}, 2, osc->trigger_mode, 20, nk_vec2(60, 200));
-                osc->trigger_slope = nk_combo(ctx, (const char*[]){"Rising", "Falling", "Both"}, 3, osc->trigger_slope, 20, nk_vec2(60, 200));
-                osc->trigger_offset = nk_slider_float(ctx, -10.0f, &osc->trigger_offset, 10.0f, 1.0f);
+            	nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){100});
+                osc->trigger_source = nk_combo(ctx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, CHANNEL_COUNT, osc->trigger_source, 30, nk_vec2(100, 160));
+                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){100, 100});
+                osc->trigger_mode = nk_combo(ctx, (const char*[]){"Normal", "Auto"}, 2, osc->trigger_mode, 30, nk_vec2(100, 120));
+                osc->trigger_slope = nk_combo(ctx, (const char*[]){"Rising", "Falling", "Both"}, 3, osc->trigger_slope, 30, nk_vec2(100, 120));
+                //nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){200});
+                //nk_slider_float(ctx, -10.0f, &osc->trigger_offset, 10.0f, 1.0f);
+
+
+                nk_layout_row(ctx, NK_STATIC, 30, 4, (float[]){60, 30, 60, 30});
+        		nk_label( ctx, "Offset", NK_TEXT_ALIGN_LEFT );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
+        		{
+        			osc->trigger_offset -= 1;
+        		}
+        		char combo_buffer[32];
+        		sprintf(combo_buffer, "%.2f", osc->trigger_offset);
+        		nk_label( ctx, combo_buffer, NK_TEXT_ALIGN_CENTERED );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
+        		{
+        			osc->trigger_offset += 1;
+        		}
+
+
                 nk_tree_pop(ctx);
             }
 
             if( nk_tree_push( ctx, NK_TREE_TAB, "Waveform", NK_MINIMIZED) ){
-                osc->waveform_selected = nk_combo(ctx, (const char*[]){"Wf1", "Wf2"}, WAVEFORM_COUNT, osc->waveform_selected, 20, nk_vec2(60, 200));
-                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){60, 60});
-                osc->waveforms[osc->waveform_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->waveforms[osc->waveform_selected].enabled, 20, nk_vec2(60, 200));
-                osc->waveforms[osc->waveform_selected].type = nk_combo(ctx, (const char*[]){"DC", "PWM", "Sine", "Tria", "Saw", "Noise"}, 6, osc->waveforms[osc->waveform_selected].type, 20, nk_vec2(60, 200));
-                osc->waveforms[osc->waveform_selected].offset = nk_slider_float(ctx, -10.0f, &osc->waveforms[osc->waveform_selected].offset, 10.0f, 1.0f);
-                osc->waveforms[osc->waveform_selected].scale = nk_slider_float(ctx, -10.0f, &osc->waveforms[osc->waveform_selected].scale, 10.0f, 1.0f);
-                osc->waveforms[osc->waveform_selected].duty_cycle = nk_slider_float(ctx, -10.0f, &osc->waveforms[osc->waveform_selected].duty_cycle, 10.0f, 1.0f);
+            	nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){100});
+                osc->waveform_selected = nk_combo(ctx, (const char*[]){"Wf1", "Wf2"}, WAVEFORM_COUNT, osc->waveform_selected, 30, nk_vec2(100, 80));
+                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){100, 100});
+                osc->waveforms[osc->waveform_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->waveforms[osc->waveform_selected].enabled, 30, nk_vec2(100, 200));
+                osc->waveforms[osc->waveform_selected].type = nk_combo(ctx, (const char*[]){"DC", "PWM", "Sine", "Tria", "Saw", "Noise"}, 6, osc->waveforms[osc->waveform_selected].type, 30, nk_vec2(100, 240));
+                //osc->waveforms[osc->waveform_selected].offset = nk_slider_float(ctx, -10.0f, &osc->waveforms[osc->waveform_selected].offset, 10.0f, 1.0f);
+                //osc->waveforms[osc->waveform_selected].scale = nk_slider_float(ctx, -10.0f, &osc->waveforms[osc->waveform_selected].scale, 10.0f, 1.0f);
+                //osc->waveforms[osc->waveform_selected].duty_cycle = nk_slider_float(ctx, -10.0f, &osc->waveforms[osc->waveform_selected].duty_cycle, 10.0f, 1.0f);
+
+                nk_layout_row(ctx, NK_STATIC, 30, 4, (float[]){60, 30, 60, 30});
+        		nk_label( ctx, "Offset", NK_TEXT_ALIGN_LEFT );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
+        		{
+        			osc->waveforms[osc->waveform_selected].offset -= 1;
+        		}
+        		char combo_buffer[32];
+        		sprintf(combo_buffer, "%.2f", osc->waveforms[osc->waveform_selected].offset);
+        		nk_label( ctx, combo_buffer, NK_TEXT_ALIGN_CENTERED );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
+        		{
+        			osc->waveforms[osc->waveform_selected].offset += 1;
+        		}
+
+        		nk_label( ctx, "Scale", NK_TEXT_ALIGN_LEFT );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
+        		{
+        			osc->waveforms[osc->waveform_selected].scale -= 1;
+        		}
+        		//char combo_buffer[32];
+        		sprintf(combo_buffer, "%.2f", osc->waveforms[osc->waveform_selected].scale);
+        		nk_label( ctx, combo_buffer, NK_TEXT_ALIGN_CENTERED );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
+        		{
+        			osc->waveforms[osc->waveform_selected].scale += 1;
+        		}
+
+        		nk_label( ctx, "Duty", NK_TEXT_ALIGN_LEFT );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
+        		{
+        			osc->waveforms[osc->waveform_selected].duty_cycle -= 1;
+        		}
+        		//char combo_buffer[32];
+        		sprintf(combo_buffer, "%.2f", osc->waveforms[osc->waveform_selected].duty_cycle);
+        		nk_label( ctx, combo_buffer, NK_TEXT_ALIGN_CENTERED );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
+        		{
+        			osc->waveforms[osc->waveform_selected].duty_cycle += 1;
+        		}
                 nk_tree_pop(ctx);
             }
 
 			if( nk_tree_push( ctx, NK_TREE_TAB, "Cursor", NK_MINIMIZED) ){
-                osc->cursor_selected = nk_combo(ctx, (const char*[]){"C1", "C2"}, CURSOR_COUNT, osc->cursor_selected, 20, nk_vec2(60, 200));
-                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){60, 60});
-                osc->cursors[osc->cursor_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->cursors[osc->cursor_selected].enabled, 20, nk_vec2(60, 200));
-                osc->cursors[osc->cursor_selected].horizontal = nk_combo(ctx, (const char*[]){"Track", "Free"}, 2, osc->cursors[osc->cursor_selected].horizontal, 20, nk_vec2(60, 200));
-                osc->cursors[osc->cursor_selected].offset = nk_slider_float(ctx, -10.0f, &osc->cursors[osc->cursor_selected].offset, 10.0f, 1.0f);
-                osc->cursors[osc->cursor_selected].track = nk_slider_float(ctx, -10.0f, &osc->cursors[osc->cursor_selected].track, 10.0f, 1.0f);
+				nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){100});
+                osc->cursor_selected = nk_combo(ctx, (const char*[]){"C1", "C2"}, CURSOR_COUNT, osc->cursor_selected, 20, nk_vec2(100, 100));
+                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){100, 100});
+                osc->cursors[osc->cursor_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->cursors[osc->cursor_selected].enabled, 30, nk_vec2(100, 100));
+                osc->cursors[osc->cursor_selected].horizontal = nk_combo(ctx, (const char*[]){"Track", "Free"}, 2, osc->cursors[osc->cursor_selected].horizontal, 30, nk_vec2(100, 100));
+
+
+                //osc->cursors[osc->cursor_selected].offset = nk_slider_float(ctx, -10.0f, &osc->cursors[osc->cursor_selected].offset, 10.0f, 1.0f);
+                //osc->cursors[osc->cursor_selected].track = nk_slider_float(ctx, -10.0f, &osc->cursors[osc->cursor_selected].track, 10.0f, 1.0f);
+                nk_layout_row(ctx, NK_STATIC, 30, 4, (float[]){60, 30, 60, 30});
+        		nk_label( ctx, "Offset", NK_TEXT_ALIGN_LEFT );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
+        		{
+        			osc->cursors[osc->cursor_selected].offset -= 1;
+        		}
+        		char combo_buffer[32];
+        		sprintf(combo_buffer, "%.2f", osc->cursors[osc->cursor_selected].offset);
+        		nk_label( ctx, combo_buffer, NK_TEXT_ALIGN_CENTERED );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
+        		{
+        			osc->cursors[osc->cursor_selected].offset += 1;
+        		}
+
+
+        		nk_label( ctx, "Track", NK_TEXT_ALIGN_LEFT );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
+        		{
+        			osc->cursors[osc->cursor_selected].track -= 1;
+        		}
+        		//char combo_buffer[32];
+        		sprintf(combo_buffer, "%.2f", osc->cursors[osc->cursor_selected].track);
+        		nk_label( ctx, combo_buffer, NK_TEXT_ALIGN_CENTERED );
+        		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+        		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
+        		{
+        			osc->cursors[osc->cursor_selected].track += 1;
+        		}
+
+
                 nk_tree_pop(ctx);
             }
 
@@ -762,11 +862,22 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
 
                 float fps = 0.0f; // Calculate fps here
                 nk_label(ctx, "FPS", NK_TEXT_LEFT);
-                nk_label(ctx, "0.0000", NK_TEXT_LEFT); // Replace with actual fps
+
+                static int a = 0;
+                static int b = 0;
+                b = a;
+                a = get_systick();
+                int d = diff_systick(b,a);
+                char buffer[32];
+                sprintf(buffer, "%d", d);
+
+                nk_label(ctx, buffer, NK_TEXT_LEFT); // Replace with actual fps
 
                 float ratio = 0.0f; // Calculate memory ratio here
                 nk_label(ctx, "Memory", NK_TEXT_LEFT);
-                nk_label(ctx, "0.0000%", NK_TEXT_LEFT); // Replace with actual memory ratio
+
+                sprintf(buffer, "%d", ctx->memory.allocated );
+                nk_label(ctx, buffer, NK_TEXT_LEFT); // Replace with actual memory ratio
 
                 nk_tree_pop(ctx);
             }
@@ -988,7 +1099,7 @@ int main(void)
   nk_buffer_init_fixed( &cmds, buf_cmds, 1024*8 );
   nk_buffer_init_fixed( &pool, buf_pool, 1024*8 );
 
-  font.height = fontUbuntuBookRNormal16.bbxh;
+  font.height = 20;//fontUbuntuBookRNormal16.bbxh;
   font.width = text_width_f;
   nk_init_custom( &ctx, &cmds, &pool, &font );
 
@@ -1013,9 +1124,11 @@ int main(void)
 	  pressed_bck = pressed;
 	  pressed = (x!=0);
 
-	  if( (pressed || pressed_bck) )// && (pressed != pressed_bck) )
+	  if(  (pressed || pressed_bck) )// && (pressed != pressed_bck) )
 	  {
 		  //printf("%d, %d, %d, %d, %d, %d, %d,\n", pressed_cnt, pressed, pressed_bck, x, y, x_bck, y_bck );
+		  int a, b, d;
+		  a = get_systick();
 		  pressed_cnt++;
 		  nk_input_begin( &ctx );
 		  if( pressed )
@@ -1034,8 +1147,15 @@ int main(void)
 		  nk_draw_fb( &ctx, &fb );
 		  nk_clear(&ctx);
 		  //HAL_Delay(10);
-
-		  lcd_rect( x, y, 2, 2, 0xFFFF );
+		  b = get_systick();
+		  d = diff_systick( b, a );
+		  if( x )
+		  {
+			  lcd_rect( x-4, y, 4, 2, 0xFFFF );
+			  lcd_rect( x+2, y, 4, 2, 0xFFFF );
+			  lcd_rect( x, y-4, 2, 4, 0xFFFF );
+			  lcd_rect( x, y+2, 2, 4, 0xFFFF );
+		  }
 	  }
 	  else if( nk_window_is_collapsed( &ctx, "STM32G4 Scope" ) )
 	  {
