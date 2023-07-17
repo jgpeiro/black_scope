@@ -21,10 +21,11 @@ typedef struct {
     float bx;
     float ay;
     float by;
+    int avg;
 } tTsc2046;
 
 
-void tsc2046_init( tTsc2046* tsc, SPI_HandleTypeDef* spi, GPIO_TypeDef* cs_port, uint16_t cs_pin, float ax, float bx, float ay, float by );
+void tsc2046_init( tTsc2046* tsc, SPI_HandleTypeDef* spi, GPIO_TypeDef* cs_port, uint16_t cs_pin, float ax, float bx, float ay, float by, int avg );
 void tsc2046_read_ll( tTsc2046* tsc, uint16_t* x, uint16_t* y );
 void tsc2046_read( tTsc2046* tsc, uint16_t* x, uint16_t* y );
 

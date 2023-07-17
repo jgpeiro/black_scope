@@ -1,3 +1,3 @@
 ../tsc2046/tsc2046.c:12:6:tsc2046_init	40	static
-../tsc2046/tsc2046.c:24:6:tsc2046_read_ll	40	static
-../tsc2046/tsc2046.c:45:6:tsc2046_read	32	static
+../tsc2046/tsc2046.c:25:6:tsc2046_read_ll	40	static
+../tsc2046/tsc2046.c:46:6:tsc2046_read	40	static

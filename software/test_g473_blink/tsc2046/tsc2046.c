@@ -9,7 +9,7 @@
 #include "tsc2046.h"
 
 
-void tsc2046_init(tTsc2046* tsc, SPI_HandleTypeDef* spi, GPIO_TypeDef* cs_port, uint16_t cs_pin, float ax, float bx, float ay, float by )
+void tsc2046_init(tTsc2046* tsc, SPI_HandleTypeDef* spi, GPIO_TypeDef* cs_port, uint16_t cs_pin, float ax, float bx, float ay, float by, int avg )
 {
 	tsc->spi = spi;
 	tsc->cs_port = cs_port;
@@ -18,6 +18,7 @@ void tsc2046_init(tTsc2046* tsc, SPI_HandleTypeDef* spi, GPIO_TypeDef* cs_port, 
 	tsc->bx = bx;
 	tsc->ay = ay;
 	tsc->by = by;
+	tsc->avg = avg;
     HAL_GPIO_WritePin(tsc->cs_port, tsc->cs_pin, GPIO_PIN_SET);
 }
 
@@ -43,10 +44,10 @@ void tsc2046_read_ll( tTsc2046* tsc, uint16_t* x, uint16_t* y) {
 }
 
 void tsc2046_read( tTsc2046* tsc, uint16_t* x, uint16_t* y) {
-    uint16_t x_acc = 0;
-    uint16_t y_acc = 0;
+    int32_t x_acc = 0;
+    int32_t y_acc = 0;
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < tsc->avg; i++) {
     	tsc2046_read_ll(tsc, x, y);
         if (*x && *y) {
             x_acc += *x;
@@ -56,9 +57,10 @@ void tsc2046_read( tTsc2046* tsc, uint16_t* x, uint16_t* y) {
             *y = 0;
             return;
         }
+        HAL_Delay(1);
     }
-    *x = x_acc / 4;
-    *y = y_acc / 4;
+    *x = x_acc / tsc->avg;
+    *y = y_acc / tsc->avg;
     *x = tsc->ax * *x + tsc->bx;
     *y = tsc->ay * *y + tsc->by;
 }

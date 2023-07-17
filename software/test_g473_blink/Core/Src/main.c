@@ -676,7 +676,9 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
 
         	if( nk_tree_push( ctx, NK_TREE_TAB, "Vertical", NK_MINIMIZED) ){
         		nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){100});
+        		//nk_style_push_style_item(&ctx, &ctx->style.combo.button.text_background, nk_style_item_color(nk_rgb(255,0,0)));
         		osc->channel_selected = nk_combo(ctx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, CHANNEL_COUNT, osc->channel_selected, 20, nk_vec2(100, 100));
+        		//nk_style_pop_style_item(&ctx);
         		nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){100, 100});
                 osc->channels[osc->channel_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->channels[osc->channel_selected].enabled, 20, nk_vec2(60, 200));
                 osc->channels[osc->channel_selected].coupling = nk_combo(ctx, (const char*[]){"DC", "AC", "Gnd"}, 3, osc->channels[osc->channel_selected].coupling, 20, nk_vec2(60, 200));
@@ -781,9 +783,8 @@ void nk_draw_fb( struct nk_context *ctx, const tFramebuf *pfb )
 {
 	  for( int y0 = 0 ; y0 < 320 ; y0 += 40 )
 	  {
-	framebuf_fill( pfb, 0x00000000 );
+	   framebuf_fill( pfb, 0x00000000 );
 
-	  //lcd_rect( 0, 0, 480, 320, 0x0000 );
 	  {
 		  const struct nk_command *cmd = NULL;
 		  nk_foreach(cmd, ctx)
@@ -936,19 +937,44 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-  float ax = 250/989.0;
-  float bx = -15800/989.0;
-  float ay = 250/1407.0;
-  float by = -1150/67.0;
+  //float ax = 250/989.0;
+  //float bx = -15800/989.0;
+  //float ay = 250/1407.0;
+  //float by = -1150/67.0;
+
+  //solve([50=a*250+b,480-50=a*1760+b],[a,b])
+  float ax = 38.0/151.0;
+  float bx = -1950.0/151.0;
+  //solve([50=a*387+b,320-50=a*1627+b],[a,b])
+  float ay = 11.0/62.0;
+  float by = -1157.0/62.0;
+
   uint16_t x = 0, y = 0;
   uint16_t x_bck = 0, y_bck = 0;
 
 
 
   tTsc2046 tsc;
-  tsc2046_init( &tsc, &hspi3, GPIOA, GPIO_PIN_15, ax, bx, ay, by);
+  tsc2046_init( &tsc, &hspi3, GPIOA, GPIO_PIN_15, ax, bx, ay, by, 32 );
 
   lcd_config();
+
+  lcd_rect( 50, 50, 2, 2, 0xFFFF );
+  lcd_rect( 480-50, 50, 2, 2, 0xFFFF );
+  lcd_rect( 50, 320-50, 2, 2, 0xFFFF );
+  lcd_rect( 480-50, 320-50, 2, 2, 0xFFFF );
+
+  while( 0 )
+  {
+	  static int cnt = 0;
+	  tsc.avg = 1;
+	  uint16_t x = 0, y = 0;
+	  tsc2046_read( &tsc, &x, &y );
+	  lcd_rect( x, y, 2, 2, 0xFFFF );
+	  printf("%d, %d, %d\n", cnt++, x, y );
+	  HAL_Delay( 1 );
+  }
+
   int d = 0;
   d = lcd_set_pixel_bench( 100, 100, 0xFFFF );
   d = d+1;
@@ -974,7 +1000,9 @@ int main(void)
 	  int pressed = 1;
 	  int pressed_bck = 0;
 	  int pressed_bck2 = 0;
+	int pressed_cnt = 0;
 	static struct Oscilloscope osc = {0};
+
   while( 1 )
   {
 	  x_bck = x;
@@ -985,8 +1013,10 @@ int main(void)
 	  pressed_bck = pressed;
 	  pressed = (x!=0);
 
-	  if( (pressed || pressed_bck || pressed_bck2) )// && (pressed != pressed_bck) )
+	  if( (pressed || pressed_bck) )// && (pressed != pressed_bck) )
 	  {
+		  //printf("%d, %d, %d, %d, %d, %d, %d,\n", pressed_cnt, pressed, pressed_bck, x, y, x_bck, y_bck );
+		  pressed_cnt++;
 		  nk_input_begin( &ctx );
 		  if( pressed )
 		  {
@@ -999,14 +1029,13 @@ int main(void)
 			  nk_input_button( &ctx, 0, x_bck, y_bck, 0 );
 		  }
 		  nk_input_end( &ctx );
-		  oscilloscope_process(&osc, &ctx);
-		  //if( pressed || pressed_bck )
-		  {
-			  nk_draw_fb( &ctx, &fb );
 
-		  }
+		  oscilloscope_process(&osc, &ctx);
+		  nk_draw_fb( &ctx, &fb );
 		  nk_clear(&ctx);
 		  //HAL_Delay(10);
+
+		  lcd_rect( x, y, 2, 2, 0xFFFF );
 	  }
 	  else if( nk_window_is_collapsed( &ctx, "STM32G4 Scope" ) )
 	  {
