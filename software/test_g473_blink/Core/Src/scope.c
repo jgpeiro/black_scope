@@ -267,7 +267,7 @@ uint16_t buffer6[BUFFER_LEN];
 uint16_t buffer7[BUFFER_LEN];
 uint16_t buffer8[BUFFER_LEN];
 tScope scope = {0};
-void test_scope( void )
+void test_scope( int collapsed )
 {
 	// test scope
 
@@ -316,18 +316,37 @@ void test_scope( void )
 		else
 		{
 			dd = 0;
-			for( int d = 0 ; d < 480 ; d += 40 )
+			if( collapsed )
 			{
-				lcd_rect( d, 0, 1, 320, 0x55555555 );
-			}
-			lcd_rect( 480, 0, 1, 320, 0x55555555 );
-			for( int d = 0 ; d < 320 ; d += 40 )
-			{
-				lcd_rect( 0, d, 480, 1, 0x55555555 );
-			}
-			lcd_rect( 0, 320, 480, 1, 0x55555555 );
+				for( int d = 0 ; d < 480 ; d += 40 )
+				{
+					lcd_rect( d/2+240, 0, 1, 320, 0x55555555 );
+				}
+				lcd_rect( 480/2+240, 0, 1, 320, 0x55555555 );
+				for( int d = 0 ; d < 320 ; d += 40 )
+				{
+					lcd_rect( 0/2+240, d, 480, 1, 0x55555555 );
+				}
+				lcd_rect( 0/2+240, 320, 480, 1, 0x55555555 );
 
-			lcd_rect( 0, 320-((2048+768)*320)/4096, 480, 1, 0xFFFFFF00 );
+				lcd_rect( 0/2+240, 320-((2048+768)*320)/4096, 480, 1, 0xFFFFFF00 );
+			}
+			else
+			{
+				for( int d = 0 ; d < 480 ; d += 40 )
+				{
+					lcd_rect( d, 0, 1, 320, 0x55555555 );
+				}
+				lcd_rect( 480, 0, 1, 320, 0x55555555 );
+				for( int d = 0 ; d < 320 ; d += 40 )
+				{
+					lcd_rect( 0, d, 480, 1, 0x55555555 );
+				}
+				lcd_rect( 0, 320, 480, 1, 0x55555555 );
+
+				lcd_rect( 0, 320-((2048+768)*320)/4096, 480, 1, 0xFFFFFF00 );
+
+			}
 
 		}
 
@@ -371,28 +390,57 @@ void test_scope( void )
 			}
 			//printf( "%d, ", buffer[n] );
 
-			int x0, y0, y1;
-			x0 = jj;//(j*480)/BUFFER_LEN;
-			y0 = 320-(((i&0x01)?buffer5[n2]:buffer1[n2])*320)/4096;
-			y1 = 320-(((i&0x01)?buffer1[n]:buffer5[n])*320)/4096;
-			extern void lcd_set_pixel( int16_t x, int16_t y, uint32_t color );
-			lcd_set_pixel( x0, y0, 0x00000000 );
-			lcd_set_pixel( x0, y1, 0x0001C007 );
+			if( collapsed )
+			{
+				int x0, y0, y1;
+				x0 = jj;//(j*480)/BUFFER_LEN;
+				y0 = 320-(((i&0x01)?buffer5[n2]:buffer1[n2])*320)/4096;
+				y1 = 320-(((i&0x01)?buffer1[n]:buffer5[n])*320)/4096;
+				extern void lcd_set_pixel( int16_t x, int16_t y, uint32_t color );
+				lcd_set_pixel( x0/2+240, y0, 0x00000000 );
+				lcd_set_pixel( x0/2+240, y1, 0x0001C007 );
 
-			y0 = 320-(((i&0x01)?buffer6[n2]:buffer2[n2])*320)/4096;
-			y1 = 320-(((i&0x01)?buffer2[n]:buffer6[n])*320)/4096;
-			lcd_set_pixel( x0, y0, 0x00000000 );
-			lcd_set_pixel( x0, y1, 0x00003F00 );
+				y0 = 320-(((i&0x01)?buffer6[n2]:buffer2[n2])*320)/4096;
+				y1 = 320-(((i&0x01)?buffer2[n]:buffer6[n])*320)/4096;
+				lcd_set_pixel( x0/2+240, y0, 0x00000000 );
+				lcd_set_pixel( x0/2+240, y1, 0x00003F00 );
 
-			y0 = 320-(((i&0x01)?buffer7[n2]:buffer3[n2])*320)/4096;
-			y1 = 320-(((i&0x01)?buffer3[n]:buffer7[n])*320)/4096;
-			lcd_set_pixel( x0, y0, 0x00000000 );
-			lcd_set_pixel( x0, y1, 0x000001F8 );
+				y0 = 320-(((i&0x01)?buffer7[n2]:buffer3[n2])*320)/4096;
+				y1 = 320-(((i&0x01)?buffer3[n]:buffer7[n])*320)/4096;
+				lcd_set_pixel( x0/2+240, y0, 0x00000000 );
+				lcd_set_pixel( x0/2+240, y1, 0x000001F8 );
 
-			y0 = 320-(((i&0x01)?buffer8[n2]:buffer4[n2])*320)/4096;
-			y1 = 320-(((i&0x01)?buffer4[n]:buffer8[n])*320)/4096;
-			lcd_set_pixel( x0, y0, 0x00000000 );
-			lcd_set_pixel( x0, y1, 0xFFFFFFFF );
+				y0 = 320-(((i&0x01)?buffer8[n2]:buffer4[n2])*320)/4096;
+				y1 = 320-(((i&0x01)?buffer4[n]:buffer8[n])*320)/4096;
+				lcd_set_pixel( x0/2+240, y0, 0x00000000 );
+				lcd_set_pixel( x0/2+240, y1, 0xFFFFFFFF );
+			}
+			else
+			{
+				int x0, y0, y1;
+				x0 = jj;//(j*480)/BUFFER_LEN;
+				y0 = 320-(((i&0x01)?buffer5[n2]:buffer1[n2])*320)/4096;
+				y1 = 320-(((i&0x01)?buffer1[n]:buffer5[n])*320)/4096;
+				extern void lcd_set_pixel( int16_t x, int16_t y, uint32_t color );
+				lcd_set_pixel( x0, y0, 0x00000000 );
+				lcd_set_pixel( x0, y1, 0x0001C007 );
+
+				y0 = 320-(((i&0x01)?buffer6[n2]:buffer2[n2])*320)/4096;
+				y1 = 320-(((i&0x01)?buffer2[n]:buffer6[n])*320)/4096;
+				lcd_set_pixel( x0, y0, 0x00000000 );
+				lcd_set_pixel( x0, y1, 0x00003F00 );
+
+				y0 = 320-(((i&0x01)?buffer7[n2]:buffer3[n2])*320)/4096;
+				y1 = 320-(((i&0x01)?buffer3[n]:buffer7[n])*320)/4096;
+				lcd_set_pixel( x0, y0, 0x00000000 );
+				lcd_set_pixel( x0, y1, 0x000001F8 );
+
+				y0 = 320-(((i&0x01)?buffer8[n2]:buffer4[n2])*320)/4096;
+				y1 = 320-(((i&0x01)?buffer4[n]:buffer8[n])*320)/4096;
+				lcd_set_pixel( x0, y0, 0x00000000 );
+				lcd_set_pixel( x0, y1, 0xFFFFFFFF );
+
+			}
 
 
 

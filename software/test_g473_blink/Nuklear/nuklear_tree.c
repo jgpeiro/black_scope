@@ -41,7 +41,7 @@ nk_tree_state_base(struct nk_context *ctx, enum nk_tree_type type,
     item_spacing = style->window.spacing;
 
     /* calculate header bounds and draw background */
-    row_height = style->font->height + 2 * style->tab.padding.y;
+    row_height = 4 + style->font->height + 2 * style->tab.padding.y;
     nk_layout_set_min_row_height(ctx, row_height);
     nk_layout_row_dynamic(ctx, row_height, 1);
     nk_layout_reset_min_row_height(ctx);
