@@ -605,6 +605,7 @@ struct Oscilloscope {
     int draw_signals;
 };
 int visible = 0;
+struct nk_rect keypad_size = {35, 35, 142, 208};
 void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
 {
 	visible = 0;
@@ -658,11 +659,11 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
                 {
                     /* about popup */
                     //static struct nk_rect s = {20, 20, 200, 200};
-                    if (nk_popup_begin(ctx, NK_POPUP_DYNAMIC, "Keypad", NK_WINDOW_CLOSABLE, (struct nk_rect){20, 20, 160, 240} ) )
+                    if (nk_popup_begin(ctx, NK_POPUP_STATIC, "Keypad", NK_WINDOW_CLOSABLE | NK_WINDOW_NO_SCROLLBAR, keypad_size ) )
                     {
-                        nk_layout_row_dynamic(ctx, 20, 1);
+                    	nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){30+30+30+30});
                         nk_label(ctx, "0.00", NK_TEXT_RIGHT );
-                        nk_layout_row(ctx, NK_STATIC, 30, 4, (float[]){35, 35, 35, 35});
+                        nk_layout_row(ctx, NK_STATIC, 30, 4, (float[]){30, 30, 30, 30});
                         nk_button_label( ctx, "7" );
                         nk_button_label( ctx, "8" );
                         nk_button_label( ctx, "9" );
@@ -678,7 +679,7 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
                         nk_button_label( ctx, "C" );
                         nk_button_label( ctx, "0" );
                         nk_button_label( ctx, "." );
-                        nk_button_label( ctx, "OK" );
+                        nk_button_symbol( ctx, NK_SYMBOL_X );
                         nk_popup_end(ctx);
                     } else show_app_about = nk_false;
                 }
@@ -689,7 +690,11 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
         			osc->horizontal_offset += 1;
         		}
 
+        		nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){60,30+60+30});
         		nk_label( ctx, "Scale", NK_TEXT_LEFT );
+        		nk_property_int(ctx, "", -100, &osc->horizontal_scale, 100, 1, 1);
+
+        		/*nk_label( ctx, "Scale", NK_TEXT_LEFT );
 				nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
 				if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
 				{
@@ -702,18 +707,18 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
 				if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
 				{
 					osc->horizontal_scale += 1;
-				}
+				}*/
                 nk_tree_pop(ctx);
             }
 
         	if( nk_tree_push( ctx, NK_TREE_TAB, "Vertical", NK_MINIMIZED) ){
-        		nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){80});
+        		nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){94});
         		//nk_style_push_style_item(&ctx, &ctx->style.combo.button.text_background, nk_style_item_color(nk_rgb(255,0,0)));
-        		osc->channel_selected = nk_combo(ctx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, CHANNEL_COUNT, osc->channel_selected, 30, nk_vec2(80, 160));
+        		osc->channel_selected = nk_combo(ctx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, CHANNEL_COUNT, osc->channel_selected, 30, nk_vec2(94, 160));
         		//nk_style_pop_style_item(&ctx);
-        		nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){80, 80});
-                osc->channels[osc->channel_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->channels[osc->channel_selected].enabled, 30, nk_vec2(80, 120));
-                osc->channels[osc->channel_selected].coupling = nk_combo(ctx, (const char*[]){"DC", "AC", "Gnd"}, 3, osc->channels[osc->channel_selected].coupling, 30, nk_vec2(80, 120));
+        		nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){94, 94});
+                osc->channels[osc->channel_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->channels[osc->channel_selected].enabled, 30, nk_vec2(94, 120));
+                osc->channels[osc->channel_selected].coupling = nk_combo(ctx, (const char*[]){"DC", "AC", "Gnd"}, 3, osc->channels[osc->channel_selected].coupling, 30, nk_vec2(94, 120));
                 //osc->channels[osc->channel_selected].offset = nk_slider_float(ctx, -10.0f, &osc->channels[osc->channel_selected].offset, 10.0f, 1.0f);
                 //osc->channels[osc->channel_selected].scale = nk_slider_float(ctx, -10.0f, &osc->channels[osc->channel_selected].scale, 10.0f, 1.0f);
 
@@ -751,11 +756,11 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
             }
 
             if( nk_tree_push( ctx, NK_TREE_TAB, "Trigger", NK_MINIMIZED) ){
-            	nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){100});
-                osc->trigger_source = nk_combo(ctx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, CHANNEL_COUNT, osc->trigger_source, 30, nk_vec2(100, 160));
-                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){100, 100});
-                osc->trigger_mode = nk_combo(ctx, (const char*[]){"Normal", "Auto"}, 2, osc->trigger_mode, 30, nk_vec2(100, 120));
-                osc->trigger_slope = nk_combo(ctx, (const char*[]){"Rising", "Falling", "Both"}, 3, osc->trigger_slope, 30, nk_vec2(100, 120));
+            	nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){94});
+                osc->trigger_source = nk_combo(ctx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, CHANNEL_COUNT, osc->trigger_source, 30, nk_vec2(94, 160));
+                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){94, 94});
+                osc->trigger_mode = nk_combo(ctx, (const char*[]){"Normal", "Auto"}, 2, osc->trigger_mode, 30, nk_vec2(94, 120));
+                osc->trigger_slope = nk_combo(ctx, (const char*[]){"Rising", "Falling", "Both"}, 3, osc->trigger_slope, 30, nk_vec2(94, 120));
                 //nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){200});
                 //nk_slider_float(ctx, -10.0f, &osc->trigger_offset, 10.0f, 1.0f);
 
@@ -781,11 +786,11 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
             }
 
             if( nk_tree_push( ctx, NK_TREE_TAB, "Waveform", NK_MINIMIZED) ){
-            	nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){100});
-                osc->waveform_selected = nk_combo(ctx, (const char*[]){"Wf1", "Wf2"}, WAVEFORM_COUNT, osc->waveform_selected, 30, nk_vec2(100, 80));
-                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){100, 100});
-                osc->waveforms[osc->waveform_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->waveforms[osc->waveform_selected].enabled, 30, nk_vec2(100, 200));
-                osc->waveforms[osc->waveform_selected].type = nk_combo(ctx, (const char*[]){"DC", "PWM", "Sine", "Tria", "Saw", "Noise"}, 6, osc->waveforms[osc->waveform_selected].type, 30, nk_vec2(100, 240));
+            	nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){94});
+                osc->waveform_selected = nk_combo(ctx, (const char*[]){"Wf1", "Wf2"}, WAVEFORM_COUNT, osc->waveform_selected, 30, nk_vec2(94, 80));
+                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){94, 94});
+                osc->waveforms[osc->waveform_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->waveforms[osc->waveform_selected].enabled, 30, nk_vec2(94, 200));
+                osc->waveforms[osc->waveform_selected].type = nk_combo(ctx, (const char*[]){"DC", "PWM", "Sine", "Tria", "Saw", "Noise"}, 6, osc->waveforms[osc->waveform_selected].type, 30, nk_vec2(94, 240));
                 //osc->waveforms[osc->waveform_selected].offset = nk_slider_float(ctx, -10.0f, &osc->waveforms[osc->waveform_selected].offset, 10.0f, 1.0f);
                 //osc->waveforms[osc->waveform_selected].scale = nk_slider_float(ctx, -10.0f, &osc->waveforms[osc->waveform_selected].scale, 10.0f, 1.0f);
                 //osc->waveforms[osc->waveform_selected].duty_cycle = nk_slider_float(ctx, -10.0f, &osc->waveforms[osc->waveform_selected].duty_cycle, 10.0f, 1.0f);
@@ -839,11 +844,11 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
             }
 
 			if( nk_tree_push( ctx, NK_TREE_TAB, "Cursor", NK_MINIMIZED) ){
-				nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){100});
-                osc->cursor_selected = nk_combo(ctx, (const char*[]){"C1", "C2"}, CURSOR_COUNT, osc->cursor_selected, 20, nk_vec2(100, 100));
-                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){100, 100});
-                osc->cursors[osc->cursor_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->cursors[osc->cursor_selected].enabled, 30, nk_vec2(100, 100));
-                osc->cursors[osc->cursor_selected].horizontal = nk_combo(ctx, (const char*[]){"Track", "Free"}, 2, osc->cursors[osc->cursor_selected].horizontal, 30, nk_vec2(100, 100));
+				nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){94});
+                osc->cursor_selected = nk_combo(ctx, (const char*[]){"C1", "C2"}, CURSOR_COUNT, osc->cursor_selected, 20, nk_vec2(94, 100));
+                nk_layout_row(ctx, NK_STATIC, 30, 2, (float[]){94, 94});
+                osc->cursors[osc->cursor_selected].enabled = nk_combo(ctx, (const char*[]){"Off", "On"}, 2, osc->cursors[osc->cursor_selected].enabled, 30, nk_vec2(94, 100));
+                osc->cursors[osc->cursor_selected].horizontal = nk_combo(ctx, (const char*[]){"Track", "Free"}, 2, osc->cursors[osc->cursor_selected].horizontal, 30, nk_vec2(94, 100));
 
 
                 //osc->cursors[osc->cursor_selected].offset = nk_slider_float(ctx, -10.0f, &osc->cursors[osc->cursor_selected].offset, 10.0f, 1.0f);

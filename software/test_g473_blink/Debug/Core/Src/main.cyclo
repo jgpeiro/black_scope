@@ -14,8 +14,8 @@
 ../Core/Src/main.c:412:12:get_text_rect	2
 ../Core/Src/main.c:426:6:__lcd_text	10
 ../Core/Src/main.c:453:6:lcd_bmp	12
-../Core/Src/main.c:608:6:oscilloscope_process	38
-../Core/Src/main.c:925:6:nk_draw_fb	21
-../Core/Src/main.c:1043:5:main	7
-../Core/Src/main.c:1262:6:SystemClock_Config	3
-../Core/Src/main.c:1311:6:Error_Handler	1
+../Core/Src/main.c:609:6:oscilloscope_process	36
+../Core/Src/main.c:930:6:nk_draw_fb	21
+../Core/Src/main.c:1048:5:main	7
+../Core/Src/main.c:1267:6:SystemClock_Config	3
+../Core/Src/main.c:1316:6:Error_Handler	1
