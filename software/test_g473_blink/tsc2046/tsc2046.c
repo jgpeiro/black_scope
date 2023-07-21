@@ -57,7 +57,7 @@ void tsc2046_read( tTsc2046* tsc, uint16_t* x, uint16_t* y) {
             *y = 0;
             return;
         }
-        HAL_Delay(1);
+        //HAL_Delay(1);
     }
     *x = x_acc / tsc->avg;
     *y = y_acc / tsc->avg;

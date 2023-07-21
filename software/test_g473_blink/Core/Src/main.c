@@ -246,7 +246,7 @@ void lcd_rect( int16_t x, int16_t y, int16_t w, int16_t h, uint32_t color )
 	*addr_data = (y1>>0)&0xFF;
 
 	*addr_cmd = 0x2C;
-	for( i = 0 ; i < n ; i++ )
+	for( i=n ; i ; i-- )
 	{
 		*addr_data = color_l;
 		*addr_data = color_h;
@@ -1106,7 +1106,7 @@ int main(void)
 
 
   tTsc2046 tsc;
-  tsc2046_init( &tsc, &hspi3, GPIOA, GPIO_PIN_15, ax, bx, ay, by, 32 );
+  tsc2046_init( &tsc, &hspi3, GPIOA, GPIO_PIN_15, ax, bx, ay, by, 8 );
 
   lcd_config();
 

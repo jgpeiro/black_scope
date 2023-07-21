@@ -43,13 +43,12 @@ void fill_rect(const tFramebuf *fb, int x, int y, int w, int h, uint32_t col) {
     w = xend - x;
     h = yend - y;
     uint16_t *b = &((uint16_t *)fb->buf)[x + y * fb->stride];
-    while (h--) {
+    while (h--){
     	for (unsigned int ww = w; ww; --ww) {
             *b++ = col;
         }
         b += fb->stride - w;
     }
-
 }
 
 void framebuf_init(tFramebuf *fb, uint16_t width, uint16_t height, char *buf ) {
