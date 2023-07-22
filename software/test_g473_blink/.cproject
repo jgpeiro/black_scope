@@ -79,11 +79,11 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Framebuf" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Lib"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Nuklear"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="tsc2046"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Lib/Framebuf"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
+						<entry excluding="Framebuf" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Lib"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
 					</sourceEntries>
 				</configuration>
@@ -159,11 +159,11 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="Framebuf" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Lib"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Nuklear"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="tsc2046"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Lib/Framebuf"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
+						<entry excluding="Framebuf" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Lib"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
 					</sourceEntries>
 				</configuration>

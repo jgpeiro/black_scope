@@ -925,14 +925,13 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
 }
 
 
-
+int tmp = 0;
 int quadrant = 0x01;
-void nk_draw_fb( struct nk_context *ctx, const tFramebuf *pfb )
+void nk_draw_fb( struct nk_context *ctx, tFramebuf *pfb )
 {
-	  for( int y0 = 0 ; y0 < 320 ; y0 += 80 )
+	  for( int y0 = 0 ; y0 < 320 ; y0 += pfb->height )
 	  {
 	   framebuf_fill( pfb, 0x00000000 );
-
 	  {
 		  const struct nk_command *cmd = NULL;
 		  nk_foreach(cmd, ctx)

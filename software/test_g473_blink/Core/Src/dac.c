@@ -145,7 +145,7 @@ void HAL_DAC_MspInit(DAC_HandleTypeDef* dacHandle)
 
     /* DAC1 DMA Init */
     /* DAC1_CH1 Init */
-    hdma_dac1_ch1.Instance = DMA1_Channel3;
+    hdma_dac1_ch1.Instance = DMA2_Channel1;
     hdma_dac1_ch1.Init.Request = DMA_REQUEST_DAC1_CHANNEL1;
     hdma_dac1_ch1.Init.Direction = DMA_MEMORY_TO_PERIPH;
     hdma_dac1_ch1.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -162,7 +162,7 @@ void HAL_DAC_MspInit(DAC_HandleTypeDef* dacHandle)
     __HAL_LINKDMA(dacHandle,DMA_Handle1,hdma_dac1_ch1);
 
     /* DAC1_CH2 Init */
-    hdma_dac1_ch2.Instance = DMA1_Channel4;
+    hdma_dac1_ch2.Instance = DMA2_Channel2;
     hdma_dac1_ch2.Init.Request = DMA_REQUEST_DAC1_CHANNEL2;
     hdma_dac1_ch2.Init.Direction = DMA_MEMORY_TO_PERIPH;
     hdma_dac1_ch2.Init.PeriphInc = DMA_PINC_DISABLE;

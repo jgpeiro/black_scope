@@ -320,7 +320,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
 
     /* ADC1 DMA Init */
     /* ADC1 Init */
-    hdma_adc1.Instance = DMA1_Channel2;
+    hdma_adc1.Instance = DMA1_Channel1;
     hdma_adc1.Init.Request = DMA_REQUEST_ADC1;
     hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -366,7 +366,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
 
     /* ADC3 DMA Init */
     /* ADC3 Init */
-    hdma_adc3.Instance = DMA1_Channel5;
+    hdma_adc3.Instance = DMA1_Channel2;
     hdma_adc3.Init.Request = DMA_REQUEST_ADC3;
     hdma_adc3.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_adc3.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -409,7 +409,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
 
     /* ADC4 DMA Init */
     /* ADC4 Init */
-    hdma_adc4.Instance = DMA1_Channel6;
+    hdma_adc4.Instance = DMA1_Channel3;
     hdma_adc4.Init.Request = DMA_REQUEST_ADC4;
     hdma_adc4.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_adc4.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -452,7 +452,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
 
     /* ADC5 DMA Init */
     /* ADC5 Init */
-    hdma_adc5.Instance = DMA1_Channel7;
+    hdma_adc5.Instance = DMA1_Channel4;
     hdma_adc5.Init.Request = DMA_REQUEST_ADC5;
     hdma_adc5.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_adc5.Init.PeriphInc = DMA_PINC_DISABLE;

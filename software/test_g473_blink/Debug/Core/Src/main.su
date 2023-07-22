@@ -16,6 +16,6 @@
 ../Core/Src/main.c:453:6:lcd_bmp	40	static
 ../Core/Src/main.c:609:6:oscilloscope_process	512	static
 ../Core/Src/main.c:930:6:nk_draw_fb	104	static
-../Core/Src/main.c:1048:5:main	112	static
-../Core/Src/main.c:1267:6:SystemClock_Config	88	static
-../Core/Src/main.c:1316:6:Error_Handler	4	static,ignoring_inline_asm
+../Core/Src/main.c:1047:5:main	112	static
+../Core/Src/main.c:1266:6:SystemClock_Config	88	static
+../Core/Src/main.c:1315:6:Error_Handler	4	static,ignoring_inline_asm
