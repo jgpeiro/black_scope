@@ -41,6 +41,7 @@
 #include "framebuf.h"
 #include "tsc2046.h"
 #include "psram.h"
+#include "lcd.h"
 
 //#define NK_INCLUDE_STANDARD_VARARGS (1)
 /* USER CODE END Includes */
@@ -121,16 +122,16 @@ float text_width_f( nk_handle handle, float h, const char* t, int len )
 
 	return get_text_rect( &fontUbuntuBookRNormal16, t ).width;
 }
-
+/*
 #define LCD_CMD_ADDR	(0x60000000)
 #define LCD_DATA_ADDR	(0x60000002) // 0x60000001 ??
 volatile uint16_t *addr_cmd = (uint16_t*) LCD_CMD_ADDR;
 volatile uint16_t *addr_data = (uint16_t*) LCD_DATA_ADDR;
 
-void lcd_config( void );
-void lcd_rect( int16_t x, int16_t y, int16_t w, int16_t h, uint32_t color );
+void __lcd_config( void );
+void __lcd_rect( int16_t x, int16_t y, int16_t w, int16_t h, uint32_t color );
 
-void lcd_config( void )
+void __lcd_config( void )
 {
 	HAL_GPIO_WritePin( GPIOA, GPIO_PIN_8, GPIO_PIN_SET );
 	HAL_GPIO_WritePin( GPIOA, GPIO_PIN_9, GPIO_PIN_RESET );
@@ -151,7 +152,7 @@ void lcd_config( void )
 
 	lcd_rect( 0, 0, 480, 320, 0x0000 );
 }
-
+*/
 uint32_t nk_colot_to_rgb666( struct nk_color color )
 {
 	uint32_t rgb666 = 0;
@@ -166,8 +167,8 @@ uint32_t nk_colot_to_rgb666( struct nk_color color )
 	rgb666 = (color.r<<12) | (color.g<<6) | (color.b<<0);
 	return rgb666;
 }
-
-void lcd_rect( int16_t x, int16_t y, int16_t w, int16_t h, uint32_t color )
+/*
+void __lcd_rect( int16_t x, int16_t y, int16_t w, int16_t h, uint32_t color )
 {
 	int16_t x0 = x;
 	int16_t y0 = y;
@@ -253,7 +254,7 @@ void lcd_rect( int16_t x, int16_t y, int16_t w, int16_t h, uint32_t color )
 	}
 }
 
-void lcd_set_pixel( int16_t x, int16_t y, uint32_t color )
+void __lcd_set_pixel( int16_t x, int16_t y, uint32_t color )
 {
 	int16_t x0 = x;
 	int16_t y0 = y;
@@ -280,7 +281,7 @@ void lcd_set_pixel( int16_t x, int16_t y, uint32_t color )
 }
 
 
-int32_t lcd_set_pixel_bench( int16_t x, int16_t y, uint32_t color )
+int32_t __lcd_set_pixel_bench( int16_t x, int16_t y, uint32_t color )
 {
 	int32_t a, b, d;
 	int16_t x0 = x;
@@ -343,6 +344,7 @@ int32_t lcd_set_pixel_bench( int16_t x, int16_t y, uint32_t color )
 	d = diff_systick(b,a);
 	return d;
 }
+*/
 void lcd_text( const tFramebuf *fb, uint16_t x0, uint16_t y0, char *str, uint32_t color )
 {
 	for(; *str; ++str) {
@@ -422,7 +424,7 @@ tRectangle get_text_rect( const tFont *pFont, char *pString )
 
     return rect;
 }
-
+/*
 void __lcd_text( uint16_t x0, uint16_t y0, char *str, uint32_t color )
 {
 	for(; *str; ++str) {
@@ -450,7 +452,7 @@ void __lcd_text( uint16_t x0, uint16_t y0, char *str, uint32_t color )
 	    }
 }
 
-void lcd_bmp( int16_t x, int16_t y, int16_t w, int16_t h, uint8_t *buf )
+void __lcd_bmp( int16_t x, int16_t y, int16_t w, int16_t h, uint8_t *buf )
 {
 	int16_t x0 = x;
 	int16_t y0 = y;
@@ -537,7 +539,7 @@ void lcd_bmp( int16_t x, int16_t y, int16_t w, int16_t h, uint8_t *buf )
 		buf++;
 	}
 }
-
+*/
 
 #define CHANNEL_COUNT 4
 #define WAVEFORM_COUNT 2
@@ -934,7 +936,7 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
 
 int tmp = 0;
 int quadrant = 0x01;
-void nk_draw_fb( struct nk_context *ctx, tFramebuf *pfb )
+void nk_draw_fb( struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd )
 {
 	  for( int y0 = 0 ; y0 < 320 ; y0 += pfb->height )
 	  {
@@ -1039,7 +1041,7 @@ void nk_draw_fb( struct nk_context *ctx, tFramebuf *pfb )
 		  }
 	  }
 
-		lcd_bmp( 0, y0, pfb->width, pfb->height, pfb->buf );
+		lcd_bmp( pLcd, 0, y0, pfb->width, pfb->height, pfb->buf );
 	  }
 }
 
@@ -1109,17 +1111,18 @@ int main(void)
   uint16_t x = 0, y = 0;
   uint16_t x_bck = 0, y_bck = 0;
 
-
+  tLcd lcd;
+  lcd_init( &lcd, GPIOA, GPIO_PIN_9, GPIOA, GPIO_PIN_8, 480, 320 );
 
   tTsc2046 tsc;
   tsc2046_init( &tsc, &hspi3, GPIOA, GPIO_PIN_15, ax, bx, ay, by, 8 );
 
-  lcd_config();
+  //lcd_config();
 
-  lcd_rect( 50, 50, 2, 2, 0xFFFF );
-  lcd_rect( 240-50, 50, 2, 2, 0xFFFF );
-  lcd_rect( 50, 320-50, 2, 2, 0xFFFF );
-  lcd_rect( 240-50, 320-50, 2, 2, 0xFFFF );
+  lcd_rect( &lcd, 50, 50, 2, 2, 0xFFFF );
+  lcd_rect( &lcd, 240-50, 50, 2, 2, 0xFFFF );
+  lcd_rect( &lcd, 50, 320-50, 2, 2, 0xFFFF );
+  lcd_rect( &lcd, 240-50, 320-50, 2, 2, 0xFFFF );
 
   while( 0 )
   {
@@ -1127,14 +1130,11 @@ int main(void)
 	  tsc.avg = 1;
 	  uint16_t x = 0, y = 0;
 	  tsc2046_read( &tsc, &x, &y );
-	  lcd_rect( x, y, 2, 2, 0xFFFF );
+	  lcd_rect( &lcd, x, y, 2, 2, 0xFFFF );
 	  printf("%d, %d, %d\n", cnt++, x, y );
 	  HAL_Delay( 1 );
   }
 
-  int d = 0;
-  d = lcd_set_pixel_bench( 100, 100, 0xFFFF );
-  d = d+1;
   static struct nk_context ctx;
   static struct nk_buffer cmds;
   static struct nk_buffer pool;
@@ -1192,17 +1192,17 @@ int main(void)
 		  nk_input_end( &ctx );
 
 		  oscilloscope_process(&osc, &ctx);
-		  nk_draw_fb( &ctx, &fb );
+		  nk_draw_fb( &ctx, &fb, &lcd );
 		  nk_clear(&ctx);
 		  //HAL_Delay(10);
 		  b = get_systick();
 		  d = diff_systick( b, a );
 		  if( x )
 		  {
-			  lcd_rect( x-4, y, 4, 2, 0xFFFF );
-			  lcd_rect( x+2, y, 4, 2, 0xFFFF );
-			  lcd_rect( x, y-4, 2, 4, 0xFFFF );
-			  lcd_rect( x, y+2, 2, 4, 0xFFFF );
+			  lcd_rect( &lcd, x-4, y, 4, 2, 0xFFFF );
+			  lcd_rect( &lcd, x+2, y, 4, 2, 0xFFFF );
+			  lcd_rect( &lcd, x, y-4, 2, 4, 0xFFFF );
+			  lcd_rect( &lcd, x, y+2, 2, 4, 0xFFFF );
 		  }
 	  }
 	  //else if( nk_window_is_collapsed( &ctx, "STM32G4 Scope" ) )
@@ -1211,10 +1211,10 @@ int main(void)
 		  static int collapsed_bck = 0;
 		  collapsed_bck = collapsed;
 		  collapsed = nk_window_is_collapsed( &ctx, "STM32G4 Scope" );
-		  test_scope( !collapsed );
+		  test_scope( &lcd, !collapsed );
 		  if( collapsed != collapsed_bck )
 		  {
-			  lcd_rect( 0, 0, 480, 320, 0x0000 );
+			  lcd_rect( &lcd, 0, 0, 480, 320, 0x0000 );
 		  }
 	  }
 

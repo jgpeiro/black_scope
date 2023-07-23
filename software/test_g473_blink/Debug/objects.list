@@ -47,6 +47,7 @@
 "./Lib/Framebuf/FontUbuntuBookRNormal16.o"
 "./Lib/Framebuf/font_petme128_8x8.o"
 "./Lib/Framebuf/framebuf.o"
+"./Lib/Lcd/lcd.o"
 "./Nuklear/nuklear_9slice.o"
 "./Nuklear/nuklear_buffer.o"
 "./Nuklear/nuklear_button.o"

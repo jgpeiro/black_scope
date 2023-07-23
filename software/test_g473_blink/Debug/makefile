@@ -11,6 +11,7 @@ RM := rm -rf
 -include sources.mk
 -include tsc2046/subdir.mk
 -include Nuklear/subdir.mk
+-include Lib/Lcd/subdir.mk
 -include Lib/Framebuf/subdir.mk
 -include Drivers/STM32G4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk

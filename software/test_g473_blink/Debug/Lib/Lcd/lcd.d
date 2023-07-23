@@ -1,4 +1,4 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
+Lib/Lcd/lcd.o: ../Lib/Lcd/lcd.c ../Lib/Lcd/lcd.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h \
  ../Core/Inc/stm32g4xx_hal_conf.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rcc.h \
@@ -37,17 +37,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_sram.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_fmc.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim.h \
- ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim_ex.h \
- ../Core/Inc/adc.h ../Core/Inc/main.h ../Core/Inc/dac.h ../Core/Inc/dma.h \
- ../Core/Inc/opamp.h ../Core/Inc/quadspi.h ../Core/Inc/spi.h \
- ../Core/Inc/tim.h ../Core/Inc/gpio.h ../Core/Inc/fmc.h \
- C:/git/black_scope/software/test_g473_blink/Nuklear/nuklear.h \
- C:/git/black_scope/software/test_g473_blink/Lib/Framebuf/framebuf.h \
- C:/git/black_scope/software/test_g473_blink/tsc2046/tsc2046.h \
- ../Core/Inc/psram.h \
- C:/git/black_scope/software/test_g473_blink/Lib/Lcd/lcd.h \
- C:/git/black_scope/software/test_g473_blink/Lib/Framebuf/FontUbuntuBookRNormal16.h
-../Core/Inc/main.h:
+ ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim_ex.h
+../Lib/Lcd/lcd.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h:
 ../Core/Inc/stm32g4xx_hal_conf.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_rcc.h:
@@ -87,19 +78,3 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_fmc.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim_ex.h:
-../Core/Inc/adc.h:
-../Core/Inc/main.h:
-../Core/Inc/dac.h:
-../Core/Inc/dma.h:
-../Core/Inc/opamp.h:
-../Core/Inc/quadspi.h:
-../Core/Inc/spi.h:
-../Core/Inc/tim.h:
-../Core/Inc/gpio.h:
-../Core/Inc/fmc.h:
-C:/git/black_scope/software/test_g473_blink/Nuklear/nuklear.h:
-C:/git/black_scope/software/test_g473_blink/Lib/Framebuf/framebuf.h:
-C:/git/black_scope/software/test_g473_blink/tsc2046/tsc2046.h:
-../Core/Inc/psram.h:
-C:/git/black_scope/software/test_g473_blink/Lib/Lcd/lcd.h:
-C:/git/black_scope/software/test_g473_blink/Lib/Framebuf/FontUbuntuBookRNormal16.h:

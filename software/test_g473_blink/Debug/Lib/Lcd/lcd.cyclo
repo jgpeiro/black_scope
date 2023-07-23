@@ -1,0 +1,8 @@
+../Lib/Lcd/lcd.c:41:6:lcd_reset	1
+../Lib/Lcd/lcd.c:49:6:lcd_config	1
+../Lib/Lcd/lcd.c:63:6:lcd_set_bl	1
+../Lib/Lcd/lcd.c:68:6:lcd_set_pixel	5
+../Lib/Lcd/lcd.c:92:6:lcd_rect	11
+../Lib/Lcd/lcd.c:122:6:lcd_clear	1
+../Lib/Lcd/lcd.c:26:6:lcd_init	1
+../Lib/Lcd/lcd.c:127:6:lcd_bmp	11

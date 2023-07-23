@@ -1,0 +1,8 @@
+../Lib/Lcd/lcd.c:41:6:lcd_reset	8	static
+../Lib/Lcd/lcd.c:49:6:lcd_config	8	static
+../Lib/Lcd/lcd.c:63:6:lcd_set_bl	8	static
+../Lib/Lcd/lcd.c:68:6:lcd_set_pixel	0	static
+../Lib/Lcd/lcd.c:92:6:lcd_rect	20	static
+../Lib/Lcd/lcd.c:122:6:lcd_clear	16	static
+../Lib/Lcd/lcd.c:26:6:lcd_init	8	static
+../Lib/Lcd/lcd.c:127:6:lcd_bmp	16	static
