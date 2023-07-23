@@ -1,3 +1,0 @@
-../tsc2046/tsc2046.c:12:6:tsc2046_init	1
-../tsc2046/tsc2046.c:25:6:tsc2046_read_ll	2
-../tsc2046/tsc2046.c:46:6:tsc2046_read	5

@@ -1,3 +1,0 @@
-../Nuklear/nuklear_page_element.c:10:1:nk_create_page_element	3
-../Nuklear/nuklear_page_element.c:36:1:nk_link_page_element_into_freelist	2
-../Nuklear/nuklear_page_element.c:48:1:nk_free_page_element	3

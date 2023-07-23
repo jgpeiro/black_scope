@@ -1,9 +1,0 @@
-../Nuklear/nuklear_chart.c:10:1:nk_chart_begin_colored	7
-../Nuklear/nuklear_chart.c:76:1:nk_chart_begin	1
-../Nuklear/nuklear_chart.c:83:1:nk_chart_add_slot_colored	3
-../Nuklear/nuklear_chart.c:106:1:nk_chart_add_slot	1
-../Nuklear/nuklear_chart.c:229:1:nk_chart_push_slot	26
-../Nuklear/nuklear_chart.c:255:1:nk_chart_push	1
-../Nuklear/nuklear_chart.c:260:1:nk_chart_end	1
-../Nuklear/nuklear_chart.c:276:1:nk_plot	7
-../Nuklear/nuklear_chart.c:301:1:nk_plot_function	7

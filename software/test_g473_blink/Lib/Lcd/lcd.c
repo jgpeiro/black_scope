@@ -20,8 +20,6 @@
 
 #define LCD_CMD_ADDR	*(volatile uint16_t*)(0x60000000)
 #define LCD_DATA_ADDR	*(volatile uint16_t*)(0x60000002)
-//volatile uint16_t *LCD_CMD = (uint16_t*) 0x60000000;
-//volatile uint16_t *LCD_DATA = (uint16_t*) 0x60000002;
 
 void lcd_init( tLcd *pThis, GPIO_TypeDef *reset_port, uint16_t reset_pin, GPIO_TypeDef *bl_port, uint16_t bl_pin, uint16_t width, uint16_t height )
 {

@@ -1,7 +1,0 @@
-../Nuklear/nuklear_slider.c:10:1:nk_slider_behavior	64	static
-../Nuklear/nuklear_slider.c:52:1:nk_draw_slider	80	static
-../Nuklear/nuklear_slider.c:118:1:nk_do_slider	144	static
-../Nuklear/nuklear_slider.c:207:1:nk_slider_float	64	static
-../Nuklear/nuklear_slider.c:241:1:nk_slide_float	16	static
-../Nuklear/nuklear_slider.c:246:1:nk_slide_int	16	static
-../Nuklear/nuklear_slider.c:253:1:nk_slider_int	16	static

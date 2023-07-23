@@ -1,8 +1,0 @@
-../Nuklear/nuklear_group.c:59:1:nk_group_scrolled_end	448	static
-../Nuklear/nuklear_group.c:10:1:nk_group_scrolled_offset_begin	440	static
-../Nuklear/nuklear_group.c:121:1:nk_group_scrolled_begin	16	static
-../Nuklear/nuklear_group.c:127:1:nk_group_begin_titled	40	static
-../Nuklear/nuklear_group.c:160:1:nk_group_begin	8	static
-../Nuklear/nuklear_group.c:165:1:nk_group_end	8	static
-../Nuklear/nuklear_group.c:170:1:nk_group_get_scroll	32	static
-../Nuklear/nuklear_group.c:205:1:nk_group_set_scroll	32	static

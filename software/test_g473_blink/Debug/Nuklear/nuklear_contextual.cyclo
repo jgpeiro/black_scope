@@ -1,9 +1,0 @@
-../Nuklear/nuklear_contextual.c:10:1:nk_contextual_begin	13
-../Nuklear/nuklear_contextual.c:176:1:nk_contextual_close	1
-../Nuklear/nuklear_contextual.c:69:1:nk_contextual_item_text	4
-../Nuklear/nuklear_contextual.c:99:1:nk_contextual_item_label	1
-../Nuklear/nuklear_contextual.c:104:1:nk_contextual_item_image_text	4
-../Nuklear/nuklear_contextual.c:134:1:nk_contextual_item_image_label	1
-../Nuklear/nuklear_contextual.c:140:1:nk_contextual_item_symbol_text	4
-../Nuklear/nuklear_contextual.c:170:1:nk_contextual_item_symbol_label	1
-../Nuklear/nuklear_contextual.c:185:1:nk_contextual_end	6
