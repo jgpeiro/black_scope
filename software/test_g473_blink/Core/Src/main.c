@@ -42,7 +42,7 @@
 #include "tsc2046.h"
 #include "psram.h"
 #include "lcd.h"
-
+#include "FontUbuntuBookRNormal16.h"
 //#define NK_INCLUDE_STANDARD_VARARGS (1)
 /* USER CODE END Includes */
 
@@ -103,56 +103,14 @@ int32_t diff_systick( int32_t b, int32_t a )
 	}
 	return d;
 }
-#include "FontUbuntuBookRNormal16.h"
-struct sRectangle
-{
-	int16_t x;
-	int16_t y;
-	int16_t width;
-	int16_t height;
-};
-typedef struct sRectangle tRectangle;
-extern const tFont fontUbuntuBookRNormal16;
-void draw_char( const tFramebuf *fb, const tFont *pFont, int16_t x0, int16_t y0, uint8_t c, uint32_t color );
-tRectangle get_char_rect( const tFont *pFont, uint8_t c );
-tRectangle get_text_rect( const tFont *pFont, char *pString );
+
 
 float text_width_f( nk_handle handle, float h, const char* t, int len )
 {
 
 	return get_text_rect( &fontUbuntuBookRNormal16, t ).width;
 }
-/*
-#define LCD_CMD_ADDR	(0x60000000)
-#define LCD_DATA_ADDR	(0x60000002) // 0x60000001 ??
-volatile uint16_t *addr_cmd = (uint16_t*) LCD_CMD_ADDR;
-volatile uint16_t *addr_data = (uint16_t*) LCD_DATA_ADDR;
 
-void __lcd_config( void );
-void __lcd_rect( int16_t x, int16_t y, int16_t w, int16_t h, uint32_t color );
-
-void __lcd_config( void )
-{
-	HAL_GPIO_WritePin( GPIOA, GPIO_PIN_8, GPIO_PIN_SET );
-	HAL_GPIO_WritePin( GPIOA, GPIO_PIN_9, GPIO_PIN_RESET );
-	HAL_Delay( 10 );
-	HAL_GPIO_WritePin( GPIOA, GPIO_PIN_9, GPIO_PIN_SET );
-	HAL_Delay( 100 );
-
-	*addr_cmd = 0x01;
-	HAL_Delay( 100 );
-	*addr_cmd = 0x11;
-	HAL_Delay( 10 );
-	*addr_cmd = 0x3A;
-	*addr_data = 0x06;//0x05;
-	*addr_cmd = 0x36;
-	*addr_data = (0x01<<5)|(0x01<<6)|(0x01<<7);
-	*addr_cmd = 0x29;
-	HAL_Delay( 10 );
-
-	lcd_rect( 0, 0, 480, 320, 0x0000 );
-}
-*/
 uint32_t nk_colot_to_rgb666( struct nk_color color )
 {
 	uint32_t rgb666 = 0;
@@ -167,379 +125,6 @@ uint32_t nk_colot_to_rgb666( struct nk_color color )
 	rgb666 = (color.r<<12) | (color.g<<6) | (color.b<<0);
 	return rgb666;
 }
-/*
-void __lcd_rect( int16_t x, int16_t y, int16_t w, int16_t h, uint32_t color )
-{
-	int16_t x0 = x;
-	int16_t y0 = y;
-	int16_t x1 = x + w - 1;
-	int16_t y1 = y + h - 1;
-
-	if( x0 < 0 )
-	{
-		x0 = 0;
-	}
-	else if( x0 > 480 - 1 )
-	{
-		x0 = 480 - 1;
-	}
-
-	if( x1 < 0 )
-	{
-		x1 = 0;
-	}
-	else if( x1 > 480 - 1 )
-	{
-		x1 = 480 - 1;
-	}
-
-	if( y0 < 0 )
-	{
-		y0 = 0;
-	}
-	else if( y0 > 320 - 1 )
-	{
-		y0 = 320 - 1;
-	}
-
-	if( y1 < 0 )
-	{
-		y1 = 0;
-	}
-	else if( y1 > 320 - 1 )
-	{
-		y1 = 320 - 1;
-	}
-
-	if( x0 > x1 )
-	{
-		int tmp = x0;
-		x0 = x1;
-		x1 = tmp;
-	}
-
-	if( y0 > y1 )
-	{
-		int tmp = y0;
-		y0 = y1;
-		y1 = tmp;
-	}
-
-	w = x1 - x0 + 1;
-	h = y1 - y0 + 1;
-
-	uint32_t i = 0;
-	uint32_t n = w*h;
-
-	uint16_t color_l = (color>>0)&0x1FF;
-	uint16_t color_h = (color>>9)&0x1FF;
-
-	*addr_cmd = 0x2A;
-	*addr_data = (x0>>8)&0xFF;
-	*addr_data = (x0>>0)&0xFF;
-	*addr_data = (x1>>8)&0xFF;
-	*addr_data = (x1>>0)&0xFF;
-
-	*addr_cmd = 0x2B;
-	*addr_data = (y0>>8)&0xFF;
-	*addr_data = (y0>>0)&0xFF;
-	*addr_data = (y1>>8)&0xFF;
-	*addr_data = (y1>>0)&0xFF;
-
-	*addr_cmd = 0x2C;
-	for( i=n ; i ; i-- )
-	{
-		*addr_data = color_l;
-		*addr_data = color_h;
-	}
-}
-
-void __lcd_set_pixel( int16_t x, int16_t y, uint32_t color )
-{
-	int16_t x0 = x;
-	int16_t y0 = y;
-	int16_t x1 = x + 1;
-	int16_t y1 = y + 1;
-	uint16_t color_l = (color>>0)&0x1FF;
-	uint16_t color_h = (color>>9)&0x1FF;
-
-	*addr_cmd = 0x2A;
-	*addr_data = (x0>>8)&0xFF;
-	*addr_data = (x0>>0)&0xFF;
-	*addr_data = (x1>>8)&0xFF;
-	*addr_data = (x1>>0)&0xFF;
-
-	*addr_cmd = 0x2B;
-	*addr_data = (y0>>8)&0xFF;
-	*addr_data = (y0>>0)&0xFF;
-	*addr_data = (y1>>8)&0xFF;
-	*addr_data = (y1>>0)&0xFF;
-
-	*addr_cmd = 0x2C;
-	*addr_data = color_l;
-	*addr_data = color_h;
-}
-
-
-int32_t __lcd_set_pixel_bench( int16_t x, int16_t y, uint32_t color )
-{
-	int32_t a, b, d;
-	int16_t x0 = x;
-	int16_t y0 = y;
-	int16_t x1 = x + 4;
-	int16_t y1 = y + 4;
-	uint16_t color_l = (color>>0)&0x1FF;
-	uint16_t color_h = (color>>9)&0x1FF;
-
-	*addr_cmd = 0x2A;
-	*addr_data = (x0>>8)&0xFF;
-	*addr_data = (x0>>0)&0xFF;
-	*addr_data = (x1>>8)&0xFF;
-	*addr_data = (x1>>0)&0xFF;
-
-	*addr_cmd = 0x2B;
-	*addr_data = (y0>>8)&0xFF;
-	*addr_data = (y0>>0)&0xFF;
-	*addr_data = (y1>>8)&0xFF;
-	*addr_data = (y1>>0)&0xFF;
-
-	a = get_systick();
-	*addr_cmd = 0x2C;
-	*addr_data = color_l;
-	*addr_data = color_h;
-	*addr_data = color_l;
-	*addr_data = color_h;
-	*addr_data = color_l;
-	*addr_data = color_h;
-	*addr_data = color_l;
-	*addr_data = color_h;
-
-	*addr_data = color_l;
-	*addr_data = color_h;
-	*addr_data = color_l;
-	*addr_data = color_h;
-	*addr_data = color_l;
-	*addr_data = color_h;
-	*addr_data = color_l;
-	*addr_data = color_h;
-
-	*addr_data = color_l;
-	*addr_data = color_h;
-	*addr_data = color_l;
-	*addr_data = color_h;
-	*addr_data = color_l;
-	*addr_data = color_h;
-	*addr_data = color_l;
-	*addr_data = color_h;
-
-	*addr_data = color_l;
-	*addr_data = color_h;
-	*addr_data = color_l;
-	*addr_data = color_h;
-	*addr_data = color_l;
-	*addr_data = color_h;
-	*addr_data = color_l;
-	*addr_data = color_h;
-	b = get_systick();
-	d = diff_systick(b,a);
-	return d;
-}
-*/
-void lcd_text( const tFramebuf *fb, uint16_t x0, uint16_t y0, char *str, uint32_t color )
-{
-	for(; *str; ++str) {
-	        // get char and make sure its in range of font
-	        int chr = *(uint8_t *)str;
-	        if (chr < 32 || chr > 127) {
-	            chr = 127;
-	        }
-	        draw_char( fb, &fontUbuntuBookRNormal16, x0, y0, chr, color );
-	        x0 += get_char_rect( &fontUbuntuBookRNormal16, chr ).width;
-	}
-}
-void draw_char( const tFramebuf *fb, const tFont *pFont, int16_t x0, int16_t y0, uint8_t c, uint32_t color )
-{
-    int16_t x, y, w, bitmap, b;
-    int16_t px, py;
-    const tGlyph *pGlyph;
-
-    pGlyph = pFont->pGlyphs[c-32];
-
-    y0 += pFont->bbxh;
-    y0 -= pFont->descent;
-    y0 -= pGlyph->bbxh;
-    y0 -= pGlyph->bbxy;
-
-    for( y = 0 ; y < pGlyph->bbxh ; y++ )
-    {
-        py = y0+y;
-
-        w = (pGlyph->bbxw-1)/8+1;
-
-        int16_t yw = y*w;
-        for( x = 0 ; x < pGlyph->bbxw ; x+=8 )
-        {
-            bitmap = pGlyph->pBitmap[yw+x/8];
-
-            for( b = 0 ; b < 8 ; b++ )
-            {
-                if( x+b >= pGlyph->bbxw )
-                {
-                    break;
-                }
-
-                px = x0+x+b;
-
-                if( bitmap & (0x80>>b) )
-                {
-                    //set_pixel( px, py, color );
-                    //lcd_rect( px, py, 1, 1, color);
-                	setpixel_checked(fb, px, py, color, 1);
-                }
-            }
-        }
-    }
-}
-
-
-tRectangle get_char_rect( const tFont *pFont, uint8_t c )
-{
-    tRectangle rect = {0};
-
-    rect.width = pFont->pGlyphs[c-32]->dwidthx;
-    rect.height = pFont->bbxh;
-    return rect;
-}
-
-tRectangle get_text_rect( const tFont *pFont, char *pString )
-{
-	uint8_t i;
-	tRectangle rect = {0};
-
-	rect.height = pFont->bbxh;
-	for( i = 0 ; pString[i] != '\0' ; i++ )
-	{
-		rect.width += get_char_rect( pFont, pString[i] ).width;
-    }
-
-    return rect;
-}
-/*
-void __lcd_text( uint16_t x0, uint16_t y0, char *str, uint32_t color )
-{
-	for(; *str; ++str) {
-	        // get char and make sure its in range of font
-	        int chr = *(uint8_t *)str;
-	        if (chr < 32 || chr > 127) {
-	            chr = 127;
-	        }
-	        // get char data
-	        extern const uint8_t font_petme128_8x8[];
-	        const uint8_t *chr_data = &font_petme128_8x8[(chr - 32) * 8];
-	        // loop over char data
-	        for (int j = 0; j < 8; j++, x0++) {
-	            if (0 <= x0 && x0 < 240) { // clip x
-	                uint32_t vline_data = chr_data[j]; // each byte is a column of 8 pixels, LSB at top
-	                for (int y = y0; vline_data; vline_data >>= 1, y++) { // scan over vertical column
-	                    if (vline_data & 1) { // only draw if pixel set
-	                        if (0 <= y && y < 320) { // clip y
-	                        	lcd_rect( x0, y, 1, 1, color);
-	                        }
-	                    }
-	                }
-	            }
-	        }
-	    }
-}
-
-void __lcd_bmp( int16_t x, int16_t y, int16_t w, int16_t h, uint8_t *buf )
-{
-	int16_t x0 = x;
-	int16_t y0 = y;
-	int16_t x1 = x + w - 1;
-	int16_t y1 = y + h - 1;
-
-	if( x0 < 0 )
-	{
-		x0 = 0;
-	}
-	else if( x0 > 240 - 1 )
-	{
-		x0 = 240 - 1;
-	}
-
-	if( x1 < 0 )
-	{
-		x1 = 0;
-	}
-	else if( x1 > 240 - 1 )
-	{
-		x1 = 240 - 1;
-	}
-
-	if( y0 < 0 )
-	{
-		y0 = 0;
-	}
-	else if( y0 > 320 - 1 )
-	{
-		y0 = 320 - 1;
-	}
-
-	if( y1 < 0 )
-	{
-		y1 = 0;
-	}
-	else if( y1 > 320 - 1 )
-	{
-		y1 = 320 - 1;
-	}
-
-	if( x0 > x1 )
-	{
-		int tmp = x0;
-		x0 = x1;
-		x1 = tmp;
-	}
-
-	if( y0 > y1 )
-	{
-		int tmp = y0;
-		y0 = y1;
-		y1 = tmp;
-	}
-
-	w = x1 - x0 + 1;
-	h = y1 - y0 + 1;
-
-	uint32_t i = 0;
-	uint32_t n = w*h;
-
-	//uint16_t color_l = (color>>0)&0x1FF;
-	//uint16_t color_h = (color>>9)&0x1FF;
-
-	*addr_cmd = 0x2A;
-	*addr_data = (x0>>8)&0xFF;
-	*addr_data = (x0>>0)&0xFF;
-	*addr_data = (x1>>8)&0xFF;
-	*addr_data = (x1>>0)&0xFF;
-
-	*addr_cmd = 0x2B;
-	*addr_data = (y0>>8)&0xFF;
-	*addr_data = (y0>>0)&0xFF;
-	*addr_data = (y1>>8)&0xFF;
-	*addr_data = (y1>>0)&0xFF;
-
-	*addr_cmd = 0x2C;
-	for( i = n ; i ; i-- )
-	{
-		*addr_data = *buf;
-		buf++;
-		*addr_data = *buf;
-		buf++;
-	}
-}
-*/
 
 #define CHANNEL_COUNT 4
 #define WAVEFORM_COUNT 2
@@ -618,16 +203,17 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
         if( nk_tree_push( ctx, NK_TREE_TAB, "Acquire", NK_MAXIMIZED) ){
             osc->draw_bg = nk_false;
             nk_layout_row(ctx, NK_STATIC, 30, 4, (float[]){60, 60, 60, 60});
-            //if (osc->acquire_run) {
-            //    if (nk_button_label(ctx, "Stop")) {
-            //        osc->acquire_run = nk_false;
-            //    }
-            //} else {
-            //    if (nk_button_label(ctx, "Run")) {
-            //        osc->acquire_run = nk_true;
-            //    }
-            //}
-            osc->acquire_run = nk_check_label( ctx, osc->acquire_run?"Stop":"Run", osc->acquire_run );
+            nk_button_set_behavior(ctx, NK_BUTTON_DEFAULT);
+            if (osc->acquire_run) {
+                if (nk_button_label(ctx, "Stop")) {
+                    osc->acquire_run = nk_false;
+                }
+            } else {
+                if (nk_button_label(ctx, "Run")) {
+                    osc->acquire_run = nk_true;
+                }
+            }
+            //osc->acquire_run = nk_check_label( ctx, osc->acquire_run?"Stop":"Run", osc->acquire_run );
 
             if (nk_button_label(ctx, "Single")) {
                 osc->acquire_single = nk_true;
@@ -1014,8 +600,7 @@ void nk_draw_fb( struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd )
 			  } break;
 			  case NK_COMMAND_TEXT: {
 				  const struct nk_command_text *t = (const struct nk_command_text*)cmd;
-				  //framebuf_text( pfb, t->x, t->y-y0, (char *)t->string, nk_colot_to_rgb666( t->foreground ) );
-				  lcd_text( pfb,  t->x, t->y-y0, (char *)t->string, 0xFFFF );
+				  framebuf_text( pfb, &fontUbuntuBookRNormal16, t->x, t->y-y0, (char *)t->string, 0xFFFF );
 			  } break;
 			  case NK_COMMAND_IMAGE: {
 				  const struct nk_command_image *i = (const struct nk_command_image*)cmd;

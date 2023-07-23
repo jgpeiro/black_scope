@@ -150,84 +150,7 @@ void line(const tFramebuf *fb, int x1, int y1, int x2, int y2, uint32_t col) {
 void framebuf_line(const tFramebuf *fb, int x1, int y1, int x2, int y2, uint32_t col) {
     line( fb, x1, y1, x2, y2, col );
 }
-/*
-// Q2 Q1
-// Q3 Q4
-#define ELLIPSE_MASK_FILL (0x10)
-#define ELLIPSE_MASK_ALL (0x0f)
-#define ELLIPSE_MASK_Q1 (0x01)
-#define ELLIPSE_MASK_Q2 (0x02)
-#define ELLIPSE_MASK_Q3 (0x04)
-#define ELLIPSE_MASK_Q4 (0x08)
 
-void draw_ellipse_points(const tFramebuf *fb, int cx, int cy, int x, int y, int col, int mask) {
-    if (mask & ELLIPSE_MASK_FILL) {
-        if (mask & ELLIPSE_MASK_Q1) {
-            fill_rect(fb, cx, cy - y, x + 1, 1, col);
-        }
-        if (mask & ELLIPSE_MASK_Q2) {
-            fill_rect(fb, cx - x, cy - y, x + 1, 1, col);
-        }
-        if (mask & ELLIPSE_MASK_Q3) {
-            fill_rect(fb, cx - x, cy + y, x + 1, 1, col);
-        }
-        if (mask & ELLIPSE_MASK_Q4) {
-            fill_rect(fb, cx, cy + y, x + 1, 1, col);
-        }
-    } else {
-        setpixel_checked(fb, cx + x, cy - y, col, mask & ELLIPSE_MASK_Q1);
-        setpixel_checked(fb, cx - x, cy - y, col, mask & ELLIPSE_MASK_Q2);
-        setpixel_checked(fb, cx - x, cy + y, col, mask & ELLIPSE_MASK_Q3);
-        setpixel_checked(fb, cx + x, cy + y, col, mask & ELLIPSE_MASK_Q4);
-    }
-}
-
-void framebuf_ellipse(const tFramebuf *fb, int cx, int cy, int xr, int yr, int col, int mask) {
-	int two_asquare = 2 * xr * xr;
-	int two_bsquare = 2 * yr * yr;
-	int x = xr;
-	int y = 0;
-	int xchange = yr * yr * (1 - 2 * xr);
-	int ychange = xr * xr;
-	int ellipse_error = 0;
-	int stoppingx = two_bsquare * xr;
-	int stoppingy = 0;
-    while (stoppingx >= stoppingy) {   // 1st set of points,  y' > -1
-        draw_ellipse_points(fb, cx, cy, x, y, col, mask);
-        y += 1;
-        stoppingy += two_asquare;
-        ellipse_error += ychange;
-        ychange += two_asquare;
-        if ((2 * ellipse_error + xchange) > 0) {
-            x -= 1;
-            stoppingx -= two_bsquare;
-            ellipse_error += xchange;
-            xchange += two_bsquare;
-        }
-    }
-    // 1st point set is done start the 2nd set of points
-    x = 0;
-    y =yr;
-    xchange = yr * yr;
-    ychange = xr * xr * (1 - 2 * yr);
-    ellipse_error = 0;
-    stoppingx = 0;
-    stoppingy = two_asquare * yr;
-    while (stoppingx <= stoppingy) {  // 2nd set of points, y' < -1
-        draw_ellipse_points(fb, cx, cy, x, y, col, mask);
-        x += 1;
-        stoppingx += two_bsquare;
-        ellipse_error += xchange;
-        xchange += two_bsquare;
-        if ((2 * ellipse_error + ychange) > 0) {
-            y -= 1;
-            stoppingy -= two_asquare;
-            ellipse_error += ychange;
-            ychange += two_asquare;
-        }
-    }
-}
-*/
 
 void framebuf_circle(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col) {
     int x = 0;
@@ -361,28 +284,55 @@ void framebuf_fill_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radi
     }
 }
 
-extern const uint8_t font_petme128_8x8[];
-
-void framebuf_text( const tFramebuf *fb, int x0, int y0, char *str, uint32_t col ) {
-    // loop over chars
-    for (; *str; ++str) {
-        // get char and make sure its in range of font
+void framebuf_text( const tFramebuf *fb, const tFont *pFont, int x0, int y0, char *str, uint16_t color )
+{
+	for(; *str; ++str)
+	{
         int chr = *(uint8_t *)str;
         if (chr < 32 || chr > 127) {
             chr = 127;
         }
-        // get char data
-        const uint8_t *chr_data = &font_petme128_8x8[(chr - 32) * 8];
-        // loop over char data
-        for (int j = 0; j < 8; j++, x0++) {
-            if (0 <= x0 && x0 < fb->width) { // clip x
-                unsigned int vline_data = chr_data[j]; // each byte is a column of 8 pixels, LSB at top
-                for (int y = y0; vline_data; vline_data >>= 1, y++) { // scan over vertical column
-                    if (vline_data & 1) { // only draw if pixel set
-                        if (0 <= y && y < fb->height) { // clip y
-                            setpixel(fb, x0, y, col);
-                        }
-                    }
+        framebuf_char( fb, pFont, x0, y0, chr, color );
+        x0 += get_char_rect( pFont, chr ).width;
+	}
+}
+
+void framebuf_char( const tFramebuf *fb, const tFont *pFont, int16_t x0, int16_t y0, uint8_t c, uint16_t color )
+{
+    int16_t x, y, w, bitmap, b;
+    int16_t px, py;
+    const tGlyph *pGlyph;
+
+    pGlyph = pFont->pGlyphs[c-32];
+
+    y0 += pFont->bbxh;
+    y0 -= pFont->descent;
+    y0 -= pGlyph->bbxh;
+    y0 -= pGlyph->bbxy;
+
+    for( y = 0 ; y < pGlyph->bbxh ; y++ )
+    {
+        py = y0+y;
+
+        w = (pGlyph->bbxw-1)/8+1;
+
+        int16_t yw = y*w;
+        for( x = 0 ; x < pGlyph->bbxw ; x+=8 )
+        {
+            bitmap = pGlyph->pBitmap[yw+x/8];
+
+            for( b = 0 ; b < 8 ; b++ )
+            {
+                if( x+b >= pGlyph->bbxw )
+                {
+                    break;
+                }
+
+                px = x0+x+b;
+
+                if( bitmap & (0x80>>b) )
+                {
+                	setpixel_checked(fb, px, py, color, 1);
                 }
             }
         }

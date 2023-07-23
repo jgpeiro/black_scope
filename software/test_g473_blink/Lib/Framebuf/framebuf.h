@@ -9,7 +9,7 @@
 #define FRAMEBUF_H_
 
 #include <stdint.h>
-
+#include "font.h"
 
 #define ELLIPSE_MASK_FILL (0x10)
 #define ELLIPSE_MASK_ALL (0x0f)
@@ -45,7 +45,7 @@ void framebuf_line(const tFramebuf *fb, int x1, int y1, int x2, int y2, uint32_t
 //void framebuf_ellipse(const tFramebuf *fb, int cx, int cy, int xr, int yr, int col, int mask);
 void framebuf_circle(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col );
 void framebuf_fill_circle(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col );
-void framebuf_text( const tFramebuf *fb, int x0, int y0, char *str, uint32_t col );
+//void framebuf_text( const tFramebuf *fb, int x0, int y0, char *str, uint32_t col );
 
 #define QUADRANT_0   0x01
 #define QUADRANT_90  0x02
@@ -53,6 +53,9 @@ void framebuf_text( const tFramebuf *fb, int x0, int y0, char *str, uint32_t col
 #define QUADRANT_270 0x08
 void framebuf_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col, uint8_t quadrant);
 void framebuf_fill_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col, uint8_t quadrant );
+
+void framebuf_text( const tFramebuf *fb, const tFont *pFont, int x0, int y0, char *str, uint16_t color );
+void framebuf_char( const tFramebuf *fb, const tFont *pFont, int16_t x0, int16_t y0, uint8_t c, uint16_t color );
 
 
 #endif /* FRAMEBUF_H_ */
