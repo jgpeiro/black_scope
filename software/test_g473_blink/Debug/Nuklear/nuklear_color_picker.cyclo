@@ -1,5 +1,5 @@
-../Nuklear/nuklear_color_picker.c:10:1:nk_color_picker_behavior	24
-../Nuklear/nuklear_color_picker.c:62:1:nk_draw_color_picker	6
-../Nuklear/nuklear_color_picker.c:121:1:nk_do_color_picker	7
-../Nuklear/nuklear_color_picker.c:167:1:nk_color_pick	8
+../Nuklear/nuklear_color_picker.c:10:1:nk_color_picker_behavior	19
+../Nuklear/nuklear_color_picker.c:62:1:nk_draw_color_picker	5
+../Nuklear/nuklear_color_picker.c:121:1:nk_do_color_picker	2
+../Nuklear/nuklear_color_picker.c:167:1:nk_color_pick	3
 ../Nuklear/nuklear_color_picker.c:195:1:nk_color_picker	1

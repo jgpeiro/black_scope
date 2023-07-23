@@ -6,6 +6,6 @@
 ../Nuklear/nuklear_image.c:64:1:nk_image_handle	1
 ../Nuklear/nuklear_image.c:77:1:nk_image_ptr	1
 ../Nuklear/nuklear_image.c:91:1:nk_image_id	1
-../Nuklear/nuklear_image.c:104:1:nk_image_is_subimage	3
-../Nuklear/nuklear_image.c:110:1:nk_image	5
-../Nuklear/nuklear_image.c:125:1:nk_image_color	5
+../Nuklear/nuklear_image.c:104:1:nk_image_is_subimage	1
+../Nuklear/nuklear_image.c:110:1:nk_image	2
+../Nuklear/nuklear_image.c:125:1:nk_image_color	2

@@ -1,6 +1,6 @@
-../Nuklear/nuklear_table.c:10:1:nk_create_table	24	static
-../Nuklear/nuklear_table.c:19:1:nk_free_table	24	static
-../Nuklear/nuklear_table.c:26:1:nk_push_table	16	static
-../Nuklear/nuklear_table.c:44:1:nk_remove_table	16	static
-../Nuklear/nuklear_table.c:56:1:nk_add_value	32	static
-../Nuklear/nuklear_table.c:74:1:nk_find_value	32	static
+../Nuklear/nuklear_table.c:10:1:nk_create_table	8	static
+../Nuklear/nuklear_table.c:19:1:nk_free_table	8	static
+../Nuklear/nuklear_table.c:26:1:nk_push_table	0	static
+../Nuklear/nuklear_table.c:44:1:nk_remove_table	0	static
+../Nuklear/nuklear_table.c:56:1:nk_add_value	16	static
+../Nuklear/nuklear_table.c:74:1:nk_find_value	8	static

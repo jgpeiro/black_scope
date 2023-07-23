@@ -1,5 +1,5 @@
 ../Nuklear/nuklear_progress.c:10:1:nk_progress_behavior	72	static
-../Nuklear/nuklear_progress.c:40:1:nk_draw_progress	32	static
-../Nuklear/nuklear_progress.c:91:1:nk_do_progress	88	static
-../Nuklear/nuklear_progress.c:122:1:nk_progress	88	static
-../Nuklear/nuklear_progress.c:153:1:nk_prog	24	static
+../Nuklear/nuklear_progress.c:40:1:nk_draw_progress	24	static
+../Nuklear/nuklear_progress.c:91:1:nk_do_progress	96	static
+../Nuklear/nuklear_progress.c:122:1:nk_progress	64	static
+../Nuklear/nuklear_progress.c:153:1:nk_prog	16	static

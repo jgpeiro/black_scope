@@ -1,4 +1,4 @@
 ../Nuklear/nuklear_scrollbar.c:10:1:nk_scrollbar_behavior	46
-../Nuklear/nuklear_scrollbar.c:86:1:nk_draw_scrollbar	11
-../Nuklear/nuklear_scrollbar.c:134:1:nk_do_scrollbarv	20
-../Nuklear/nuklear_scrollbar.c:223:1:nk_do_scrollbarh	16
+../Nuklear/nuklear_scrollbar.c:86:1:nk_draw_scrollbar	9
+../Nuklear/nuklear_scrollbar.c:134:1:nk_do_scrollbarv	15
+../Nuklear/nuklear_scrollbar.c:223:1:nk_do_scrollbarh	10

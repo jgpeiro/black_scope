@@ -1,7 +1,6 @@
-../Nuklear/nuklear_utf8.c:15:1:nk_utf_validate	7
-../Nuklear/nuklear_utf8.c:26:1:nk_utf_decode_byte	4
-../Nuklear/nuklear_utf8.c:37:1:nk_utf_decode	10
-../Nuklear/nuklear_utf8.c:65:1:nk_utf_encode_byte	1
-../Nuklear/nuklear_utf8.c:70:1:nk_utf_encode	5
-../Nuklear/nuklear_utf8.c:85:1:nk_utf_len	5
-../Nuklear/nuklear_utf8.c:108:1:nk_utf_at	8
+../Nuklear/nuklear_utf8.c:26:1:nk_utf_decode_byte	3
+../Nuklear/nuklear_utf8.c:15:1:nk_utf_validate	6
+../Nuklear/nuklear_utf8.c:37:1:nk_utf_decode	9
+../Nuklear/nuklear_utf8.c:70:1:nk_utf_encode	6
+../Nuklear/nuklear_utf8.c:85:1:nk_utf_len	6
+../Nuklear/nuklear_utf8.c:108:1:nk_utf_at	7

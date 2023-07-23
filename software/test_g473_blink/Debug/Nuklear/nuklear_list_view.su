@@ -1,2 +1,2 @@
-../Nuklear/nuklear_list_view.c:10:1:nk_list_view_begin	72	static
-../Nuklear/nuklear_list_view.c:64:1:nk_list_view_end	32	static
+../Nuklear/nuklear_list_view.c:10:1:nk_list_view_begin	56	static
+../Nuklear/nuklear_list_view.c:64:1:nk_list_view_end	8	static

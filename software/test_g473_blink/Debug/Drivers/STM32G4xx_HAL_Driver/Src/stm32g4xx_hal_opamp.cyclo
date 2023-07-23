@@ -1,7 +1,7 @@
-../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c:294:19:HAL_OPAMP_Init	11
-../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c:460:19:HAL_OPAMP_DeInit	4
 ../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c:524:13:HAL_OPAMP_MspInit	1
+../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c:294:19:HAL_OPAMP_Init	8
 ../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c:541:13:HAL_OPAMP_MspDeInit	1
+../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c:460:19:HAL_OPAMP_DeInit	4
 ../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c:578:19:HAL_OPAMP_Start	4
 ../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c:621:19:HAL_OPAMP_Stop	5
 ../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c:672:19:HAL_OPAMP_SelfCalibrate	10

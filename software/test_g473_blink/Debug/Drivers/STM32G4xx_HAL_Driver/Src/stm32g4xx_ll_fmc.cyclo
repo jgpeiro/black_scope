@@ -1,5 +1,5 @@
-../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_fmc.c:177:20:FMC_NORSRAM_Init	10
-../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_fmc.c:308:19:FMC_NORSRAM_DeInit	6
+../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_fmc.c:177:20:FMC_NORSRAM_Init	8
+../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_fmc.c:308:19:FMC_NORSRAM_DeInit	5
 ../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_fmc.c:365:19:FMC_NORSRAM_Timing_Init	2
 ../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_fmc.c:415:19:FMC_NORSRAM_Extended_Timing_Init	2
 ../Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_fmc.c:475:19:FMC_NORSRAM_WriteOperation_Enable	1

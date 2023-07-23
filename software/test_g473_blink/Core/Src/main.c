@@ -124,8 +124,8 @@ float text_width_f( nk_handle handle, float h, const char* t, int len )
 
 #define LCD_CMD_ADDR	(0x60000000)
 #define LCD_DATA_ADDR	(0x60000002) // 0x60000001 ??
-uint16_t *addr_cmd = (uint16_t*) LCD_CMD_ADDR;
-uint16_t *addr_data = (uint16_t*) LCD_DATA_ADDR;
+volatile uint16_t *addr_cmd = (uint16_t*) LCD_CMD_ADDR;
+volatile uint16_t *addr_data = (uint16_t*) LCD_DATA_ADDR;
 
 void lcd_config( void );
 void lcd_rect( int16_t x, int16_t y, int16_t w, int16_t h, uint32_t color );
@@ -616,15 +616,16 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
         if( nk_tree_push( ctx, NK_TREE_TAB, "Acquire", NK_MAXIMIZED) ){
             osc->draw_bg = nk_false;
             nk_layout_row(ctx, NK_STATIC, 30, 4, (float[]){60, 60, 60, 60});
-            if (osc->acquire_run) {
-                if (nk_button_label(ctx, "Stop")) {
-                    osc->acquire_run = nk_false;
-                }
-            } else {
-                if (nk_button_label(ctx, "Run")) {
-                    osc->acquire_run = nk_true;
-                }
-            }
+            //if (osc->acquire_run) {
+            //    if (nk_button_label(ctx, "Stop")) {
+            //        osc->acquire_run = nk_false;
+            //    }
+            //} else {
+            //    if (nk_button_label(ctx, "Run")) {
+            //        osc->acquire_run = nk_true;
+            //    }
+            //}
+            osc->acquire_run = nk_check_label( ctx, osc->acquire_run?"Stop":"Run", osc->acquire_run );
 
             if (nk_button_label(ctx, "Single")) {
                 osc->acquire_single = nk_true;
@@ -911,9 +912,15 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
                 nk_label(ctx, buffer, NK_TEXT_LEFT); // Replace with actual fps
 
                 float ratio = 0.0f; // Calculate memory ratio here
-                nk_label(ctx, "Memory", NK_TEXT_LEFT);
+                nk_label(ctx, "Memory1", NK_TEXT_LEFT);
 
-                sprintf(buffer, "%d", ctx->memory.allocated );
+                sprintf(buffer, "%d%%", (100*ctx->memory.allocated)/ctx->memory.size );
+                nk_label(ctx, buffer, NK_TEXT_LEFT); // Replace with actual memory ratio
+
+                //float ratio = 0.0f; // Calculate memory ratio here
+                nk_label(ctx, "Memory2", NK_TEXT_LEFT);
+
+                sprintf(buffer, "%d%%", (100*ctx->pool.cap)/ctx->pool.size);
                 nk_label(ctx, buffer, NK_TEXT_LEFT); // Replace with actual memory ratio
 
                 nk_tree_pop(ctx);

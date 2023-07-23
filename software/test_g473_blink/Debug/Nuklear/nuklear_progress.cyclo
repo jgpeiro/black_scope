@@ -1,5 +1,5 @@
-../Nuklear/nuklear_progress.c:10:1:nk_progress_behavior	21
-../Nuklear/nuklear_progress.c:40:1:nk_draw_progress	11
-../Nuklear/nuklear_progress.c:91:1:nk_do_progress	7
-../Nuklear/nuklear_progress.c:122:1:nk_progress	8
+../Nuklear/nuklear_progress.c:10:1:nk_progress_behavior	15
+../Nuklear/nuklear_progress.c:40:1:nk_draw_progress	9
+../Nuklear/nuklear_progress.c:91:1:nk_do_progress	3
+../Nuklear/nuklear_progress.c:122:1:nk_progress	3
 ../Nuklear/nuklear_progress.c:153:1:nk_prog	1

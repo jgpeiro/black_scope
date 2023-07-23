@@ -1,10 +1,10 @@
 ../Nuklear/nuklear_panel.c:10:1:nk_create_panel	2
 ../Nuklear/nuklear_panel.c:19:1:nk_free_panel	1
-../Nuklear/nuklear_panel.c:26:1:nk_panel_has_header	6
-../Nuklear/nuklear_panel.c:35:1:nk_panel_get_padding	10
-../Nuklear/nuklear_panel.c:48:1:nk_panel_get_border	11
-../Nuklear/nuklear_panel.c:64:1:nk_panel_get_border_color	10
+../Nuklear/nuklear_panel.c:26:1:nk_panel_has_header	3
+../Nuklear/nuklear_panel.c:35:1:nk_panel_get_padding	9
+../Nuklear/nuklear_panel.c:48:1:nk_panel_get_border	10
+../Nuklear/nuklear_panel.c:64:1:nk_panel_get_border_color	9
 ../Nuklear/nuklear_panel.c:77:1:nk_panel_is_sub	1
 ../Nuklear/nuklear_panel.c:82:1:nk_panel_is_nonblock	1
-../Nuklear/nuklear_panel.c:87:1:nk_panel_begin	47
-../Nuklear/nuklear_panel.c:327:1:nk_panel_end	78
+../Nuklear/nuklear_panel.c:87:1:nk_panel_begin	34
+../Nuklear/nuklear_panel.c:327:1:nk_panel_end	69

@@ -1,4 +1,4 @@
-../Nuklear/nuklear_scrollbar.c:10:1:nk_scrollbar_behavior	80	static
-../Nuklear/nuklear_scrollbar.c:86:1:nk_draw_scrollbar	32	static
-../Nuklear/nuklear_scrollbar.c:134:1:nk_do_scrollbarv	160	static
-../Nuklear/nuklear_scrollbar.c:223:1:nk_do_scrollbarh	160	static
+../Nuklear/nuklear_scrollbar.c:10:1:nk_scrollbar_behavior	72	static
+../Nuklear/nuklear_scrollbar.c:86:1:nk_draw_scrollbar	24	static
+../Nuklear/nuklear_scrollbar.c:134:1:nk_do_scrollbarv	152	static
+../Nuklear/nuklear_scrollbar.c:223:1:nk_do_scrollbarh	152	static

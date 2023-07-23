@@ -123,7 +123,15 @@ void scope_stop( tScope *scope )
 
 uint8_t scope_is_busy( tScope *scope )
 {
-	return scope->state != SCOPE_STATE_DONE;
+	if( scope->state != SCOPE_STATE_DONE )
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+	//return scope->state != SCOPE_STATE_DONE;
 }
 
 int32_t scope_get_trigger( tScope *scope )
@@ -367,7 +375,7 @@ void test_scope( int collapsed )
 		for( int jj = 0; jj < 480; jj++ )
 		//for( int jj = 0; jj < BUFFER_LEN; jj++ )
 		{
-			int j = (jj*BUFFER_LEN)/480.0;
+			int j = (jj*BUFFER_LEN)/480;
 			//int j = jj;
 			int n = trigger + j;
 			if( n < 0 )
@@ -453,3 +461,5 @@ void test_scope( int collapsed )
 		//HAL_Delay( 10 );
 	}
 }
+
+

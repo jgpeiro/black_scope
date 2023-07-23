@@ -25,7 +25,7 @@ typedef enum eScopeState tScopeState;
 
 struct sScope
 {
-	tScopeState state;
+	volatile tScopeState state;
 	uint16_t sample_rate;
 	uint16_t *buffer1;
 	uint16_t *buffer2;
@@ -45,7 +45,7 @@ struct sScope
 	TIM_HandleTypeDef *htim1;
 	TIM_HandleTypeDef *htim2;
 
-	int32_t CNDTRs[SCOPE_STATE_MAX];
+	volatile int32_t CNDTRs[SCOPE_STATE_MAX];
 };
 typedef struct sScope tScope;
 
