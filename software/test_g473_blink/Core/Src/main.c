@@ -107,8 +107,7 @@ int32_t diff_systick( int32_t b, int32_t a )
 
 float text_width_f( nk_handle handle, float h, const char* t, int len )
 {
-
-	return get_text_rect( &fontUbuntuBookRNormal16, t ).width;
+	return font_text_width( &fontUbuntuBookRNormal16, t );
 }
 
 uint32_t nk_colot_to_rgb666( struct nk_color color )
@@ -629,8 +628,6 @@ void nk_draw_fb( struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd )
 		lcd_bmp( pLcd, 0, y0, pfb->width, pfb->height, pfb->buf );
 	  }
 }
-
-
 
 /* USER CODE END 0 */
 

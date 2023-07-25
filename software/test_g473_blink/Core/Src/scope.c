@@ -450,16 +450,38 @@ void test_scope( tLcd *pLcd, int collapsed )
 				lcd_set_pixel( pLcd, x0, y1, 0xFFFFFFFF );
 
 			}
-
-
-
 		}
 
-		//lcd_rect( 240, 0, 1, 320, 0xFFFFFF00 );
-		//printf( "], dtype=np.float32 )\n" );
+		static uint8_t fb_buf[160*16*2];
+#include "framebuf.h"
+		tFramebuf fb;
+
+		framebuf_init( &fb, 160, 16, fb_buf );
+		framebuf_fill( &fb, 0x00000000 );
+		char buffer[32];
+		sprintf( buffer, "%d %d %d %d", trigger, trigger, trigger, trigger );
+#include "font.h"
+#include "FontUbuntuBookRNormal16.h"
+		framebuf_text( &fb, &fontUbuntuBookRNormal16, 0, 0, buffer, 0xFFFF );
+		if( collapsed )
+		{
+			lcd_bmp( pLcd, 240+1, 320-fb.height, fb.width, fb.height, fb.buf );
+		}
+		else
+		{
+			lcd_bmp( pLcd, 0, 320-fb.height, fb.width, fb.height, fb.buf );
+		}
+/*
+#include "font.h"
+#include "FontUbuntuBookRNormal16.h"
+#include "lcd.h"
+extern tLcd lcd;
+		char buffer[32];
+		sprintf( buffer, "%d", trigger );
+		font_draw_text( &fontUbuntuBookRNormal16, 240, 160, buffer, 0xFFFF, lcd_set_pixel, pLcd );
+*/
 		i += 1;
 		trigger_bck = trigger;
-		//HAL_Delay( 10 );
 	}
 }
 

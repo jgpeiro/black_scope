@@ -18,8 +18,8 @@ void setpixel(const tFramebuf *fb, unsigned int x, unsigned int y, uint32_t col)
 	((uint16_t *)fb->buf)[x + y * fb->stride] = col;
 }
 
-void setpixel_checked(const tFramebuf *fb, int x, int y, int col, int mask) {
-    if (mask && 0 <= x && x < fb->width && 0 <= y && y < fb->height) {
+void setpixel_checked(const tFramebuf *fb, int x, int y, int col ) {
+    if ( 0 <= x && x < fb->width && 0 <= y && y < fb->height) {
         setpixel(fb, x, y, col);
     }
 }
@@ -286,55 +286,5 @@ void framebuf_fill_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radi
 
 void framebuf_text( const tFramebuf *fb, const tFont *pFont, int x0, int y0, char *str, uint16_t color )
 {
-	for(; *str; ++str)
-	{
-        int chr = *(uint8_t *)str;
-        if (chr < 32 || chr > 127) {
-            chr = 127;
-        }
-        framebuf_char( fb, pFont, x0, y0, chr, color );
-        x0 += get_char_rect( pFont, chr ).width;
-	}
-}
-
-void framebuf_char( const tFramebuf *fb, const tFont *pFont, int16_t x0, int16_t y0, uint8_t c, uint16_t color )
-{
-    int16_t x, y, w, bitmap, b;
-    int16_t px, py;
-    const tGlyph *pGlyph;
-
-    pGlyph = pFont->pGlyphs[c-32];
-
-    y0 += pFont->bbxh;
-    y0 -= pFont->descent;
-    y0 -= pGlyph->bbxh;
-    y0 -= pGlyph->bbxy;
-
-    for( y = 0 ; y < pGlyph->bbxh ; y++ )
-    {
-        py = y0+y;
-
-        w = (pGlyph->bbxw-1)/8+1;
-
-        int16_t yw = y*w;
-        for( x = 0 ; x < pGlyph->bbxw ; x+=8 )
-        {
-            bitmap = pGlyph->pBitmap[yw+x/8];
-
-            for( b = 0 ; b < 8 ; b++ )
-            {
-                if( x+b >= pGlyph->bbxw )
-                {
-                    break;
-                }
-
-                px = x0+x+b;
-
-                if( bitmap & (0x80>>b) )
-                {
-                	setpixel_checked(fb, px, py, color, 1);
-                }
-            }
-        }
-    }
+	font_draw_text( pFont, x0, y0, str, color, setpixel_checked, fb );
 }
