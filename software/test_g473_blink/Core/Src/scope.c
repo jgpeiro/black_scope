@@ -274,8 +274,12 @@ uint16_t buffer5[BUFFER_LEN];
 uint16_t buffer6[BUFFER_LEN];
 uint16_t buffer7[BUFFER_LEN];
 uint16_t buffer8[BUFFER_LEN];
+
+uint16_t buffer_tmp[BUFFER_LEN];
+
 tScope scope = {0};
 #include "lcd.h"
+#include "tools.h"
 void test_scope( tLcd *pLcd, int collapsed )
 {
 	// test scope
@@ -372,6 +376,20 @@ void test_scope( tLcd *pLcd, int collapsed )
 
 		int32_t trigger = scope_get_trigger( &scope ) - BUFFER_LEN/2;
 
+		for( int j = 0; j < BUFFER_LEN; j++ )
+		{
+			int n = trigger + j;
+			if( n < 0 )
+			{
+				n += BUFFER_LEN;
+			}
+			else if( n >= BUFFER_LEN )
+			{
+				n -= BUFFER_LEN;
+			}
+			buffer_tmp[j] = (i&0x01)?buffer5[n]:buffer1[n];
+		}
+
 		//printf( "data%d = np.array( [", i );
 		for( int jj = 0; jj < 480; jj++ )
 		//for( int jj = 0; jj < BUFFER_LEN; jj++ )
@@ -451,6 +469,13 @@ void test_scope( tLcd *pLcd, int collapsed )
 
 			}
 		}
+		//HAL_Delay(1);
+
+		int min = get_vmin( buffer_tmp, BUFFER_LEN );
+		int max = get_vmax( buffer_tmp, BUFFER_LEN );
+		int avg = get_vavg( buffer_tmp, BUFFER_LEN );
+		int period = get_period( buffer_tmp, BUFFER_LEN, max, min, avg );
+		int duty = get_duty( buffer_tmp, BUFFER_LEN, max, min, avg );
 
 		static uint8_t fb_buf[160*16*2];
 #include "framebuf.h"
@@ -459,18 +484,19 @@ void test_scope( tLcd *pLcd, int collapsed )
 		framebuf_init( &fb, 160, 16, fb_buf );
 		framebuf_fill( &fb, 0x00000000 );
 		char buffer[32];
-		sprintf( buffer, "%d %d %d %d", trigger, trigger, trigger, trigger );
+		sprintf( buffer, "%04d %04d %04d %04d", min, max, period, duty );
 #include "font.h"
 #include "FontUbuntuBookRNormal16.h"
 		framebuf_text( &fb, &fontUbuntuBookRNormal16, 0, 0, buffer, 0xFFFF );
 		if( collapsed )
 		{
-			lcd_bmp( pLcd, 240+1, 320-fb.height, fb.width, fb.height, fb.buf );
+			lcd_bmp( pLcd, 240+1, 320-fb.height-1, fb.width, fb.height, fb.buf );
 		}
 		else
 		{
-			lcd_bmp( pLcd, 0, 320-fb.height, fb.width, fb.height, fb.buf );
+			lcd_bmp( pLcd, 0+1, 320-fb.height-1, fb.width, fb.height, fb.buf );
 		}
+		//HAL_Delay(1);
 /*
 #include "font.h"
 #include "FontUbuntuBookRNormal16.h"

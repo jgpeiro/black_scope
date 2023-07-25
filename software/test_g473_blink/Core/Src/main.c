@@ -678,6 +678,8 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
+  // hsram1.Init.WriteFifo = FMC_WRITE_FIFO_ENABLE;
+
   //float ax = 250/989.0;
   //float bx = -15800/989.0;
   //float ay = 250/1407.0;
