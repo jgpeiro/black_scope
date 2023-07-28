@@ -52,7 +52,7 @@ osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 1024 * 16
+  .stack_size = 4096 * 4
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -105,6 +105,7 @@ void MX_FREERTOS_Init(void) {
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
+#include <stdio.h>
 #include <math.h>
 
 #include "dac.h"
@@ -116,6 +117,7 @@ void MX_FREERTOS_Init(void) {
 #include "Scope.h"
 #include "framebuf.h"
 #include "FontUbuntuBookRNormal16.h"
+#include "psram.h"
 
 #include "nuklear.h"
 
@@ -538,12 +540,21 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
 	nk_end(ctx);
 }
 
+void lcd_draw_cross( tLcd *pLcd, uint16_t x, uint16_t y, uint16_t color )
+{
+	lcd_rect( pLcd, x-4, y, 4, 2, color );
+	lcd_rect( pLcd, x+2, y, 4, 2, color );
+	lcd_rect( pLcd, x, y-4, 2, 4, color );
+	lcd_rect( pLcd, x, y+2, 2, 4, color );
+}
+
 float text_width_f( nk_handle handle, float h, const char* t, int len )
 {
 	return font_text_width( &fontUbuntuBookRNormal16, t );
 }
 
 extern void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd);
+extern void nk_set_theme(struct nk_context *ctx, int theme);
 /**
   * @brief  Function implementing the defaultTask thread.
   * @param  argument: Not used
@@ -578,13 +589,14 @@ void StartDefaultTask(void *argument)
 	uint16_t x_bck = 0, y_bck = 0;
 	int pressed = 1;
 	int pressed_bck = 0;
+	int nk_theme =1;
+
+	psram_test();
 
 	lcd_init( &lcd, LCD_nRST_GPIO_Port, LCD_nRST_Pin, LCD_BL_GPIO_Port, LCD_BL_Pin, 480, 320 );
 	tsc_init( &tsc, &hspi3, TSC_nSS_GPIO_Port, TSC_nSS_Pin, AX, BX, AY, BY, 8 );
 
 	framebuf_init( &fb, FB_WIDTH, FB_HEIGHT, fb_buf );
-	//framebuf_text( &fb, &fontUbuntuBookRNormal16, 0, 0, "Hello", 0xFFFF );
-	//lcd_bmp( &lcd, 0, 0, FB_WIDTH, FB_HEIGHT, fb_buf );
 
 	nk_buffer_init_fixed( &cmds, nk_buf_cmds, NK_BUFFER_CMDS_LEN );
 	nk_buffer_init_fixed( &pool, nk_buf_pool, NK_BUFFER_POOL_LEN);
@@ -592,6 +604,7 @@ void StartDefaultTask(void *argument)
 	font.height = fontUbuntuBookRNormal16.bbxh;
 	font.width = text_width_f;
 	nk_init_custom( &ctx, &cmds, &pool, &font );
+	nk_set_theme( &ctx, THEME_DARK );
 
 	for( i = 0 ; i < BUFFER_LEN ; i++ )
 	{
@@ -615,14 +628,14 @@ void StartDefaultTask(void *argument)
 		dv = dv*0.5 + 0.5*(dx+dy)/2;
 		if( x_bck )
 		{
-			lcd_rect( &lcd, x_bck-2, y_bck-2, 4, 4, 0x0000 );
-			x_bck = 0;
+			//lcd_rect( &lcd, x_bck-2, y_bck-2, 4, 4, 0x0000 );
+			//x_bck = 0;
 		}
 		if( x )
 		{
 			//x_bck = x;
 		    //y_bck = y;
-			lcd_rect( &lcd, x-2, y-2, 4, 4, 0xFFFF );
+			//lcd_rect( &lcd, x-2, y-2, 4, 4, 0xFFFF );
 		}
 
 		pressed_bck = pressed;
@@ -647,11 +660,11 @@ void StartDefaultTask(void *argument)
 		    oscilloscope_process(&osc, &ctx);
 			nk_draw_fb( &ctx, &fb, &lcd );
 			nk_clear(&ctx);
-
 	    }
 
 		if( pressed )
 		{
+			lcd_draw_cross( &lcd, x, y, 0xFFFF );
 			continue;
 		}
 		scope_init( &scope, 2048, 1000000,

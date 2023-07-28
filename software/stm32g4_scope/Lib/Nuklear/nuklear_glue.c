@@ -61,8 +61,6 @@ void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd) {
 			case NK_COMMAND_RECT: {
 				const struct nk_command_rect *r =
 						(const struct nk_command_rect*) cmd;
-//printf( "NK_COMMAND_RECT x: %d, y: %d, width: %d, height: %d, rounding: %d, thickness: %d\n", r->x, r->y, r->w, r->h, r->rounding, r->line_thickness );
-//framebuf_rect( pfb, r->x, r->y-y0, r->w, r->h, nk_colot_to_rgb666( r->color ) );
 				int rad = 4; //r->rounding;
 				framebuf_circle_quadrant(pfb, r->x + r->w - rad,
 						r->y - y0 + r->h - rad, rad,
@@ -91,33 +89,25 @@ void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd) {
 						(const struct nk_command_rect_filled*) cmd;
 //framebuf_fill_rect( pfb, r->x, r->y-y0, r->w, r->h, nk_colot_to_rgb666( r->color ) );
 				int rad = 4; //r->rounding;
-				struct nk_color r_color = r->color;
-				if (r_color.r == 50) {
-					r_color.r = 40;
-					r_color.g = 40;
-					r_color.b = 40;
-					r_color.a = 255;
-				}
 				framebuf_fill_circle_quadrant(pfb, r->x + r->w - rad,
 						r->y - y0 + r->h - rad, rad,
-						nk_color_to_rgb565(r_color), QUADRANT_90);
+						nk_color_to_rgb565(r->color), QUADRANT_90);
 				framebuf_fill_circle_quadrant(pfb, r->x + rad,
 						r->y - y0 + r->h - rad, rad,
-						nk_color_to_rgb565(r_color), QUADRANT_90);
+						nk_color_to_rgb565(r->color), QUADRANT_90);
 				framebuf_fill_circle_quadrant(pfb, r->x + rad, r->y - y0 + rad,
-						rad, nk_color_to_rgb565(r_color), QUADRANT_90);
+						rad, nk_color_to_rgb565(r->color), QUADRANT_90);
 				framebuf_fill_circle_quadrant(pfb, r->x + r->w - rad,
-						r->y - y0 + rad, rad, nk_color_to_rgb565(r_color),
+						r->y - y0 + rad, rad, nk_color_to_rgb565(r->color),
 						QUADRANT_90);
 // up and down
-//framebuf_fill_rect( pfb, r->x+rad, r->y-y0, r->w-rad-rad, r->h, nk_colot_to_rgb666( r_color ) );
 				framebuf_fill_rect(pfb, r->x + rad, r->y - y0, r->w - rad - rad,
-						rad, nk_color_to_rgb565(r_color));
+						rad, nk_color_to_rgb565(r->color));
 				framebuf_fill_rect(pfb, r->x + rad, r->y - y0 + r->h - rad,
-						r->w - rad - rad, rad, nk_color_to_rgb565(r_color));
+						r->w - rad - rad, rad, nk_color_to_rgb565(r->color));
 // middle
 				framebuf_fill_rect(pfb, r->x, r->y - y0 + rad, r->w,
-						r->h - rad - rad, nk_color_to_rgb565(r_color));
+						r->h - rad - rad, nk_color_to_rgb565(r->color));
 			}
 				break;
 			case NK_COMMAND_CIRCLE: {
@@ -140,33 +130,25 @@ void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd) {
 				const struct nk_command_text *t =
 						(const struct nk_command_text*) cmd;
 				framebuf_text(pfb, &fontUbuntuBookRNormal16, t->x, t->y - y0,
-						(char*) t->string, 0xFFFF);
+						(char*) t->string, nk_color_to_rgb565(t->foreground));
 			}
 				break;
 			case NK_COMMAND_IMAGE: {
 				const struct nk_command_image *i =
 						(const struct nk_command_image*) cmd;
 				framebuf_fill_rect(pfb, i->x, i->y - y0, i->w, i->h,
-						0x0003FFFF);
+						nk_color_to_rgb565(i->col));
 			}
 				break;
 			case NK_COMMAND_TRIANGLE_FILLED: {
 				const struct nk_command_triangle_filled *t =
 						(const struct nk_command_triangle_filled*) cmd;
-				struct nk_color t_color = t->color;
-				if (1) {
-					t_color.r = 175;
-					t_color.g = 175;
-					t_color.b = 175;
-					t_color.a = 255;
-				}
-
 				framebuf_line(pfb, t->a.x, t->a.y - y0, t->b.x, t->b.y - y0,
-						0xFFFF);
+						nk_color_to_rgb565(t->color));
 				framebuf_line(pfb, t->b.x, t->b.y - y0, t->c.x, t->c.y - y0,
-						0xFFFF);
+						nk_color_to_rgb565(t->color));
 				framebuf_line(pfb, t->c.x, t->c.y - y0, t->a.x, t->a.y - y0,
-						0xFFFF);
+						nk_color_to_rgb565(t->color));
 			}
 				break;
 			default:

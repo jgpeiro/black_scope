@@ -23,6 +23,7 @@
 #include "dac.h"
 #include "dma.h"
 #include "opamp.h"
+#include "quadspi.h"
 #include "spi.h"
 #include "tim.h"
 #include "gpio.h"
@@ -110,6 +111,7 @@ int main(void)
   MX_ADC4_Init();
   MX_ADC5_Init();
   MX_SPI3_Init();
+  MX_QUADSPI1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
