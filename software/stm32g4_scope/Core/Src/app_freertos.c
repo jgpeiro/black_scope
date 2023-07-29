@@ -184,8 +184,8 @@ struct Oscilloscope {
     struct {
         nk_bool enabled;
         int coupling;
-        float offset;
-        float scale;
+        int offset;
+        int scale;
         struct nk_color color;
     } channels[CHANNEL_COUNT];
 
@@ -214,7 +214,7 @@ struct Oscilloscope {
 
 int visible = 0;
 struct nk_rect keypad_size = {35, 35, 142, 208};
-void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
+void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx, tScope *pScope)
 {
 	visible = 0;
 	if( nk_begin(ctx, "STM32G4 Scope", nk_rect(0, 0, 240, 320), NK_WINDOW_MINIMIZABLE ) )
@@ -337,30 +337,205 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx)
         		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
         		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
         		{
-        			osc->channels[osc->channel_selected].offset -= 1;
+        			if( 0 <= osc->channels[0].offset - 1 )
+        			{
+        				osc->channels[0].offset -= 1;
+        			}
+        			HAL_DAC_SetValue(&hdac2, DAC_CHANNEL_1, DAC_ALIGN_12B_R, osc->channels[0].offset );
         		}
         		char combo_buffer[32];
-        		sprintf(combo_buffer, "%.2f", osc->channels[osc->channel_selected].offset);
+        		sprintf(combo_buffer, "%d", osc->channels[0].offset);
         		nk_label( ctx, combo_buffer, NK_TEXT_CENTERED );
         		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
         		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
         		{
-        			osc->channels[osc->channel_selected].offset += 1;
+        			if( osc->channels[0].offset + 1 < 4096 )
+					{
+						osc->channels[0].offset += 1;
+					}
+        			HAL_DAC_SetValue(&hdac2, DAC_CHANNEL_1, DAC_ALIGN_12B_R, osc->channels[0].offset );
         		}
 
         		nk_label( ctx, "Scale", NK_TEXT_LEFT );
-				nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+				nk_button_set_behavior(ctx, 0 );
 				if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
 				{
-					osc->channels[osc->channel_selected].scale -= 1;
+					if( 0 <= osc->channels[osc->channel_selected].scale - 1 )
+					{
+						osc->channels[osc->channel_selected].scale -= 1;
+					}
+					if( osc->channel_selected == 0 )
+					{
+						//pScope->hopamp1->Instance->CSR &= ~OPAMP_CSR_PGGAIN_Msk;
+						//pScope->hopamp1->Instance->CSR |= osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;
+						extern OPAMP_HandleTypeDef hopamp1;
+						HAL_OPAMP_Stop(&hopamp1);
+						HAL_OPAMP_DeInit(&hopamp1);
+						hopamp1.Instance = OPAMP1;
+						hopamp1.Init.PowerMode = OPAMP_POWERMODE_NORMALSPEED;
+						hopamp1.Init.Mode = OPAMP_PGA_MODE;
+						hopamp1.Init.NonInvertingInput = OPAMP_NONINVERTINGINPUT_IO2;
+						hopamp1.Init.InternalOutput = ENABLE;
+						hopamp1.Init.TimerControlledMuxmode = OPAMP_TIMERCONTROLLEDMUXMODE_DISABLE;
+						hopamp1.Init.PgaConnect = OPAMP_PGA_CONNECT_INVERTINGINPUT_IO0_BIAS;
+						hopamp1.Init.PgaGain = osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;//OPAMP_PGA_GAIN_2_OR_MINUS_1;
+						hopamp1.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
+						HAL_OPAMP_Init(&hopamp1);
+						HAL_OPAMP_SelfCalibrate(&hopamp1);
+						HAL_OPAMP_Start(&hopamp1);
+					}
+					else if( osc->channel_selected == 1 )
+					{
+						//pScope->hopamp2->Instance->CSR &= ~OPAMP_CSR_PGGAIN_Msk;
+						//pScope->hopamp2->Instance->CSR |= osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;
+						extern OPAMP_HandleTypeDef hopamp3;
+						HAL_OPAMP_Stop(&hopamp3);
+						HAL_OPAMP_DeInit(&hopamp3);
+						hopamp3.Instance = OPAMP3;
+						hopamp3.Init.PowerMode = OPAMP_POWERMODE_NORMALSPEED;
+						hopamp3.Init.Mode = OPAMP_PGA_MODE;
+						hopamp3.Init.NonInvertingInput = OPAMP_NONINVERTINGINPUT_IO2;
+						hopamp3.Init.InternalOutput = ENABLE;
+						hopamp3.Init.TimerControlledMuxmode = OPAMP_TIMERCONTROLLEDMUXMODE_DISABLE;
+						hopamp3.Init.PgaConnect = OPAMP_PGA_CONNECT_INVERTINGINPUT_IO0_BIAS;
+						hopamp3.Init.PgaGain = osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;//OPAMP_PGA_GAIN_2_OR_MINUS_1;
+						hopamp3.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
+						HAL_OPAMP_Init(&hopamp3);
+						HAL_OPAMP_SelfCalibrate(&hopamp3);
+						HAL_OPAMP_Start(&hopamp3);
+					}
+					else if( osc->channel_selected == 2 )
+					{
+						//pScope->hopamp3->Instance->CSR &= ~OPAMP_CSR_PGGAIN_Msk;
+						//pScope->hopamp3->Instance->CSR |= osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;
+						extern OPAMP_HandleTypeDef hopamp5;
+						HAL_OPAMP_Stop(&hopamp5);
+						HAL_OPAMP_DeInit(&hopamp5);
+						hopamp5.Instance = OPAMP5;
+						hopamp5.Init.PowerMode = OPAMP_POWERMODE_NORMALSPEED;
+						hopamp5.Init.Mode = OPAMP_PGA_MODE;
+						hopamp5.Init.NonInvertingInput = OPAMP_NONINVERTINGINPUT_IO2;
+						hopamp5.Init.InternalOutput = ENABLE;
+						hopamp5.Init.TimerControlledMuxmode = OPAMP_TIMERCONTROLLEDMUXMODE_DISABLE;
+						hopamp5.Init.PgaConnect = OPAMP_PGA_CONNECT_INVERTINGINPUT_IO0_BIAS;
+						hopamp5.Init.PgaGain = osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;//OPAMP_PGA_GAIN_2_OR_MINUS_1;
+						hopamp5.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
+						HAL_OPAMP_Init(&hopamp5);
+						HAL_OPAMP_SelfCalibrate(&hopamp5);
+						HAL_OPAMP_Start(&hopamp5);
+					}
+					else if( osc->channel_selected == 3 )
+					{
+						//pScope->hopamp4->Instance->CSR &= ~OPAMP_CSR_PGGAIN_Msk;
+						//pScope->hopamp4->Instance->CSR |= osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;
+						extern OPAMP_HandleTypeDef hopamp6;
+						HAL_OPAMP_Stop(&hopamp6);
+						HAL_OPAMP_DeInit(&hopamp6);
+						hopamp6.Instance = OPAMP6;
+						hopamp6.Init.PowerMode = OPAMP_POWERMODE_NORMALSPEED;
+						hopamp6.Init.Mode = OPAMP_PGA_MODE;
+						hopamp6.Init.NonInvertingInput = OPAMP_NONINVERTINGINPUT_IO2;
+						hopamp6.Init.InternalOutput = ENABLE;
+						hopamp6.Init.TimerControlledMuxmode = OPAMP_TIMERCONTROLLEDMUXMODE_DISABLE;
+						hopamp6.Init.PgaConnect = OPAMP_PGA_CONNECT_INVERTINGINPUT_IO0_BIAS;
+						hopamp6.Init.PgaGain = osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;//OPAMP_PGA_GAIN_2_OR_MINUS_1;
+						hopamp6.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
+						HAL_OPAMP_Init(&hopamp6);
+						HAL_OPAMP_SelfCalibrate(&hopamp6);
+						HAL_OPAMP_Start(&hopamp6);
+					}
+
 				}
 				//char combo_buffer[32];
-				sprintf(combo_buffer, "%.2f", osc->channels[osc->channel_selected].scale);
+				sprintf(combo_buffer, "%d", osc->channels[osc->channel_selected].scale);
 				nk_label( ctx, combo_buffer, NK_TEXT_CENTERED );
-				nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
+				nk_button_set_behavior(ctx, 0);
 				if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
 				{
-					osc->channels[osc->channel_selected].scale += 1;
+					if( osc->channels[osc->channel_selected].scale + 1 <= 8 )
+					{
+						osc->channels[osc->channel_selected].scale += 1;
+					}
+					if( osc->channel_selected == 0 )
+					{
+						//pScope->hopamp1->Instance->CSR &= ~OPAMP_CSR_PGGAIN_Msk;
+						//pScope->hopamp1->Instance->CSR |= osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;
+						extern OPAMP_HandleTypeDef hopamp1;
+						HAL_OPAMP_Stop(&hopamp1);
+						HAL_OPAMP_DeInit(&hopamp1);
+						hopamp1.Instance = OPAMP1;
+						hopamp1.Init.PowerMode = OPAMP_POWERMODE_NORMALSPEED;
+						hopamp1.Init.Mode = OPAMP_PGA_MODE;
+						hopamp1.Init.NonInvertingInput = OPAMP_NONINVERTINGINPUT_IO2;
+						hopamp1.Init.InternalOutput = ENABLE;
+						hopamp1.Init.TimerControlledMuxmode = OPAMP_TIMERCONTROLLEDMUXMODE_DISABLE;
+						hopamp1.Init.PgaConnect = OPAMP_PGA_CONNECT_INVERTINGINPUT_IO0_BIAS;
+						hopamp1.Init.PgaGain = osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;//OPAMP_PGA_GAIN_2_OR_MINUS_1;
+						hopamp1.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
+						HAL_OPAMP_Init(&hopamp1);
+						HAL_OPAMP_SelfCalibrate(&hopamp1);
+						HAL_OPAMP_Start(&hopamp1);
+					}
+					else if( osc->channel_selected == 1 )
+					{
+						//pScope->hopamp2->Instance->CSR &= ~OPAMP_CSR_PGGAIN_Msk;
+						//pScope->hopamp2->Instance->CSR |= osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;
+						extern OPAMP_HandleTypeDef hopamp3;
+						HAL_OPAMP_Stop(&hopamp3);
+						HAL_OPAMP_DeInit(&hopamp3);
+						hopamp3.Instance = OPAMP3;
+						hopamp3.Init.PowerMode = OPAMP_POWERMODE_NORMALSPEED;
+						hopamp3.Init.Mode = OPAMP_PGA_MODE;
+						hopamp3.Init.NonInvertingInput = OPAMP_NONINVERTINGINPUT_IO2;
+						hopamp3.Init.InternalOutput = ENABLE;
+						hopamp3.Init.TimerControlledMuxmode = OPAMP_TIMERCONTROLLEDMUXMODE_DISABLE;
+						hopamp3.Init.PgaConnect = OPAMP_PGA_CONNECT_INVERTINGINPUT_IO0_BIAS;
+						hopamp3.Init.PgaGain = osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;//OPAMP_PGA_GAIN_2_OR_MINUS_1;
+						hopamp3.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
+						HAL_OPAMP_Init(&hopamp3);
+						HAL_OPAMP_SelfCalibrate(&hopamp3);
+						HAL_OPAMP_Start(&hopamp3);
+					}
+					else if( osc->channel_selected == 2 )
+					{
+						//pScope->hopamp3->Instance->CSR &= ~OPAMP_CSR_PGGAIN_Msk;
+						//pScope->hopamp3->Instance->CSR |= osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;
+						extern OPAMP_HandleTypeDef hopamp5;
+						HAL_OPAMP_Stop(&hopamp5);
+						HAL_OPAMP_DeInit(&hopamp5);
+						hopamp5.Instance = OPAMP5;
+						hopamp5.Init.PowerMode = OPAMP_POWERMODE_NORMALSPEED;
+						hopamp5.Init.Mode = OPAMP_PGA_MODE;
+						hopamp5.Init.NonInvertingInput = OPAMP_NONINVERTINGINPUT_IO2;
+						hopamp5.Init.InternalOutput = ENABLE;
+						hopamp5.Init.TimerControlledMuxmode = OPAMP_TIMERCONTROLLEDMUXMODE_DISABLE;
+						hopamp5.Init.PgaConnect = OPAMP_PGA_CONNECT_INVERTINGINPUT_IO0_BIAS;
+						hopamp5.Init.PgaGain = osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;//OPAMP_PGA_GAIN_2_OR_MINUS_1;
+						hopamp5.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
+						HAL_OPAMP_Init(&hopamp5);
+						HAL_OPAMP_SelfCalibrate(&hopamp5);
+						HAL_OPAMP_Start(&hopamp5);
+					}
+					else if( osc->channel_selected == 3 )
+					{
+						//pScope->hopamp4->Instance->CSR &= ~OPAMP_CSR_PGGAIN_Msk;
+						//pScope->hopamp4->Instance->CSR |= osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;
+						extern OPAMP_HandleTypeDef hopamp6;
+						HAL_OPAMP_Stop(&hopamp6);
+						HAL_OPAMP_DeInit(&hopamp6);
+						hopamp6.Instance = OPAMP6;
+						hopamp6.Init.PowerMode = OPAMP_POWERMODE_NORMALSPEED;
+						hopamp6.Init.Mode = OPAMP_PGA_MODE;
+						hopamp6.Init.NonInvertingInput = OPAMP_NONINVERTINGINPUT_IO2;
+						hopamp6.Init.InternalOutput = ENABLE;
+						hopamp6.Init.TimerControlledMuxmode = OPAMP_TIMERCONTROLLEDMUXMODE_DISABLE;
+						hopamp6.Init.PgaConnect = OPAMP_PGA_CONNECT_INVERTINGINPUT_IO0_BIAS;
+						hopamp6.Init.PgaGain = osc->channels[osc->channel_selected].scale << OPAMP_CSR_PGGAIN_Pos;//OPAMP_PGA_GAIN_2_OR_MINUS_1;
+						hopamp6.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
+						HAL_OPAMP_Init(&hopamp6);
+						HAL_OPAMP_SelfCalibrate(&hopamp6);
+						HAL_OPAMP_Start(&hopamp6);
+					}
 				}
                 nk_tree_pop(ctx);
             }
@@ -555,6 +730,73 @@ float text_width_f( nk_handle handle, float h, const char* t, int len )
 
 extern void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd);
 extern void nk_set_theme(struct nk_context *ctx, int theme);
+
+void draw_buffers(
+		tLcd *pLcd,
+		int32_t trigger,
+		int32_t trigger_bck,
+		uint16_t *buffer1,
+		uint16_t *buffer2,
+		uint16_t *buffer3,
+		uint16_t *buffer4,
+		uint16_t *buffer5,
+		uint16_t *buffer6,
+		uint16_t *buffer7,
+		uint16_t *buffer8,
+		uint16_t len,
+		uint32_t collapsed,
+		uint8_t a_b )
+{
+	int j, j2, n, n2;
+	int x0, ya, yb, yc, yd;
+
+	uint16_t width = pLcd->width;
+	uint16_t height = pLcd->height;
+
+	for( j = 0; j < width; j++ )
+	{
+		j2 = (j*len)/width;
+		n = trigger + j2;
+		if( n < 0 )
+		{
+			n += len;
+		}
+		else if( n >= len )
+		{
+			n -= len;
+		}
+
+		n2 = trigger_bck + j2;
+		if( n2 < 0 )
+		{
+			n2 += len;
+		}
+		else if( n2 >= len )
+		{
+			n2 -= len;
+		}
+
+		x0 = collapsed? j : width/2 + j/2;
+
+		ya = height-((a_b?buffer5[n2]:buffer1[n2])*height)/4096;
+		yb = height-((a_b?buffer6[n2]:buffer2[n2])*height)/4096;
+		yc = height-((a_b?buffer7[n2]:buffer3[n2])*height)/4096;
+		yd = height-((a_b?buffer8[n2]:buffer4[n2])*height)/4096;
+		lcd_set_pixel( pLcd, x0, ya, 0x0000 );
+		lcd_set_pixel( pLcd, x0, yb, 0x0000 );
+		lcd_set_pixel( pLcd, x0, yc, 0x0000 );
+		lcd_set_pixel( pLcd, x0, yd, 0x0000 );
+
+		ya = height-((a_b?buffer1[n]:buffer5[n])*height)/4096;
+		yb = height-((a_b?buffer2[n]:buffer6[n])*height)/4096;
+		yc = height-((a_b?buffer3[n]:buffer7[n])*height)/4096;
+		yd = height-((a_b?buffer4[n]:buffer8[n])*height)/4096;
+		lcd_set_pixel( pLcd, x0, ya, 0x001F );
+		lcd_set_pixel( pLcd, x0, yb, 0x07E0 );
+		lcd_set_pixel( pLcd, x0, yc, 0xF800 );
+		lcd_set_pixel( pLcd, x0, yd, 0xF81F );
+	}
+}
 /**
   * @brief  Function implementing the defaultTask thread.
   * @param  argument: Not used
@@ -590,11 +832,13 @@ void StartDefaultTask(void *argument)
 	int pressed = 1;
 	int pressed_bck = 0;
 	int nk_theme =1;
+	int collapsed_bck = 0;
+	int collapsed = 0;
 
-	psram_test();
+	//psram_test();
 
 	lcd_init( &lcd, LCD_nRST_GPIO_Port, LCD_nRST_Pin, LCD_BL_GPIO_Port, LCD_BL_Pin, 480, 320 );
-	tsc_init( &tsc, &hspi3, TSC_nSS_GPIO_Port, TSC_nSS_Pin, AX, BX, AY, BY, 8 );
+	tsc_init( &tsc, &hspi3, TSC_nSS_GPIO_Port, TSC_nSS_Pin, AX, BX, AY, BY, 1 );
 
 	framebuf_init( &fb, FB_WIDTH, FB_HEIGHT, fb_buf );
 
@@ -608,8 +852,8 @@ void StartDefaultTask(void *argument)
 
 	for( i = 0 ; i < BUFFER_LEN ; i++ )
 	{
-		dac1_buffer[i] = sinf(dac_freq*2*M_PI*i/BUFFER_LEN)*1023 + 2048;
-		dac2_buffer[i] = 1024+(((BUFFER_LEN-i-1)*8)%2048);
+		dac1_buffer[i] = sinf(2*dac_freq*2*M_PI*i/BUFFER_LEN)*1023 + 2048;
+		dac2_buffer[i] = sinf(dac_freq*2*M_PI*i/BUFFER_LEN)*1023 + 2048;
 	}
 
 	__HAL_DBGMCU_FREEZE_TIM4();
@@ -617,29 +861,22 @@ void StartDefaultTask(void *argument)
 	HAL_DAC_Start_DMA( &hdac1, DAC_CHANNEL_2, (uint32_t*)dac2_buffer, BUFFER_LEN, DAC_ALIGN_12B_R );
 	HAL_TIM_Base_Start( &htim4 );
 
+	osc.channels[0].offset = 2048;
+	osc.channels[1].offset = 2048;
+	osc.channels[2].offset = 2048;
+	osc.channels[3].offset = 2048;
+	HAL_DAC_SetValue(&hdac2, DAC_CHANNEL_1, DAC_ALIGN_12B_R, osc.channels[0].offset);
+	HAL_DAC_Start(&hdac2, DAC_CHANNEL_1);
+
 	/* Infinite loop */
 	for(;;)
 	{
+		x_bck = x;
+		y_bck = y;
 		tsc_read( &tsc, &x, &y );
 
-		int dx = abs(x-x_bck);
-		int dy = abs(y-y_bck);
-		static float dv = 0;
-		dv = dv*0.5 + 0.5*(dx+dy)/2;
-		if( x_bck )
-		{
-			//lcd_rect( &lcd, x_bck-2, y_bck-2, 4, 4, 0x0000 );
-			//x_bck = 0;
-		}
-		if( x )
-		{
-			//x_bck = x;
-		    //y_bck = y;
-			//lcd_rect( &lcd, x-2, y-2, 4, 4, 0xFFFF );
-		}
-
 		pressed_bck = pressed;
-		pressed = (x!=0);
+		pressed = 0 < x && x <fb.width;
 		nk_input_begin( &ctx );
 		if( pressed )
 		{
@@ -652,21 +889,22 @@ void StartDefaultTask(void *argument)
 			nk_input_button( &ctx, 0, x_bck, y_bck, 0 );
 		}
 		nk_input_end( &ctx );
-		x_bck = x;
-	    y_bck = y;
 
 	    if( pressed || pressed_bck )
 	    {
-		    oscilloscope_process(&osc, &ctx);
+		    oscilloscope_process( &osc, &ctx, &scope );
+
+			collapsed = nk_window_is_collapsed( &ctx, "STM32G4 Scope" );
+			if( collapsed != collapsed_bck )
+			{
+				collapsed_bck = collapsed;
+				lcd_clear( &lcd, 0x0000 );
+			}
+
 			nk_draw_fb( &ctx, &fb, &lcd );
 			nk_clear(&ctx);
 	    }
 
-		if( pressed )
-		{
-			lcd_draw_cross( &lcd, x, y, 0xFFFF );
-			continue;
-		}
 		scope_init( &scope, 2048, 1000000,
 				(i&0x01)?buffer1:buffer5,
 				(i&0x01)?buffer2:buffer6,
@@ -680,63 +918,32 @@ void StartDefaultTask(void *argument)
 		trigger = scope_get_trigger( &scope ) - BUFFER_LEN/2;
 
 
-		static int collapsed_bck = 0;
-		static int collapsed = 0;
 
-		collapsed = nk_window_is_collapsed( &ctx, "STM32G4 Scope" );
-		if( collapsed != collapsed_bck )
+
+
+
+		draw_buffers(
+			&lcd,
+			trigger,
+			trigger_bck,
+			buffer1,
+			buffer2,
+			buffer3,
+			buffer4,
+			buffer5,
+			buffer6,
+			buffer7,
+			buffer8,
+			BUFFER_LEN,
+			collapsed,
+			i&0x01
+		);
+
+		if( pressed )
 		{
-			collapsed_bck = collapsed;
-			lcd_clear( &lcd, 0x0000 );
+			lcd_draw_cross( &lcd, x, y, 0xFFFF );
 		}
-		for( int jj = 0; jj < 480; jj++ )		{
-			int j = (jj*BUFFER_LEN)/480;
-			int n = trigger + j;
-			if( n < 0 )
-			{
-				n += BUFFER_LEN;
-			}
-			else if( n >= BUFFER_LEN )
-			{
-				n -= BUFFER_LEN;
-			}
 
-			int n2 = trigger_bck + j;
-			if( n2 < 0 )
-			{
-				n2 += BUFFER_LEN;
-			}
-			else if( n2 >= BUFFER_LEN )
-			{
-				n2 -= BUFFER_LEN;
-			}
-			int x0, ya, yb, yc, yd;
-			if( collapsed )
-			{
-				x0 = jj;
-			}
-			else
-			{
-				x0 = 240+jj/2;
-			}
-			ya = 320-(((i&0x01)?buffer5[n2]:buffer1[n2])*320)/4096;
-			yb = 320-(((i&0x01)?buffer6[n2]:buffer2[n2])*320)/4096;
-			yc = 320-(((i&0x01)?buffer7[n2]:buffer3[n2])*320)/4096;
-			yd = 320-(((i&0x01)?buffer8[n2]:buffer4[n2])*320)/4096;
-			lcd_set_pixel( &lcd, x0, ya, 0x0000 );
-			lcd_set_pixel( &lcd, x0, yb, 0x0000 );
-			lcd_set_pixel( &lcd, x0, yc, 0x0000 );
-			lcd_set_pixel( &lcd, x0, yd, 0x0000 );
-
-			ya = 320-(((i&0x01)?buffer1[n]:buffer5[n])*320)/4096;
-			yb = 320-(((i&0x01)?buffer2[n]:buffer6[n])*320)/4096;
-			yc = 320-(((i&0x01)?buffer3[n]:buffer7[n])*320)/4096;
-			yd = 320-(((i&0x01)?buffer4[n]:buffer8[n])*320)/4096;
-			lcd_set_pixel( &lcd, x0, ya, 0x001F );
-			lcd_set_pixel( &lcd, x0, yb, 0x07E0 );
-			lcd_set_pixel( &lcd, x0, yc, 0xF800 );
-			lcd_set_pixel( &lcd, x0, yd, 0xF81F );
-		}
 		i += 1;
 		trigger_bck = trigger;
 

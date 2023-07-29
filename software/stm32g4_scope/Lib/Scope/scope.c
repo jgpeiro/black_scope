@@ -24,6 +24,10 @@ void scope_init( tScope *scope, uint16_t trigger_level, uint16_t sample_rate, ui
 
 	_scope = scope;
 
+	extern OPAMP_HandleTypeDef hopamp1;
+	extern OPAMP_HandleTypeDef hopamp3;
+	extern OPAMP_HandleTypeDef hopamp5;
+	extern OPAMP_HandleTypeDef hopamp6;
 	extern ADC_HandleTypeDef hadc1;
 	extern ADC_HandleTypeDef hadc3;
 	extern ADC_HandleTypeDef hadc5;
@@ -35,6 +39,11 @@ void scope_init( tScope *scope, uint16_t trigger_level, uint16_t sample_rate, ui
 	extern TIM_HandleTypeDef htim2;
 	extern TIM_HandleTypeDef htim3;
 
+
+	scope->hopamp1 = &hopamp1;
+	scope->hopamp2 = &hopamp3;
+	scope->hopamp3 = &hopamp5;
+	scope->hopamp4 = &hopamp6;
 	scope->hadc1 = &hadc1;
 	scope->hadc2 = &hadc3;
 	scope->hadc3 = &hadc5;
@@ -74,16 +83,22 @@ void scope_start( tScope *scope )
 	__HAL_DBGMCU_FREEZE_TIM1();
 	__HAL_DBGMCU_FREEZE_TIM2();
 
-	extern DAC_HandleTypeDef hdac2;
-	int vcc = 3.3;
-	HAL_DAC_SetValue(&hdac2, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (vcc/2.0)/vcc*4095);
-	HAL_DAC_Start(&hdac2, DAC_CHANNEL_1);
+	//extern DAC_HandleTypeDef hdac2;
+	//int vcc = 3.3;
+	//HAL_DAC_SetValue(&hdac2, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (vcc/2.0)/vcc*4095);
+	//HAL_DAC_Start(&hdac2, DAC_CHANNEL_1);
 
 
 	extern OPAMP_HandleTypeDef hopamp1;
 	extern OPAMP_HandleTypeDef hopamp3;
 	extern OPAMP_HandleTypeDef hopamp5;
 	extern OPAMP_HandleTypeDef hopamp6;
+
+	HAL_OPAMP_SelfCalibrate(&hopamp1);
+	HAL_OPAMP_SelfCalibrate(&hopamp3);
+	HAL_OPAMP_SelfCalibrate(&hopamp5);
+	HAL_OPAMP_SelfCalibrate(&hopamp6);
+
 	HAL_OPAMP_Start(&hopamp1);
 	HAL_OPAMP_Start(&hopamp3);
 	HAL_OPAMP_Start(&hopamp5);

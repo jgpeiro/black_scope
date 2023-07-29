@@ -35,14 +35,22 @@ struct sScope
 	uint16_t len;
 	uint16_t trigger_level;
 	uint16_t trigger_location;
+
+	OPAMP_HandleTypeDef *hopamp1;
+	OPAMP_HandleTypeDef *hopamp2;
+	OPAMP_HandleTypeDef *hopamp3;
+	OPAMP_HandleTypeDef *hopamp4;
+
 	ADC_HandleTypeDef *hadc1;
 	ADC_HandleTypeDef *hadc2;
 	ADC_HandleTypeDef *hadc3;
 	ADC_HandleTypeDef *hadc4;
+
 	DMA_HandleTypeDef *hdma_adc1;
 	DMA_HandleTypeDef *hdma_adc2;
 	DMA_HandleTypeDef *hdma_adc3;
 	DMA_HandleTypeDef *hdma_adc4;
+
 	TIM_HandleTypeDef *htim1;
 	TIM_HandleTypeDef *htim2;
 

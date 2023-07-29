@@ -89,10 +89,8 @@ void lcd_set_window( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h )
 
 void lcd_set_pixel( tLcd *pThis, int16_t x, int16_t y, uint16_t color )
 {
-    if( x < 0 || x > pThis->width - 1 || y < 0 || y > pThis->height - 1 )
-    {
-        return;
-    }
+    x = LCD_CLAMP( x, 0, pThis->width - 1 );
+    y = LCD_CLAMP( y, 0, pThis->height - 1 );
 
     LCD_CMD_ADDR = LCD_REG_COLUMN_ADDR;
     LCD_DATA_ADDR = (x>>8)&0xFF;
