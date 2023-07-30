@@ -22,6 +22,7 @@ typedef struct {
     float bx;
     float ay;
     float by;
+    int cnt;
     int avg;
 } tTsc;
 

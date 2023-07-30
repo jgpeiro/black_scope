@@ -54,6 +54,13 @@ const osThreadAttr_t defaultTask_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
   .stack_size = 4096 * 4
 };
+/* Definitions for taskTsc */
+osThreadId_t taskTscHandle;
+const osThreadAttr_t taskTsc_attributes = {
+  .name = "taskTsc",
+  .priority = (osPriority_t) osPriorityNormal1,
+  .stack_size = 128 * 4
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -61,6 +68,7 @@ const osThreadAttr_t defaultTask_attributes = {
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
+void StartTaskTsc(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -93,6 +101,9 @@ void MX_FREERTOS_Init(void) {
   /* Create the thread(s) */
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+
+  /* creation of taskTsc */
+  taskTscHandle = osThreadNew(StartTaskTsc, NULL, &taskTsc_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -145,6 +156,15 @@ uint8_t fb_buf[FB_WIDTH*FB_HEIGHT*2];
 uint8_t nk_buf_cmds[NK_BUFFER_CMDS_LEN] = {0};
 uint8_t nk_buf_pool[NK_BUFFER_POOL_LEN] = {0};
 
+int _write(int file, char *ptr, int len)
+{
+	int DataIdx;
+	for(DataIdx = 0; DataIdx < len; DataIdx++)
+	{
+		ITM_SendChar(*ptr++);
+	}
+    return len;
+}
 
 #define CHANNEL_COUNT 4
 #define WAVEFORM_COUNT 2
@@ -171,7 +191,7 @@ struct Oscilloscope {
     nk_bool acquire_run;
     nk_bool acquire_single;
 
-    float horizontal_offset;
+    int horizontal_offset;
     float horizontal_scale;
 
     float trigger_offset;
@@ -212,8 +232,57 @@ struct Oscilloscope {
     int draw_signals;
 };
 
+struct nk_rect keypad_size = {0, 30, 108, 208};
+int nk_keypad( struct nk_context *ctx, int32_t *value )
+{
+	int retval = 0;
+	char buffer[32];
+
+    if (nk_popup_begin(ctx, NK_POPUP_STATIC, "Keypad", NK_WINDOW_CLOSABLE | NK_WINDOW_NO_SCROLLBAR, keypad_size ) )
+    {
+    	retval = 1;
+    	nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){30+30+30});
+
+		sprintf( buffer, "%d", *value );
+
+    	nk_label(ctx, buffer, NK_TEXT_RIGHT );
+        nk_layout_row(ctx, NK_STATIC, 30, 3, (float[]){30, 30, 30});
+
+        nk_button_set_behavior( ctx, 0 );
+        if( nk_button_label( ctx, "7" ) )	*value = *value*10 + 7;
+        if( nk_button_label( ctx, "8" ) )	*value = *value*10 + 8;
+        if( nk_button_label( ctx, "9" ) )	*value = *value*10 + 9;
+        if( nk_button_label( ctx, "4" ) )	*value = *value*10 + 4;
+        if( nk_button_label( ctx, "5" ) )	*value = *value*10 + 5;
+        if( nk_button_label( ctx, "6" ) )	*value = *value*10 + 6;
+        if( nk_button_label( ctx, "1" ) )	*value = *value*10 + 1;
+        if( nk_button_label( ctx, "2" ) )	*value = *value*10 + 2;
+        if( nk_button_label( ctx, "3" ) )	*value = *value*10 + 3;
+        if( nk_button_label( ctx, "C" ) )	*value = *value/10;
+        if( nk_button_label( ctx, "0" ) )	*value = *value*10 + 0;
+        if( nk_button_label( ctx, "-" ) )	*value = -*value;
+        //if( nk_button_symbol( ctx, NK_SYMBOL_TRIANGLE_RIGHT ) )	{
+        //	nk_popup_close(ctx);
+        //	retval = 0;
+        //}
+        if( *value > 999999 )
+        {
+        	*value = 999999;
+        }
+        if( *value < -999999 )
+        {
+        	*value = -999999;
+        }
+        nk_popup_end(ctx);
+    }
+    else
+    {
+    	retval = 0;
+    }
+    return retval;
+}
+
 int visible = 0;
-struct nk_rect keypad_size = {35, 35, 142, 208};
 void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx, tScope *pScope)
 {
 	visible = 0;
@@ -226,11 +295,11 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx, tSco
             nk_layout_row(ctx, NK_STATIC, 30, 4, (float[]){60, 60, 60, 60});
             nk_button_set_behavior(ctx, NK_BUTTON_DEFAULT);
             if (osc->acquire_run) {
-                if (nk_button_label(ctx, "Stop")) {
+                if (nk_button_label(ctx, "Run")) {
                     osc->acquire_run = nk_false;
                 }
             } else {
-                if (nk_button_label(ctx, "Run")) {
+                if (nk_button_label(ctx, "Stop")) {
                     osc->acquire_run = nk_true;
                 }
             }
@@ -238,6 +307,7 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx, tSco
 
             if (nk_button_label(ctx, "Single")) {
                 osc->acquire_single = nk_true;
+                osc->acquire_run = nk_false;
             }
 
             if (nk_button_label(ctx, "Draw")) {
@@ -259,39 +329,14 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx, tSco
         		{
         			osc->horizontal_offset -= 1;
         		}
+
         		char combo_buffer[32];
-        		sprintf(combo_buffer, "%.2f", osc->horizontal_offset);
-
-        		static int show_app_about = 0;
-        		show_app_about |= nk_button_label( ctx, combo_buffer );
-
-                if (show_app_about)
+        		sprintf(combo_buffer, "%d", osc->horizontal_offset);
+        		static int show_keypad = 0;
+        		show_keypad |= nk_button_label( ctx, combo_buffer );
+                if (show_keypad)
                 {
-                    /* about popup */
-                    //static struct nk_rect s = {20, 20, 200, 200};
-                    if (nk_popup_begin(ctx, NK_POPUP_STATIC, "Keypad", NK_WINDOW_CLOSABLE | NK_WINDOW_NO_SCROLLBAR, keypad_size ) )
-                    {
-                    	nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){30+30+30+30});
-                        nk_label(ctx, "0.00", NK_TEXT_RIGHT );
-                        nk_layout_row(ctx, NK_STATIC, 30, 4, (float[]){30, 30, 30, 30});
-                        nk_button_label( ctx, "7" );
-                        nk_button_label( ctx, "8" );
-                        nk_button_label( ctx, "9" );
-                        nk_button_label( ctx, "k" );
-                        nk_button_label( ctx, "4" );
-                        nk_button_label( ctx, "5" );
-                        nk_button_label( ctx, "6" );
-                        nk_button_label( ctx, "m" );
-                        nk_button_label( ctx, "1" );
-                        nk_button_label( ctx, "2" );
-                        nk_button_label( ctx, "3" );
-                        nk_button_label( ctx, "u" );
-                        nk_button_label( ctx, "C" );
-                        nk_button_label( ctx, "0" );
-                        nk_button_label( ctx, "." );
-                        nk_button_symbol( ctx, NK_SYMBOL_X );
-                        nk_popup_end(ctx);
-                    } else show_app_about = nk_false;
+                	show_keypad = nk_keypad( ctx, &osc->horizontal_offset );
                 }
 
         		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
@@ -343,9 +388,19 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx, tSco
         			}
         			HAL_DAC_SetValue(&hdac2, DAC_CHANNEL_1, DAC_ALIGN_12B_R, osc->channels[0].offset );
         		}
+
         		char combo_buffer[32];
         		sprintf(combo_buffer, "%d", osc->channels[0].offset);
-        		nk_label( ctx, combo_buffer, NK_TEXT_CENTERED );
+        		static int show_keypad = 0;
+        		nk_button_set_behavior(ctx, 0);
+        		show_keypad |= nk_button_label( ctx, combo_buffer );
+                if (show_keypad)
+                {
+                	show_keypad = nk_keypad( ctx, &osc->channels[0].offset );
+                	HAL_DAC_SetValue(&hdac2, DAC_CHANNEL_1, DAC_ALIGN_12B_R, osc->channels[0].offset );
+                }
+
+
         		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
         		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
         		{
@@ -723,9 +778,9 @@ void lcd_draw_cross( tLcd *pLcd, uint16_t x, uint16_t y, uint16_t color )
 	lcd_rect( pLcd, x, y+2, 2, 4, color );
 }
 
-float text_width_f( nk_handle handle, float h, const char* t, int len )
+float text_width_f( nk_handle handle, float h, const char* text, int len )
 {
-	return font_text_width( &fontUbuntuBookRNormal16, t );
+	return font_text_width( &fontUbuntuBookRNormal16, text );
 }
 
 extern void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd);
@@ -797,17 +852,67 @@ void draw_buffers(
 		lcd_set_pixel( pLcd, x0, yd, 0xF81F );
 	}
 }
+
+void draw_grid( tLcd *pLcd, uint32_t collapsed )
+{
+	static int i = 0;
+	if( i < 10 )
+	{
+		i++;
+		return;
+	}
+	else
+	{
+		i = 0;
+	}
+	if( collapsed )
+	{
+		for( int d = 0 ; d < pLcd->width ; d += 40 )
+		{
+			lcd_rect( pLcd, d, 0, 1, pLcd->height, 0x8410 );
+		}
+		lcd_rect( pLcd, pLcd->width, 0, 1, pLcd->height, 0x8410 );
+
+		for( int d = 0 ; d < pLcd->height ; d += 40 )
+		{
+			lcd_rect( pLcd, 0, d, pLcd->width, 1, 0x8410 );
+		}
+		lcd_rect( pLcd, 0, pLcd->height, pLcd->width, 1, 0x8410 );
+
+		lcd_rect( pLcd, 0, pLcd->height-((2048+768)*pLcd->height)/4096, pLcd->width, 1, 0x07FF );
+	}
+	else
+	{
+		for( int d = 0 ; d < pLcd->width ; d += 40 )
+		{
+			lcd_rect( pLcd, d/2+pLcd->width/2, 0, 1, pLcd->height, 0x8410 );
+		}
+		lcd_rect( pLcd, pLcd->width/2+pLcd->width/2, 0, 1, pLcd->height, 0x8410 );
+
+		for( int d = 0 ; d < pLcd->height ; d += 40 )
+		{
+			lcd_rect( pLcd, 0/2+pLcd->width/2, d, pLcd->width, 1, 0x8410 );
+		}
+		lcd_rect( pLcd, 0/2+pLcd->width/2, pLcd->height, pLcd->width, 1, 0x8410 );
+
+		lcd_rect( pLcd, 0/2+pLcd->width/2, pLcd->height-((2048+768)*pLcd->height)/4096, pLcd->width, 1, 0x07FF );
+	}
+
+}
 /**
   * @brief  Function implementing the defaultTask thread.
   * @param  argument: Not used
   * @retval None
   */
+uint16_t x_tsc = 0;
+uint16_t y_tsc = 0;
+uint16_t p_tsc = 0;
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
 	tLcd lcd = {0};
-	tTsc tsc = {0};
+	//tTsc tsc = {0};
 	tScope scope = {0};
 	tFramebuf fb = {0};
 
@@ -818,10 +923,7 @@ void StartDefaultTask(void *argument)
 
 	struct Oscilloscope osc = {0};
 
-	float AX = 38.0/151.0;
-	float BX = -1950.0/151.0;
-	float AY = 11.0/62.0;
-	float BY = -1157.0/62.0;
+
 
 	int i;
 	float dac_freq = 3;
@@ -838,7 +940,25 @@ void StartDefaultTask(void *argument)
 	//psram_test();
 
 	lcd_init( &lcd, LCD_nRST_GPIO_Port, LCD_nRST_Pin, LCD_BL_GPIO_Port, LCD_BL_Pin, 480, 320 );
-	tsc_init( &tsc, &hspi3, TSC_nSS_GPIO_Port, TSC_nSS_Pin, AX, BX, AY, BY, 1 );
+	//tsc_init( &tsc, &hspi3, TSC_nSS_GPIO_Port, TSC_nSS_Pin, AX, BX, AY, BY, 32 );
+	/*
+	lcd_rect( &lcd, 100, 100, 2, 2, 0xFFFF );
+	lcd_rect( &lcd, 200, 100, 2, 2, 0xFFFF );
+	lcd_rect( &lcd, 100, 200, 2, 2, 0xFFFF );
+	lcd_rect( &lcd, 200, 200, 2, 2, 0xFFFF );
+
+	for( int q = 0; q < 10000 ; q++ )
+	{
+		uint16_t x = 0, y = 0;
+		//tsc_read_ll( &tsc, &x, &y );
+		if( x )
+		{
+			x = tsc.ax*x + tsc.bx;
+			y = tsc.ay*y + tsc.by;
+		}
+		printf( "%d, %d, %d, %d\r\n", q, HAL_GetTick(), x, y );
+		HAL_Delay( 1 );
+	}*/
 
 	framebuf_init( &fb, FB_WIDTH, FB_HEIGHT, fb_buf );
 
@@ -873,10 +993,11 @@ void StartDefaultTask(void *argument)
 	{
 		x_bck = x;
 		y_bck = y;
-		tsc_read( &tsc, &x, &y );
-
+		//tsc_read( &tsc, &x, &y );
+		x = x_tsc;
+		y = y_tsc;
 		pressed_bck = pressed;
-		pressed = 0 < x && x <fb.width;
+		pressed = p_tsc && x < fb.width;
 		nk_input_begin( &ctx );
 		if( pressed )
 		{
@@ -905,50 +1026,117 @@ void StartDefaultTask(void *argument)
 			nk_clear(&ctx);
 	    }
 
-		scope_init( &scope, 2048, 1000000,
-				(i&0x01)?buffer1:buffer5,
-				(i&0x01)?buffer2:buffer6,
-				(i&0x01)?buffer3:buffer7,
-				(i&0x01)?buffer4:buffer8,
-				BUFFER_LEN );
-		scope_start( &scope );
-		while( scope_is_busy( &scope ) );
-		scope_stop( &scope );
+	    if( osc.acquire_run || osc.acquire_single )
+	    {
+	    	osc.acquire_single = 0;
+	    	scope_init( &scope, 2048, 1000000,
+					(i&0x01)?buffer1:buffer5,
+					(i&0x01)?buffer2:buffer6,
+					(i&0x01)?buffer3:buffer7,
+					(i&0x01)?buffer4:buffer8,
+					BUFFER_LEN );
+			scope_start( &scope );
+			while( scope_is_busy( &scope ) );
+			scope_stop( &scope );
 
-		trigger = scope_get_trigger( &scope ) - BUFFER_LEN/2;
+			trigger = scope_get_trigger( &scope ) - BUFFER_LEN/2;
 
+			draw_grid( &lcd, collapsed );
 
+			draw_buffers(
+				&lcd,
+				trigger,
+				trigger_bck,
+				buffer1,
+				buffer2,
+				buffer3,
+				buffer4,
+				buffer5,
+				buffer6,
+				buffer7,
+				buffer8,
+				BUFFER_LEN,
+				collapsed,
+				i&0x01
+			);
+			trigger_bck = trigger;
+			i += 1;
+	    }
 
-
-
-
-		draw_buffers(
-			&lcd,
-			trigger,
-			trigger_bck,
-			buffer1,
-			buffer2,
-			buffer3,
-			buffer4,
-			buffer5,
-			buffer6,
-			buffer7,
-			buffer8,
-			BUFFER_LEN,
-			collapsed,
-			i&0x01
-		);
-
-		if( pressed )
+		if( pressed && x < 240-5 )
 		{
 			lcd_draw_cross( &lcd, x, y, 0xFFFF );
 		}
 
-		i += 1;
-		trigger_bck = trigger;
+		osDelay(10);
+
 
 	}
   /* USER CODE END StartDefaultTask */
+}
+
+/* USER CODE BEGIN Header_StartTaskTsc */
+/**
+* @brief Function implementing the taskTsc thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTaskTsc */
+void StartTaskTsc(void *argument)
+{
+  /* USER CODE BEGIN StartTaskTsc */
+	uint16_t x = 0;
+	uint16_t y = 0;
+
+	int x_low = 0;
+	int y_low = 0;
+
+	int cnt = 0;
+
+	float AX = 38.0/151.0;
+	float BX = -1950.0/151.0;
+	float AY = 11.0/62.0;
+	float BY = -1157.0/62.0;
+
+	tTsc tsc = {0};
+	tsc_init( &tsc, &hspi3, TSC_nSS_GPIO_Port, TSC_nSS_Pin, AX, BX, AY, BY, 32 );
+
+  /* Infinite loop */
+  for(;;)
+  {
+	  tsc_read_ll( &tsc, &x, &y );
+	  if( x )
+	  {
+		  cnt += 1;
+	  }
+	  else
+	  {
+		  cnt = 0;
+	  }
+
+	  // filter
+	  x_low = x*0.1 + x_low*0.9;
+	  y_low = y*0.1 + y_low*0.9;
+
+	  // tsc to pixel coordinates
+	  x = tsc.ax*x_low + tsc.bx;
+	  y = tsc.ay*y_low + tsc.by;
+
+	  if( cnt > 50 )
+	  {
+		  x_tsc = x;
+		  y_tsc = y;
+		  p_tsc = 1;
+	  }
+	  else
+	  {
+		  x_tsc = 0;
+		  y_tsc = 0;
+		  p_tsc = 0;
+	  }
+	  osDelay(1);
+  }
+  /* USER CODE END StartTaskTsc */
 }
 
 /* Private application code --------------------------------------------------*/

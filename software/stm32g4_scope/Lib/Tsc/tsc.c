@@ -20,6 +20,7 @@ void tsc_init( tTsc* tsc, SPI_HandleTypeDef* spi, GPIO_TypeDef* cs_port, uint16_
 	tsc->ay = ay;
 	tsc->by = by;
 	tsc->avg = avg;
+
     HAL_GPIO_WritePin(tsc->cs_port, tsc->cs_pin, GPIO_PIN_SET);
 }
 
@@ -53,16 +54,27 @@ void tsc_read( tTsc* tsc, uint16_t* x, uint16_t* y) {
         if (*x && *y) {
             x_acc += *x;
             y_acc += *y;
+            tsc->cnt += 1;
         } else {
             *x = 0;
             *y = 0;
+            tsc->cnt = 0;
             return;
         }
         //HAL_Delay(1);
     }
-    *x = x_acc / tsc->avg;
-    *y = y_acc / tsc->avg;
-    *x = tsc->ax * *x + tsc->bx;
-    *y = tsc->ay * *y + tsc->by;
+
+    if( tsc->cnt >= tsc->avg )
+    {
+        *x = x_acc / tsc->avg;
+        *y = y_acc / tsc->avg;
+        *x = tsc->ax * *x + tsc->bx;
+        *y = tsc->ay * *y + tsc->by;
+    }
+    else
+    {
+        *x = 0;
+        *y = 0;
+    }
 }
 

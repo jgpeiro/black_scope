@@ -51,13 +51,16 @@ void lcd_config( tLcd *pThis )
 {
     LCD_CMD_ADDR = LCD_REG_SOFT_RESET;
     HAL_Delay( 100 );
+
     LCD_CMD_ADDR = LCD_REG_SLEEP_OUT;
     HAL_Delay( 10 );
+
     LCD_CMD_ADDR = LCD_REG_INTERFACE_PIXEL_FORMAT;
-    //LCD_DATA_ADDR = 0x06;
     LCD_DATA_ADDR = 0x05;
+
     LCD_CMD_ADDR = LCD_REG_MEMORY_ACCESS_CONTROL;
     LCD_DATA_ADDR = (0x01<<5)|(0x01<<6)|(0x01<<7);
+
     LCD_CMD_ADDR = LCD_REG_DISPLAY_ON;
     HAL_Delay( 10 );
 }
@@ -89,54 +92,21 @@ void lcd_set_window( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h )
 
 void lcd_set_pixel( tLcd *pThis, int16_t x, int16_t y, uint16_t color )
 {
-    x = LCD_CLAMP( x, 0, pThis->width - 1 );
-    y = LCD_CLAMP( y, 0, pThis->height - 1 );
-
-    LCD_CMD_ADDR = LCD_REG_COLUMN_ADDR;
-    LCD_DATA_ADDR = (x>>8)&0xFF;
-    LCD_DATA_ADDR = (x>>0)&0xFF;
-    LCD_DATA_ADDR = (x>>8)&0xFF;
-    LCD_DATA_ADDR = (x>>0)&0xFF;
-
-    LCD_CMD_ADDR = LCD_REG_PAGE_ADDR;
-    LCD_DATA_ADDR = (y>>8)&0xFF;
-    LCD_DATA_ADDR = (y>>0)&0xFF;
-    LCD_DATA_ADDR = (y>>8)&0xFF;
-    LCD_DATA_ADDR = (y>>0)&0xFF;
+	lcd_set_window( pThis, x, y, 1, 1 );
 
     LCD_CMD_ADDR = LCD_REG_MEMORY_WRITE;
-    //LCD_DATA_ADDR = (color>>0)&0xFF;
-    //LCD_DATA_ADDR = (color>>8)&0xFF;
     LCD_DATA_ADDR = color;
 }
 
 void lcd_rect( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color )
 {
     uint32_t i = 0;
-    uint16_t x0 = LCD_CLAMP( x, 0, pThis->width - 1 );
-    uint16_t y0 = LCD_CLAMP( y, 0, pThis->height - 1 );
-    uint16_t x1 = LCD_CLAMP( x + w - 1, 0, pThis->width - 1 );
-    uint16_t y1 = LCD_CLAMP( y + h - 1, 0, pThis->height - 1 );
-    //uint8_t color_l = (color>>0)&0xFF;
-    //uint8_t color_h = (color>>8)&0xFF;
 
-    LCD_CMD_ADDR = LCD_REG_COLUMN_ADDR;
-    LCD_DATA_ADDR = (x0>>8)&0xFF;
-    LCD_DATA_ADDR = (x0>>0)&0xFF;
-    LCD_DATA_ADDR = (x1>>8)&0xFF;
-    LCD_DATA_ADDR = (x1>>0)&0xFF;
-
-    LCD_CMD_ADDR = LCD_REG_PAGE_ADDR;
-    LCD_DATA_ADDR = (y0>>8)&0xFF;
-    LCD_DATA_ADDR = (y0>>0)&0xFF;
-    LCD_DATA_ADDR = (y1>>8)&0xFF;
-    LCD_DATA_ADDR = (y1>>0)&0xFF;
+    lcd_set_window( pThis, x, y, w, h );
 
     LCD_CMD_ADDR = LCD_REG_MEMORY_WRITE;
     for( i = w*h ; i ; i-- )
     {
-        //LCD_DATA_ADDR = color_l;
-        //LCD_DATA_ADDR = color_h;
     	LCD_DATA_ADDR = color;
     }
 }
@@ -149,30 +119,12 @@ void lcd_clear( tLcd *pThis, uint16_t color )
 void lcd_bmp( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint8_t *buf )
 {
     uint32_t i = 0;
-	uint16_t x0 = LCD_CLAMP( x, 0, pThis->width - 1 );
-    uint16_t y0 = LCD_CLAMP( y, 0, pThis->height - 1 );
-    uint16_t x1 = LCD_CLAMP( x + w - 1, 0, pThis->width - 1 );
-    uint16_t y1 = LCD_CLAMP( y + h - 1, 0, pThis->height - 1 );
 
-    LCD_CMD_ADDR = LCD_REG_COLUMN_ADDR;
-    LCD_DATA_ADDR = (x0>>8)&0xFF;
-    LCD_DATA_ADDR = (x0>>0)&0xFF;
-    LCD_DATA_ADDR = (x1>>8)&0xFF;
-    LCD_DATA_ADDR = (x1>>0)&0xFF;
-
-    LCD_CMD_ADDR = LCD_REG_PAGE_ADDR;
-    LCD_DATA_ADDR = (y0>>8)&0xFF;
-    LCD_DATA_ADDR = (y0>>0)&0xFF;
-    LCD_DATA_ADDR = (y1>>8)&0xFF;
-    LCD_DATA_ADDR = (y1>>0)&0xFF;
+    lcd_set_window( pThis, x, y, w, h );
 
     LCD_CMD_ADDR = LCD_REG_MEMORY_WRITE;
     for( i = w*h ; i ; i-- )
     {
-        //LCD_DATA_ADDR = *buf;
-        //buf++;
-        //LCD_DATA_ADDR = *buf;
-        //buf++;
         LCD_DATA_ADDR = *(uint16_t*)buf;
         buf+=2;
     }
