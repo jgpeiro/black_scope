@@ -126,6 +126,7 @@ void MX_FREERTOS_Init(void) {
 #include "Lcd.h"
 #include "Tsc.h"
 #include "Scope.h"
+#include "tools.h"
 #include "framebuf.h"
 #include "FontUbuntuBookRNormal16.h"
 #include "psram.h"
@@ -135,6 +136,8 @@ void MX_FREERTOS_Init(void) {
 #define BUFFER_LEN 	(1024)
 #define FB_WIDTH 	(240)
 #define FB_HEIGHT	(80)
+#define FB2_WIDTH 	(160-1)
+#define FB2_HEIGHT	(16)
 
 uint16_t dac1_buffer[BUFFER_LEN];
 uint16_t dac2_buffer[BUFFER_LEN];
@@ -148,7 +151,10 @@ uint16_t buffer6[BUFFER_LEN];
 uint16_t buffer7[BUFFER_LEN];
 uint16_t buffer8[BUFFER_LEN];
 
+uint16_t buffer_tmp[BUFFER_LEN];
+
 uint8_t fb_buf[FB_WIDTH*FB_HEIGHT*2];
+uint8_t fb2_buf[FB2_WIDTH*FB2_HEIGHT*2];
 
 #define NK_BUFFER_CMDS_LEN 	(1024*8)
 #define NK_BUFFER_POOL_LEN 	(1024*8)
@@ -850,6 +856,8 @@ void draw_buffers(
 		lcd_set_pixel( pLcd, x0, yb, 0x07E0 );
 		lcd_set_pixel( pLcd, x0, yc, 0xF800 );
 		lcd_set_pixel( pLcd, x0, yd, 0xF81F );
+
+		buffer_tmp[j] = a_b?buffer5[n]:buffer1[n];
 	}
 }
 
@@ -869,13 +877,27 @@ void draw_grid( tLcd *pLcd, uint32_t collapsed )
 	{
 		for( int d = 0 ; d < pLcd->width ; d += 40 )
 		{
-			lcd_rect( pLcd, d, 0, 1, pLcd->height, 0x8410 );
+			if( d < 40*6 )
+			{
+				lcd_rect( pLcd, d, 40, 1, pLcd->height-40, 0x8410 );
+			}
+			else
+			{
+				lcd_rect( pLcd, d, 0, 1, pLcd->height, 0x8410 );
+			}
 		}
 		lcd_rect( pLcd, pLcd->width, 0, 1, pLcd->height, 0x8410 );
 
 		for( int d = 0 ; d < pLcd->height ; d += 40 )
 		{
-			lcd_rect( pLcd, 0, d, pLcd->width, 1, 0x8410 );
+			if( d < 1 )
+			{
+				lcd_rect( pLcd, 40*6, d, pLcd->width-40*6, 1, 0x8410 );
+			}
+			else
+			{
+				lcd_rect( pLcd, 0, d, pLcd->width, 1, 0x8410 );
+			}
 		}
 		lcd_rect( pLcd, 0, pLcd->height, pLcd->width, 1, 0x8410 );
 
@@ -898,6 +920,34 @@ void draw_grid( tLcd *pLcd, uint32_t collapsed )
 		lcd_rect( pLcd, 0/2+pLcd->width/2, pLcd->height-((2048+768)*pLcd->height)/4096, pLcd->width, 1, 0x07FF );
 	}
 
+}
+
+
+void draw_measurements( tLcd *pLcd, int collapsed )
+{
+	tFramebuf fb;
+	uint16_t min, max, avg, period, duty;
+	char buffer[32];
+
+	min = get_vmin( buffer_tmp, 480 );
+	max = get_vmax( buffer_tmp, 480 );
+	avg = get_vavg( buffer_tmp, 480 );
+	period = get_period( buffer_tmp, 480, max, min, avg );
+	duty = get_duty( buffer_tmp, 480, max, min, avg );
+
+	framebuf_init( &fb, FB2_WIDTH, FB2_HEIGHT, fb2_buf );
+	framebuf_fill( &fb, 0x0000 );
+
+	sprintf( buffer, "%04d %04d %04d %04d", min, max, period, duty );
+	framebuf_text( &fb, &fontUbuntuBookRNormal16, 0, 0, buffer, 0xFFFF );
+	if( collapsed )
+	{
+		lcd_bmp( pLcd, 240+40+1, 1, fb.width, fb.height, fb.buf );
+	}
+	else
+	{
+		lcd_bmp( pLcd, 240+40+1, 1, fb.width, fb.height, fb.buf );
+	}
 }
 /**
   * @brief  Function implementing the defaultTask thread.
@@ -940,25 +990,6 @@ void StartDefaultTask(void *argument)
 	//psram_test();
 
 	lcd_init( &lcd, LCD_nRST_GPIO_Port, LCD_nRST_Pin, LCD_BL_GPIO_Port, LCD_BL_Pin, 480, 320 );
-	//tsc_init( &tsc, &hspi3, TSC_nSS_GPIO_Port, TSC_nSS_Pin, AX, BX, AY, BY, 32 );
-	/*
-	lcd_rect( &lcd, 100, 100, 2, 2, 0xFFFF );
-	lcd_rect( &lcd, 200, 100, 2, 2, 0xFFFF );
-	lcd_rect( &lcd, 100, 200, 2, 2, 0xFFFF );
-	lcd_rect( &lcd, 200, 200, 2, 2, 0xFFFF );
-
-	for( int q = 0; q < 10000 ; q++ )
-	{
-		uint16_t x = 0, y = 0;
-		//tsc_read_ll( &tsc, &x, &y );
-		if( x )
-		{
-			x = tsc.ax*x + tsc.bx;
-			y = tsc.ay*y + tsc.by;
-		}
-		printf( "%d, %d, %d, %d\r\n", q, HAL_GetTick(), x, y );
-		HAL_Delay( 1 );
-	}*/
 
 	framebuf_init( &fb, FB_WIDTH, FB_HEIGHT, fb_buf );
 
@@ -981,6 +1012,7 @@ void StartDefaultTask(void *argument)
 	HAL_DAC_Start_DMA( &hdac1, DAC_CHANNEL_2, (uint32_t*)dac2_buffer, BUFFER_LEN, DAC_ALIGN_12B_R );
 	HAL_TIM_Base_Start( &htim4 );
 
+	osc.acquire_run = 1;
 	osc.channels[0].offset = 2048;
 	osc.channels[1].offset = 2048;
 	osc.channels[2].offset = 2048;
@@ -1059,6 +1091,9 @@ void StartDefaultTask(void *argument)
 				collapsed,
 				i&0x01
 			);
+
+			draw_measurements( &lcd, collapsed );
+
 			trigger_bck = trigger;
 			i += 1;
 	    }

@@ -44,8 +44,32 @@ void tsc_read_ll( tTsc* tsc, uint16_t* x, uint16_t* y) {
         *x = 0;
     }
 }
+/*
+void tsc_read( tTsc* tsc, uint16_t* x, uint16_t* y)
+{
+	tsc_read_ll( tsc, x, y );
 
-void tsc_read( tTsc* tsc, uint16_t* x, uint16_t* y) {
+	if( *x )
+	{
+		tsc->cnt += 1;
+	}
+	else
+	{
+		tsc->cnt = 0;
+	}
+
+	x_low = x*0.1 + x_low*0.9;
+	y_low = y*0.1 + y_low*0.9;
+
+	x = tsc->ax*x_low + tsc->bx;
+	y = tsc->ay*y_low + tsc->by;
+
+	*x = tsc->x;
+	*x = tsc->y;
+}
+*/
+
+void _tsc_read( tTsc* tsc, uint16_t* x, uint16_t* y) {
     int32_t x_acc = 0;
     int32_t y_acc = 0;
 
