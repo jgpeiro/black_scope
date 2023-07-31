@@ -130,6 +130,8 @@ void MX_FREERTOS_Init(void) {
 #include "framebuf.h"
 #include "FontUbuntuBookRNormal16.h"
 #include "psram.h"
+#include "wavegen.h"
+
 
 #include "nuklear.h"
 
@@ -153,8 +155,8 @@ uint16_t buffer8[BUFFER_LEN];
 
 uint16_t buffer_tmp[BUFFER_LEN];
 
-uint8_t fb_buf[FB_WIDTH*FB_HEIGHT*2];
-uint8_t fb2_buf[FB2_WIDTH*FB2_HEIGHT*2];
+uint16_t fb_buf[FB_WIDTH*FB_HEIGHT];
+uint16_t fb2_buf[FB2_WIDTH*FB2_HEIGHT];
 
 #define NK_BUFFER_CMDS_LEN 	(1024*8)
 #define NK_BUFFER_POOL_LEN 	(1024*8)
@@ -219,9 +221,9 @@ struct Oscilloscope {
     struct {
         nk_bool enabled;
         int type;
-        float offset;
-        float scale;
-        float duty_cycle;
+        int offset;
+        int scale;
+        int duty_cycle;
         struct nk_color color;
     } waveforms[WAVEFORM_COUNT];
 
@@ -288,6 +290,153 @@ int nk_keypad( struct nk_context *ctx, int32_t *value )
     return retval;
 }
 
+void build_waveform( struct Oscilloscope *osc )
+{
+	uint16_t *buffer;
+
+	buffer = osc->waveform_selected? dac1_buffer : dac2_buffer;
+
+	if( osc->waveforms[osc->waveform_selected].enabled )
+	{
+		if( osc->waveforms[osc->waveform_selected].type == WAVEGEN_TYPE_DC )
+		{
+			wavegen_build_dc( buffer, BUFFER_LEN,
+				osc->waveforms[osc->waveform_selected].offset );
+		}
+		else if( osc->waveforms[osc->waveform_selected].type == WAVEGEN_TYPE_SINE )
+		{
+			wavegen_build_sine( buffer, BUFFER_LEN,
+				1e6,
+				1024,
+				osc->waveforms[osc->waveform_selected].offset,
+				10e3
+			);
+		}
+	}
+	else
+	{
+		wavegen_build_dc( buffer, BUFFER_LEN, 0 );
+	}
+}
+
+
+/*
+enum eWaveformType
+{
+	WAVEFORM_DC,
+	WAVEFORM_PWM,
+	WAVEFORM_SINE,
+	WAVEFORM_TRIANGLE,
+	WAVEFORM_SAWTOOTH,
+	WAVEFORM_NOISE,
+	WAVEFORM_MAX
+};
+void build_waveform( struct Oscilloscope *osc )
+{
+	if( osc->waveforms[osc->waveform_selected].type == WAVEFORM_DC )
+	{
+		build_dc_waveform( osc->waveform_selected?dac2_buffer:dac1_buffer, BUFFER_LEN,
+			osc->waveforms[osc->waveform_selected].scale,
+			osc->waveforms[osc->waveform_selected].offset,
+			0
+		);
+	}
+	else if( osc->waveforms[osc->waveform_selected].type == WAVEFORM_PWM )
+	{
+		build_pwm_waveform( osc->waveform_selected?dac2_buffer:dac1_buffer, BUFFER_LEN,
+			osc->waveforms[osc->waveform_selected].scale,
+			osc->waveforms[osc->waveform_selected].offset,
+			0
+		);
+	}
+	else if( osc->waveforms[osc->waveform_selected].type == WAVEFORM_SINE )
+	{
+		build_sine_waveform( osc->waveform_selected?dac2_buffer:dac1_buffer, BUFFER_LEN,
+				osc->waveforms[osc->waveform_selected].scale,
+				osc->waveforms[osc->waveform_selected].offset,
+				0
+			);
+	}
+	else if( osc->waveforms[osc->waveform_selected].type == WAVEFORM_TRIANGLE )
+	{
+		build_triangle_waveform( osc->waveform_selected?dac2_buffer:dac1_buffer, BUFFER_LEN,
+				osc->waveforms[osc->waveform_selected].scale,
+				osc->waveforms[osc->waveform_selected].offset,
+				0
+			);
+	}
+	else if( osc->waveforms[osc->waveform_selected].type == WAVEFORM_SAWTOOTH )
+	{
+		build_sawtooth_waveform( osc->waveform_selected?dac2_buffer:dac1_buffer, BUFFER_LEN,
+				osc->waveforms[osc->waveform_selected].scale,
+				osc->waveforms[osc->waveform_selected].offset,
+				0
+			);
+	}
+	else if( osc->waveforms[osc->waveform_selected].type == WAVEFORM_NOISE )
+	{
+		build_noise_waveform( osc->waveform_selected?dac2_buffer:dac1_buffer, BUFFER_LEN,
+				osc->waveforms[osc->waveform_selected].scale,
+				osc->waveforms[osc->waveform_selected].offset,
+				0
+			);
+	}
+}
+
+void build_dc_waveform( uint16_t *buffer, uint16_t len, float freq, float amplitude, float offset )
+{
+	uint16_t i;
+	for( i = 0 ; i < len ; i++ )
+	{
+		buffer[i] = amplitude + offset;
+	}
+}
+
+void build_pwm_waveform( uint16_t *buffer, uint16_t len, float freq, float amplitude, float offset )
+{
+	uint16_t i;
+	for( i = 0 ; i < len ; i++ )
+	{
+		buffer[i] = (i < len/2) ? amplitude + offset : offset;
+	}
+}
+
+void build_sine_waveform( uint16_t *buffer, uint16_t len, float freq, float amplitude, float offset )
+{
+	uint16_t i;
+	for( i = 0 ; i < len ; i++ )
+	{
+		buffer[i] = sinf(freq*2*M_PI*i/len)*amplitude + offset;
+	}
+}
+
+void build_triangle_waveform( uint16_t *buffer, uint16_t len, float freq, float amplitude, float offset )
+{
+	uint16_t i;
+	for( i = 0 ; i < len ; i++ )
+	{
+		buffer[i] = (2*amplitude/len)*i + offset;
+	}
+}
+
+void build_sawtooth_waveform( uint16_t *buffer, uint16_t len, float freq, float amplitude, float offset )
+{
+	uint16_t i;
+	for( i = 0 ; i < len ; i++ )
+	{
+		buffer[i] = (amplitude/len)*i + offset;
+	}
+}
+
+void build_noise_waveform( uint16_t *buffer, uint16_t len, float freq, float amplitude, float offset )
+{
+	uint16_t i;
+	for( i = 0 ; i < len ; i++ )
+	{
+		buffer[i] = rand()*amplitude + offset;
+	}
+}
+*/
 int visible = 0;
 void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx, tScope *pScope)
 {
@@ -647,14 +796,25 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx, tSco
         		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
         		{
         			osc->waveforms[osc->waveform_selected].offset -= 1;
+        			build_waveform( osc );
         		}
         		char combo_buffer[32];
-        		sprintf(combo_buffer, "%.2f", osc->waveforms[osc->waveform_selected].offset);
-        		nk_label( ctx, combo_buffer, NK_TEXT_CENTERED );
+        		sprintf(combo_buffer, "%d", osc->waveforms[osc->waveform_selected].offset);
+
+        		static int show_keypad = 0;
+        		show_keypad |= nk_button_label( ctx, combo_buffer );
+                if (show_keypad)
+                {
+                	show_keypad = nk_keypad( ctx, &osc->waveforms[osc->waveform_selected].offset );
+                	build_waveform( osc );
+                }
+
+        		//nk_label( ctx, combo_buffer, NK_TEXT_CENTERED );
         		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
         		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
         		{
         			osc->waveforms[osc->waveform_selected].offset += 1;
+        			build_waveform( osc );
         		}
 
         		nk_label( ctx, "Scale", NK_TEXT_LEFT );
@@ -662,14 +822,24 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx, tSco
         		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
         		{
         			osc->waveforms[osc->waveform_selected].scale -= 1;
+        			build_waveform( osc );
         		}
         		//char combo_buffer[32];
-        		sprintf(combo_buffer, "%.2f", osc->waveforms[osc->waveform_selected].scale);
-        		nk_label( ctx, combo_buffer, NK_TEXT_CENTERED );
+        		sprintf(combo_buffer, "%d", osc->waveforms[osc->waveform_selected].scale);
+        		//nk_label( ctx, combo_buffer, NK_TEXT_CENTERED );
+        		static int show_keypad2 = 0;
+        		show_keypad2 |= nk_button_label( ctx, combo_buffer );
+                if (show_keypad2)
+                {
+                	show_keypad2 = nk_keypad( ctx, &osc->waveforms[osc->waveform_selected].scale );
+                	build_waveform( osc );
+                }
+
         		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
         		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
         		{
         			osc->waveforms[osc->waveform_selected].scale += 1;
+        			build_waveform( osc );
         		}
 
         		nk_label( ctx, "Duty", NK_TEXT_LEFT );
@@ -677,14 +847,24 @@ void oscilloscope_process(struct Oscilloscope *osc, struct nk_context *ctx, tSco
         		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_LEFT) )
         		{
         			osc->waveforms[osc->waveform_selected].duty_cycle -= 1;
+        			build_waveform( osc );
         		}
         		//char combo_buffer[32];
-        		sprintf(combo_buffer, "%.2f", osc->waveforms[osc->waveform_selected].duty_cycle);
-        		nk_label( ctx, combo_buffer, NK_TEXT_CENTERED );
+        		sprintf(combo_buffer, "%d", osc->waveforms[osc->waveform_selected].duty_cycle);
+        		//nk_label( ctx, combo_buffer, NK_TEXT_CENTERED );
+        		static int show_keypad3 = 0;
+        		show_keypad3 |= nk_button_label( ctx, combo_buffer );
+                if (show_keypad3)
+                {
+                	show_keypad3 = nk_keypad( ctx, &osc->waveforms[osc->waveform_selected].duty_cycle );
+                	build_waveform( osc );
+                }
+
         		nk_button_set_behavior(ctx, NK_BUTTON_REPEATER);
         		if( nk_button_symbol(ctx, NK_SYMBOL_TRIANGLE_RIGHT) )
         		{
         			osc->waveforms[osc->waveform_selected].duty_cycle += 1;
+        			build_waveform( osc );
         		}
                 nk_tree_pop(ctx);
             }
@@ -1103,7 +1283,7 @@ void StartDefaultTask(void *argument)
 			lcd_draw_cross( &lcd, x, y, 0xFFFF );
 		}
 
-		osDelay(10);
+		osDelay(1);
 
 
 	}

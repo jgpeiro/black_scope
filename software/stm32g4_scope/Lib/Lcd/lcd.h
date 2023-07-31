@@ -17,6 +17,7 @@ struct sLcd
     uint16_t reset_pin;
     GPIO_TypeDef *bl_port;
     uint16_t bl_pin;
+
     uint16_t width;
     uint16_t height;
 };
@@ -31,8 +32,6 @@ void lcd_set_window( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h )
 void lcd_set_pixel( tLcd *pThis, int16_t x, int16_t y, uint16_t color );
 void lcd_rect( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color );
 void lcd_clear( tLcd *pThis, uint16_t color );
-void lcd_bmp( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint8_t *buf );
-
-
+void lcd_bmp( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *buf );
 
 #endif /* LCD_H_ */

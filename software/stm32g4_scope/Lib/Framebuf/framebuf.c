@@ -14,8 +14,8 @@
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
-void setpixel(const tFramebuf *fb, unsigned int x, unsigned int y, uint32_t col) {
-	((uint16_t *)fb->buf)[x + y * fb->stride] = col;
+void setpixel(const tFramebuf *fb, unsigned int x, unsigned int y, uint16_t col) {
+	fb->buf[x + y * fb->stride] = col;
 }
 
 void setpixel_checked(const tFramebuf *fb, int x, int y, int col ) {
@@ -24,8 +24,8 @@ void setpixel_checked(const tFramebuf *fb, int x, int y, int col ) {
     }
 }
 
-uint32_t getpixel(const tFramebuf *fb, unsigned int x, unsigned int y) {
-	return ((uint16_t *)fb->buf)[x + y * fb->stride];
+uint16_t getpixel(const tFramebuf *fb, unsigned int x, unsigned int y) {
+	return fb->buf[x + y * fb->stride];
 }
 
 void fill_rect(const tFramebuf *fb, int x, int y, int w, int h, uint32_t col) {
@@ -42,7 +42,7 @@ void fill_rect(const tFramebuf *fb, int x, int y, int w, int h, uint32_t col) {
 
     w = xend - x;
     h = yend - y;
-    uint16_t *b = &((uint16_t *)fb->buf)[x + y * fb->stride];
+    uint16_t *b = &fb->buf[x + y * fb->stride];
     while (h--){
     	for (unsigned int ww = w; ww; --ww) {
             *b++ = col;
@@ -51,43 +51,43 @@ void fill_rect(const tFramebuf *fb, int x, int y, int w, int h, uint32_t col) {
     }
 }
 
-void framebuf_init(tFramebuf *fb, uint16_t width, uint16_t height, char *buf ) {
+void framebuf_init(tFramebuf *fb, uint16_t width, uint16_t height, uint16_t *buf ) {
     fb->width = width;
     fb->height = height;
 	fb->buf = buf;
 	fb->stride = fb->width;
 }
 
-void framebuf_fill( const tFramebuf *fb, uint32_t col ) {
+void framebuf_fill( const tFramebuf *fb, uint16_t col ) {
     fill_rect( fb, 0, 0, fb->width, fb->height, col);
 }
 
-void framebuf_fill_rect( const tFramebuf *fb, int x, int y, int w, int h, uint32_t col ) {
+void framebuf_fill_rect( const tFramebuf *fb, int x, int y, int w, int h, uint16_t col ) {
     fill_rect( fb, x, y, w, h, col );
 }
 
-void framebuf_pixel( const tFramebuf *fb, int x, int y, uint32_t col ) {
+void framebuf_pixel( const tFramebuf *fb, int x, int y, uint16_t col ) {
     if (0 <= x && x < fb->width && 0 <= y && y < fb->height) {
 		setpixel( fb, x, y,  col );
     }
 }
 
-void framebuf_hline( const tFramebuf *fb, int x, int y, int w, uint32_t col ) {
+void framebuf_hline( const tFramebuf *fb, int x, int y, int w, uint16_t col ) {
 	fill_rect( fb, x, y, w, 1, col );
 }
 
-void framebuf_vline( const tFramebuf *fb, int x, int y, int h, uint32_t col ) {
+void framebuf_vline( const tFramebuf *fb, int x, int y, int h, uint16_t col ) {
 	fill_rect( fb, x, y, 1, h, col );
 }
 
-void framebuf_rect( const tFramebuf *fb, int x, int y, int w, int h, uint32_t col ) {
+void framebuf_rect( const tFramebuf *fb, int x, int y, int w, int h, uint16_t col ) {
 	fill_rect( fb, x, y, w, 1, col );
 	fill_rect( fb, x, y + h - 1, w, 1, col );
 	fill_rect( fb, x, y, 1, h, col );
 	fill_rect( fb, x + w - 1, y, 1, h, col );
 }
 
-void line(const tFramebuf *fb, int x1, int y1, int x2, int y2, uint32_t col) {
+void line(const tFramebuf *fb, int x1, int y1, int x2, int y2, uint16_t col) {
 	int dx = x2 - x1;
 	int sx;
     if (dx > 0) {
@@ -147,12 +147,12 @@ void line(const tFramebuf *fb, int x1, int y1, int x2, int y2, uint32_t col) {
     }
 }
 
-void framebuf_line(const tFramebuf *fb, int x1, int y1, int x2, int y2, uint32_t col) {
+void framebuf_line(const tFramebuf *fb, int x1, int y1, int x2, int y2, uint16_t col) {
     line( fb, x1, y1, x2, y2, col );
 }
 
 
-void framebuf_circle(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col) {
+void framebuf_circle(const tFramebuf *fb, int xc, int yc, int radius, uint16_t col) {
     int x = 0;
     int y = radius;
     int d = 3 - 2 * radius;
@@ -180,7 +180,7 @@ void framebuf_circle(const tFramebuf *fb, int xc, int yc, int radius, uint32_t c
 #define QUADRANT_90  0x02
 #define QUADRANT_180 0x04
 #define QUADRANT_270 0x08
-void framebuf_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col, uint8_t quadrant) {
+void framebuf_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radius, uint16_t col, uint8_t quadrant) {
     int x = 0;
     int y = radius;
     int d = 3 - 2 * radius;
@@ -213,7 +213,7 @@ void framebuf_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radius, u
     }
 }
 
-void framebuf_fill_circle(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col) {
+void framebuf_fill_circle(const tFramebuf *fb, int xc, int yc, int radius, uint16_t col) {
     framebuf_hline(fb, xc - radius, yc, 2 * radius, col);
 
     int x = 0;
@@ -241,7 +241,7 @@ void framebuf_fill_circle(const tFramebuf *fb, int xc, int yc, int radius, uint3
     }
 }
 
-void framebuf_fill_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radius, uint32_t col, uint8_t quadrant) {
+void framebuf_fill_circle_quadrant(const tFramebuf *fb, int xc, int yc, int radius, uint16_t col, uint8_t quadrant) {
     framebuf_hline(fb, xc - radius, yc, 2 * radius, col);
 
     int x = 0;

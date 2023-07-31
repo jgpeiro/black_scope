@@ -8,7 +8,6 @@
 #include "lcd.h"
 
 // ILI9488 register definitions
-
 #define LCD_REG_SOFT_RESET              (0x01)
 #define LCD_REG_SLEEP_OUT               (0x11)
 #define LCD_REG_DISPLAY_ON              (0x29)
@@ -116,7 +115,7 @@ void lcd_clear( tLcd *pThis, uint16_t color )
     lcd_rect( pThis, 0, 0, pThis->width, pThis->height, color );
 }
 
-void lcd_bmp( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint8_t *buf )
+void lcd_bmp( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *buf )
 {
     uint32_t i = 0;
 
@@ -125,7 +124,6 @@ void lcd_bmp( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint8_t
     LCD_CMD_ADDR = LCD_REG_MEMORY_WRITE;
     for( i = w*h ; i ; i-- )
     {
-        LCD_DATA_ADDR = *(uint16_t*)buf;
-        buf+=2;
+        LCD_DATA_ADDR = *buf++;
     }
 }
