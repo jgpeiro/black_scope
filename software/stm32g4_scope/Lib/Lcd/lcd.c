@@ -77,21 +77,32 @@ void lcd_set_window( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h )
     uint16_t y1 = LCD_CLAMP( y + h - 1, 0, pThis->height - 1 );
 
     LCD_CMD_ADDR = LCD_REG_COLUMN_ADDR;
-    LCD_DATA_ADDR = (x0>>8)&0xFF;
-    LCD_DATA_ADDR = (x0>>0)&0xFF;
-    LCD_DATA_ADDR = (x1>>8)&0xFF;
-    LCD_DATA_ADDR = (x1>>0)&0xFF;
+    LCD_DATA_ADDR =(x0>>8)&0xFF;
+    LCD_DATA_ADDR = x0;
+    LCD_DATA_ADDR =(x1>>8)&0xFF;
+    LCD_DATA_ADDR = x1;
 
     LCD_CMD_ADDR = LCD_REG_PAGE_ADDR;
-    LCD_DATA_ADDR = (y0>>8)&0xFF;
-    LCD_DATA_ADDR = (y0>>0)&0xFF;
-    LCD_DATA_ADDR = (y1>>8)&0xFF;
-    LCD_DATA_ADDR = (y1>>0)&0xFF;
+    LCD_DATA_ADDR =(y0>>8)&0xFF;
+    LCD_DATA_ADDR = y0;
+    LCD_DATA_ADDR =(y1>>8)&0xFF;
+    LCD_DATA_ADDR = y1;
 }
 
 void lcd_set_pixel( tLcd *pThis, int16_t x, int16_t y, uint16_t color )
 {
-	lcd_set_window( pThis, x, y, 1, 1 );
+	//lcd_set_window( pThis, x, y, 1, 1 );
+    LCD_CMD_ADDR = LCD_REG_COLUMN_ADDR;
+    LCD_DATA_ADDR =(x>>8)&0xFF;
+    LCD_DATA_ADDR = x;
+    LCD_DATA_ADDR =(x>>8)&0xFF;
+    LCD_DATA_ADDR = x;
+
+    LCD_CMD_ADDR = LCD_REG_PAGE_ADDR;
+    LCD_DATA_ADDR =(y>>8)&0xFF;
+    LCD_DATA_ADDR = y;
+    LCD_DATA_ADDR =(y>>8)&0xFF;
+    LCD_DATA_ADDR = y;
 
     LCD_CMD_ADDR = LCD_REG_MEMORY_WRITE;
     LCD_DATA_ADDR = color;

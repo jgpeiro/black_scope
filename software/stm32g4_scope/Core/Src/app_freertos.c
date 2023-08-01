@@ -131,6 +131,7 @@ void MX_FREERTOS_Init(void) {
 #include "FontUbuntuBookRNormal16.h"
 #include "psram.h"
 #include "wavegen.h"
+#include "ui.h"
 
 
 #include "nuklear.h"
@@ -994,6 +995,8 @@ void draw_buffers(
 	uint16_t width = pLcd->width;
 	uint16_t height = pLcd->height;
 
+	lcd_set_window( pLcd, 0, 0, pLcd->width, pLcd->height );
+
 	for( j = 0; j < width; j++ )
 	{
 		j2 = (j*len)/width;
@@ -1153,6 +1156,7 @@ void StartDefaultTask(void *argument)
 
 	struct Oscilloscope osc = {0};
 
+	tUi ui = {0};
 
 
 	int i;
@@ -1225,8 +1229,8 @@ void StartDefaultTask(void *argument)
 
 	    if( pressed || pressed_bck )
 	    {
-		    oscilloscope_process( &osc, &ctx, &scope );
-
+		    //oscilloscope_process( &osc, &ctx, &scope );
+	    	ui_build( &ui, &ctx );
 			collapsed = nk_window_is_collapsed( &ctx, "STM32G4 Scope" );
 			if( collapsed != collapsed_bck )
 			{
@@ -1272,7 +1276,7 @@ void StartDefaultTask(void *argument)
 				i&0x01
 			);
 
-			draw_measurements( &lcd, collapsed );
+			//draw_measurements( &lcd, collapsed );
 
 			trigger_bck = trigger;
 			i += 1;
