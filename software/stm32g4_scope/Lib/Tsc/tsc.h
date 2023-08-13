@@ -13,6 +13,8 @@
 // TSC2046 registers
 #define TSC_CHANNEL_X	(0x90)
 #define TSC_CHANNEL_Y	(0xD0)
+//#define TSC_CHANNEL_X	(0x93)
+//#define TSC_CHANNEL_Y	(0xD3)
 
 typedef struct {
     SPI_HandleTypeDef* spi;

@@ -49,10 +49,10 @@
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
+osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 4096 * 4
+  .stack_size = 1024 * 2
 };
 /* Definitions for taskTsc */
 osThreadId_t taskTscHandle;
@@ -136,7 +136,7 @@ void MX_FREERTOS_Init(void) {
 
 #include "nuklear.h"
 
-#define BUFFER_LEN 	(1024)
+#define BUFFER_LEN 	(512)
 #define FB_WIDTH 	(240)
 #define FB_HEIGHT	(80)
 #define FB2_WIDTH 	(160-1)
@@ -301,17 +301,17 @@ void build_waveform( struct Oscilloscope *osc )
 	{
 		if( osc->waveforms[osc->waveform_selected].type == WAVEGEN_TYPE_DC )
 		{
-			wavegen_build_dc( buffer, BUFFER_LEN,
-				osc->waveforms[osc->waveform_selected].offset );
+			//wavegen_build_dc( buffer, BUFFER_LEN,
+			//	osc->waveforms[osc->waveform_selected].offset );
 		}
 		else if( osc->waveforms[osc->waveform_selected].type == WAVEGEN_TYPE_SINE )
 		{
-			wavegen_build_sine( buffer, BUFFER_LEN,
-				1e6,
-				1024,
-				osc->waveforms[osc->waveform_selected].offset,
-				10e3
-			);
+			//wavegen_build_sine( buffer, BUFFER_LEN,
+			//	1e6,
+			//	1024,
+			//	osc->waveforms[osc->waveform_selected].offset,
+			//	10e3
+			//);
 		}
 	}
 	else
@@ -1140,6 +1140,10 @@ void draw_measurements( tLcd *pLcd, int collapsed )
 uint16_t x_tsc = 0;
 uint16_t y_tsc = 0;
 uint16_t p_tsc = 0;
+
+struct nk_context ctx = {0};
+tWaveGen wavegen;
+
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
@@ -1149,12 +1153,13 @@ void StartDefaultTask(void *argument)
 	tScope scope = {0};
 	tFramebuf fb = {0};
 
-	struct nk_context ctx = {0};
+	//struct nk_context ctx = {0};
 	struct nk_buffer cmds = {0};
 	struct nk_buffer pool = {0};
 	struct nk_user_font font = {0};
 
 	struct Oscilloscope osc = {0};
+	
 
 	tUi ui = {0};
 
@@ -1185,16 +1190,29 @@ void StartDefaultTask(void *argument)
 	nk_init_custom( &ctx, &cmds, &pool, &font );
 	nk_set_theme( &ctx, THEME_DARK );
 
-	for( i = 0 ; i < BUFFER_LEN ; i++ )
-	{
-		dac1_buffer[i] = sinf(2*dac_freq*2*M_PI*i/BUFFER_LEN)*1023 + 2048;
-		dac2_buffer[i] = sinf(dac_freq*2*M_PI*i/BUFFER_LEN)*1023 + 2048;
-	}
+	//for( i = 0 ; i < BUFFER_LEN ; i++ )
+	//{
+	//	dac1_buffer[i] = sinf(2*dac_freq*2*M_PI*i/BUFFER_LEN)*1023 + 2048;
+	//	dac2_buffer[i] = sinf(dac_freq*2*M_PI*i/BUFFER_LEN)*1023 + 2048;
+	//}
 
 	__HAL_DBGMCU_FREEZE_TIM4();
-	HAL_DAC_Start_DMA( &hdac1, DAC_CHANNEL_1, (uint32_t*)dac1_buffer, BUFFER_LEN, DAC_ALIGN_12B_R );
-	HAL_DAC_Start_DMA( &hdac1, DAC_CHANNEL_2, (uint32_t*)dac2_buffer, BUFFER_LEN, DAC_ALIGN_12B_R );
-	HAL_TIM_Base_Start( &htim4 );
+	//HAL_DAC_Start_DMA( &hdac1, DAC_CHANNEL_1, (uint32_t*)dac1_buffer, BUFFER_LEN, DAC_ALIGN_12B_R );
+	//HAL_DAC_Start_DMA( &hdac1, DAC_CHANNEL_2, (uint32_t*)dac2_buffer, BUFFER_LEN, DAC_ALIGN_12B_R );
+	//HAL_TIM_Base_Start( &htim4 );
+
+	wavegen_init( &wavegen,
+		&hdac1,
+		&htim4,
+		dac1_buffer,
+		dac2_buffer,
+		100,
+		1e6 );
+    wavegen_build_sine( &wavegen, 0x01, 10e3, 2047, 1500 );
+    wavegen_build_sine( &wavegen, 0x02, 20e3, 2047, 1500 );
+    wavegen_start( &wavegen, 0x03 );
+    //HAL_Delay( 1000 );
+    //wavegen_stop( &wavegen, 0x03 );
 
 	osc.acquire_run = 1;
 	osc.channels[0].offset = 2048;
@@ -1204,17 +1222,36 @@ void StartDefaultTask(void *argument)
 	HAL_DAC_SetValue(&hdac2, DAC_CHANNEL_1, DAC_ALIGN_12B_R, osc.channels[0].offset);
 	HAL_DAC_Start(&hdac2, DAC_CHANNEL_1);
 
+	TickType_t xLastWakeTime;
+	const TickType_t xFrequency = 20;
+	xLastWakeTime = xTaskGetTickCount();
+	int key_cnt = 0;
+	int key = NK_KEY_RIGHT;
 	/* Infinite loop */
 	for(;;)
 	{
+		vTaskDelayUntil( &xLastWakeTime, xFrequency );
 		x_bck = x;
 		y_bck = y;
 		//tsc_read( &tsc, &x, &y );
 		x = x_tsc;
 		y = y_tsc;
+
+		//continue;
 		pressed_bck = pressed;
 		pressed = p_tsc && x < fb.width;
 		nk_input_begin( &ctx );
+
+		if( key_cnt%10 == 0 )
+		{
+			nk_input_key( &ctx, key, 1 );
+		}
+		if( key_cnt%10 == 1 )
+		{
+			nk_input_key( &ctx, key, 0 );
+		}
+		key_cnt += 1;
+
 		if( pressed )
 		{
 			nk_input_motion( &ctx, x, y );
@@ -1252,7 +1289,8 @@ void StartDefaultTask(void *argument)
 					(i&0x01)?buffer4:buffer8,
 					BUFFER_LEN );
 			scope_start( &scope );
-			while( scope_is_busy( &scope ) );
+			int t0 = HAL_GetTick();
+			while( scope_is_busy( &scope ) && HAL_GetTick()-t0 < (1000/xFrequency) );
 			scope_stop( &scope );
 
 			trigger = scope_get_trigger( &scope ) - BUFFER_LEN/2;
@@ -1276,7 +1314,7 @@ void StartDefaultTask(void *argument)
 				i&0x01
 			);
 
-			//draw_measurements( &lcd, collapsed );
+			draw_measurements( &lcd, collapsed );
 
 			trigger_bck = trigger;
 			i += 1;
@@ -1287,7 +1325,7 @@ void StartDefaultTask(void *argument)
 			lcd_draw_cross( &lcd, x, y, 0xFFFF );
 		}
 
-		osDelay(1);
+		//osDelay(1);
 
 
 	}
@@ -1307,8 +1345,8 @@ void StartTaskTsc(void *argument)
 	uint16_t x = 0;
 	uint16_t y = 0;
 
-	int x_low = 0;
-	int y_low = 0;
+	float x_low = 0;
+	float y_low = 0;
 
 	int cnt = 0;
 
@@ -1320,11 +1358,38 @@ void StartTaskTsc(void *argument)
 	tTsc tsc = {0};
 	tsc_init( &tsc, &hspi3, TSC_nSS_GPIO_Port, TSC_nSS_Pin, AX, BX, AY, BY, 32 );
 
+	TickType_t xLastWakeTime;
+	const TickType_t xFrequency = 1;
+	xLastWakeTime = xTaskGetTickCount();
   /* Infinite loop */
   for(;;)
   {
-	  tsc_read_ll( &tsc, &x, &y );
-	  if( x )
+	  vTaskDelayUntil( &xLastWakeTime, xFrequency );
+	  uint16_t xx;
+	  uint16_t yy;
+	  int acc_x = 0;
+	  int acc_y = 0;
+	  x = 0;
+	  y = 0;
+	  int i;
+	  int N = 8;
+	  for( i = 0 ; i < N ; i++ )
+	  {
+		  xx = 0;
+		  yy = 0;
+		  tsc_read_ll( &tsc, &xx, &yy );
+		 // printf( "%d, %d, %d\n", HAL_GetTick(), (int)xx, (int)yy );
+		  if( xx == 0 )
+		  {
+			  acc_x = 0;
+			  acc_y = 0;
+			  break;
+		  }
+		  acc_x += xx;
+		  acc_y += yy;
+	  }
+
+	  if( acc_x )
 	  {
 		  cnt += 1;
 	  }
@@ -1334,8 +1399,11 @@ void StartTaskTsc(void *argument)
 	  }
 
 	  // filter
-	  x_low = x*0.1 + x_low*0.9;
-	  y_low = y*0.1 + y_low*0.9;
+	  if( acc_x )
+	  {
+		  x_low = acc_x/N*0.1 + x_low*0.9;
+		  y_low = acc_y/N*0.1 + y_low*0.9;
+	  }
 
 	  // tsc to pixel coordinates
 	  x = tsc.ax*x_low + tsc.bx;
@@ -1353,7 +1421,7 @@ void StartTaskTsc(void *argument)
 		  y_tsc = 0;
 		  p_tsc = 0;
 	  }
-	  osDelay(1);
+	  //osDelay(1);
   }
   /* USER CODE END StartTaskTsc */
 }

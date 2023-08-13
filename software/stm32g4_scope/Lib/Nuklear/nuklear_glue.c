@@ -27,19 +27,48 @@ uint32_t nk_color_to_rgb565( struct nk_color color )
 	return rgb565;
 }
 
+void clip( struct nk_recti *r, struct nk_recti *s )
+{
+	if( r->x < s->x )
+	{
+		r->w -= s->x - r->x;
+		r->x = s->x;
+	}
+	if( r->y < s->y )
+	{
+		r->h -= s->y - r->y;
+		r->y = s->y;
+	}
+	if( r->x + r->w > s->x + s->w )
+	{
+		r->w = s->x + s->w - r->x;
+	}
+	if( r->y + r->h > s->y + s->h )
+	{
+		r->h = s->y + s->h - r->y;
+	}
+}
+
 void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd) {
 	int y0;
 	const struct nk_command *cmd = NULL;
+	struct nk_command_scissor gs = {0};
 	for (y0 = 0; y0 < pLcd->height; y0 += pfb->height) {
 		framebuf_fill(pfb, 0x00000000);
-
+		gs.x = 0;
+		gs.y = y0;
+		gs.w = pfb->width;
+		gs.h = pfb->height;
 		for (cmd = nk__begin(ctx); cmd != 0; cmd = nk__next(ctx, cmd)) {
 			//printf( "cmd->type = %d\n", cmd->type );
 			switch (cmd->type) {
 			case NK_COMMAND_NOP:
 				break;
-			case NK_COMMAND_SCISSOR:
-				break;
+			case NK_COMMAND_SCISSOR:{
+				const struct nk_command_scissor *s =
+						(const struct nk_command_scissor*) cmd;
+				gs = *s;
+			}	break;
 			case NK_COMMAND_LINE: {
 				const struct nk_command_line *l =
 						(const struct nk_command_line*) cmd;
@@ -59,8 +88,16 @@ void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd) {
 				break;
 
 			case NK_COMMAND_RECT: {
-				const struct nk_command_rect *r =
-						(const struct nk_command_rect*) cmd;
+				struct nk_command_rect *r =
+						(struct nk_command_rect*) cmd;
+				/*struct nk_recti r1 = { r->x, r->y, r->w, r->h };
+				struct nk_recti r2 = { gs.x, gs.y, gs.w, gs.h };
+				clip( &r1, &r2 );
+				r->x = r1.x;
+				r->y = r1.y;
+				r->w = r1.w;
+				r->h = r1.h;*/
+				
 				int rad = 4;
 				framebuf_circle_quadrant(pfb, r->x + r->w - rad,
 						r->y - y0 + r->h - rad, rad,
@@ -85,9 +122,16 @@ void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd) {
 			}
 				break;
 			case NK_COMMAND_RECT_FILLED: {
-				const struct nk_command_rect_filled *r =
-						(const struct nk_command_rect_filled*) cmd;
+				struct nk_command_rect_filled *r =
+						(struct nk_command_rect_filled*) cmd;
 				//framebuf_fill_rect( pfb, r->x, r->y-y0, r->w, r->h, nk_colot_to_rgb666( r->color ) );
+				/*struct nk_recti r1 = { r->x, r->y, r->w, r->h };
+				struct nk_recti r2 = { gs.x, gs.y, gs.w, gs.h };
+				clip( &r1, &r2 );
+				r->x = r1.x;
+				r->y = r1.y;
+				r->w = r1.w;
+				r->h = r1.h;*/
 				int rad = 4;
 				framebuf_fill_circle_quadrant(pfb, r->x + r->w - rad,
 						r->y - y0 + r->h - rad, rad,

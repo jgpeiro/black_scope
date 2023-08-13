@@ -79,6 +79,7 @@ struct sUi_Waveform
     int32_t offset;
     int32_t scale;
     int32_t duty_cycle;
+    int32_t frequency;
 };
 typedef struct sUi_Waveform tUi_Waveform;
 

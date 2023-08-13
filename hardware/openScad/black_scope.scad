@@ -98,7 +98,7 @@ standoffDiameter    = 4;
 // Total height of box = basePlaneThickness + lidPlaneThickness 
 //                     + baseWallHeight + lidWallHeight
 pcbLength           = 89;//87;
-pcbWidth            = 60.5;//59;
+pcbWidth            = 60.5-0.4;//59;
 pcbThickness        = 1.7;
                             
 // padding between pcb and inside wall

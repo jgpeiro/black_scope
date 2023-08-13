@@ -74,7 +74,6 @@ void font_draw_char( const tFont *pFont, int16_t x0, int16_t y0, uint8_t c, uint
 
                 if( bitmap & (0x80>>b) )
                 {
-                	//setpixel_checked(fb, px, py, color, 1);
                 	cb( param, px, py, color );
                 }
             }
