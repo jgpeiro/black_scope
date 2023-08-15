@@ -148,8 +148,11 @@ void scope_config_vertical( tScope *scope, int gain1, int gain2, int gain3, int 
 	HAL_DAC_Start( scope->vertical.hdac, DAC_CHANNEL_1 );
 }
 
+#include "ui.h"
+int _channel = 0;
 void scope_config_trigger( tScope *scope, int channel, int mode, int level, int slope )
 {
+	_channel = channel;
     ADC_AnalogWDGConfTypeDef AnalogWDGConfig_arm_1 = {0};
     ADC_AnalogWDGConfTypeDef AnalogWDGConfig_arm_2 = {0};
     ADC_AnalogWDGConfTypeDef AnalogWDGConfig_arm_3 = {0};
@@ -187,9 +190,9 @@ void scope_config_trigger( tScope *scope, int channel, int mode, int level, int 
     AnalogWDGConfig_trig_4.WatchdogNumber = ADC_ANALOGWATCHDOG_2;
 
     // Configure the required for arm the oscilloscope.
-    if( mode == 1 ) // normal
+    if( mode == UI_TRIGGER_MODE_NORMAL )
     {
-        if( slope == 0 ) // Rising. This is inverted PGA gain is negative.
+        if( slope == UI_TRIGGER_SLOPE_RISING ) // Note: PGA gain is negative.
         {
             if( channel == 0 )
             {
@@ -270,6 +273,38 @@ void scope_config_trigger( tScope *scope, int channel, int mode, int level, int 
     HAL_ADC_AnalogWDGConfig( scope->trigger.hadc2, &AnalogWDGConfig_trig_2 );
     HAL_ADC_AnalogWDGConfig( scope->trigger.hadc3, &AnalogWDGConfig_trig_3 );
     HAL_ADC_AnalogWDGConfig( scope->trigger.hadc4, &AnalogWDGConfig_trig_4 );
+
+    // disable ADCs irq. Leave only the selected channel enabled.
+    __HAL_ADC_DISABLE_IT( scope->trigger.hadc1, ADC_IT_AWD1 );
+    __HAL_ADC_DISABLE_IT( scope->trigger.hadc2, ADC_IT_AWD1 );
+    __HAL_ADC_DISABLE_IT( scope->trigger.hadc3, ADC_IT_AWD1 );
+    __HAL_ADC_DISABLE_IT( scope->trigger.hadc4, ADC_IT_AWD1 );
+    __HAL_ADC_DISABLE_IT( scope->trigger.hadc1, ADC_IT_AWD2 );
+    __HAL_ADC_DISABLE_IT( scope->trigger.hadc2, ADC_IT_AWD2 );
+    __HAL_ADC_DISABLE_IT( scope->trigger.hadc3, ADC_IT_AWD2 );
+    __HAL_ADC_DISABLE_IT( scope->trigger.hadc4, ADC_IT_AWD2 );
+
+    // enable only the selected channel.
+    if( channel == 0 )
+    {
+        __HAL_ADC_ENABLE_IT( scope->trigger.hadc1, ADC_IT_AWD1 );
+        //__HAL_ADC_ENABLE_IT( scope->trigger.hadc1, ADC_IT_AWD2 );
+    }
+    else if( channel == 1 )
+    {
+        __HAL_ADC_ENABLE_IT( scope->trigger.hadc2, ADC_IT_AWD1 );
+        //__HAL_ADC_ENABLE_IT( scope->trigger.hadc2, ADC_IT_AWD2 );
+    }
+    else if( channel == 2 )
+    {
+        __HAL_ADC_ENABLE_IT( scope->trigger.hadc3, ADC_IT_AWD1 );
+        //__HAL_ADC_ENABLE_IT( scope->trigger.hadc3, ADC_IT_AWD2 );
+    }
+    else if( channel == 3 )
+    {
+        __HAL_ADC_ENABLE_IT( scope->trigger.hadc4, ADC_IT_AWD1 );
+        //__HAL_ADC_ENABLE_IT( scope->trigger.hadc4, ADC_IT_AWD2 );
+    }
 }
 
 void scope_init( tScope *scope, uint16_t trigger_level, uint16_t sample_rate, uint16_t *buffer1, uint16_t *buffer2, uint16_t *buffer3, uint16_t *buffer4, uint16_t len )
@@ -385,10 +420,34 @@ void scope_start( tScope *scope )
 	HAL_ADCEx_Calibration_Start( scope->hadc3, ADC_SINGLE_ENDED );
 	HAL_ADCEx_Calibration_Start( scope->hadc4, ADC_SINGLE_ENDED );
 
-	LL_ADC_DisableIT_AWD1( scope->hadc1->Instance );
-	LL_ADC_DisableIT_AWD2( scope->hadc1->Instance );
-	__HAL_ADC_CLEAR_FLAG( scope->hadc1, ADC_FLAG_AWD1 );
-	__HAL_ADC_CLEAR_FLAG( scope->hadc1, ADC_FLAG_AWD2 );
+	if( _channel == 0 )
+	{
+		LL_ADC_DisableIT_AWD1( scope->hadc1->Instance );
+		LL_ADC_DisableIT_AWD2( scope->hadc1->Instance );
+		__HAL_ADC_CLEAR_FLAG( scope->hadc1, ADC_FLAG_AWD1 );
+		__HAL_ADC_CLEAR_FLAG( scope->hadc1, ADC_FLAG_AWD2 );
+	}
+	if( _channel == 1 )
+	{
+		LL_ADC_DisableIT_AWD1( scope->hadc2->Instance );
+		LL_ADC_DisableIT_AWD2( scope->hadc2->Instance );
+		__HAL_ADC_CLEAR_FLAG( scope->hadc2, ADC_FLAG_AWD1 );
+		__HAL_ADC_CLEAR_FLAG( scope->hadc2, ADC_FLAG_AWD2 );
+	}
+	if( _channel == 2 )
+	{
+		LL_ADC_DisableIT_AWD1( scope->hadc3->Instance );
+		LL_ADC_DisableIT_AWD2( scope->hadc3->Instance );
+		__HAL_ADC_CLEAR_FLAG( scope->hadc3, ADC_FLAG_AWD1 );
+		__HAL_ADC_CLEAR_FLAG( scope->hadc3, ADC_FLAG_AWD2 );
+	}
+	if( _channel == 3 )
+	{
+		LL_ADC_DisableIT_AWD1( scope->hadc4->Instance );
+		LL_ADC_DisableIT_AWD2( scope->hadc4->Instance );
+		__HAL_ADC_CLEAR_FLAG( scope->hadc4, ADC_FLAG_AWD1 );
+		__HAL_ADC_CLEAR_FLAG( scope->hadc4, ADC_FLAG_AWD2 );
+	}
 
 	scope->htim1->Instance->CNT = 0;
 	scope->htim2->Instance->CNT = 0;
@@ -437,6 +496,15 @@ void HAL_ADC_ConvHalfCpltCallback( ADC_HandleTypeDef* hadc )
 	if( _scope && hadc == _scope->hadc1 )
 	{
 	}
+	else if( _scope && hadc == _scope->hadc2 )
+	{
+	}
+	else if( _scope && hadc == _scope->hadc3 )
+	{
+	}
+	else if( _scope && hadc == _scope->hadc4 )
+	{
+	}
 }
 
 void HAL_ADC_ConvCpltCallback( ADC_HandleTypeDef* hadc )
@@ -473,6 +541,39 @@ void HAL_ADC_ConvCpltCallback( ADC_HandleTypeDef* hadc )
 			//__HAL_ADC_CLEAR_FLAG( _scope->hadc1, ADC_FLAG_AWD2 );
 		}
 	}
+
+	else if( _scope && hadc == _scope->hadc2 )
+		{
+			if( 1 && _scope->state == SCOPE_STATE_WAIT_FOR_CONVERSION_COMPLETE )
+			{
+				_scope->state = SCOPE_STATE_WAIT_FOR_ARM;
+				_scope->CNDTRs[SCOPE_STATE_WAIT_FOR_ARM] = _scope->hdma_adc2->Instance->CNDTR;
+				__HAL_ADC_CLEAR_FLAG( _scope->hadc2, ADC_FLAG_AWD1 );
+				//__HAL_ADC_CLEAR_FLAG( _scope->hadc2, ADC_FLAG_AWD2 );
+				LL_ADC_EnableIT_AWD1( _scope->hadc2->Instance );
+			}
+
+			if( 0 && _scope->state == SCOPE_STATE_WAIT_FOR_CONVERSION_COMPLETE )
+			{
+				_scope->state = SCOPE_STATE_WAIT_FOR_STOP;
+				_scope->CNDTRs[SCOPE_STATE_WAIT_FOR_STOP] = _scope->hdma_adc2->Instance->CNDTR;
+
+				//_scope->htim2->Instance->CCR1 = 127;
+				__HAL_TIM_CLEAR_IT( _scope->htim2, TIM_IT_CC1 );
+				__HAL_TIM_CLEAR_IT( _scope->htim2, TIM_IT_CC2 );
+				__HAL_TIM_CLEAR_IT( _scope->htim2, TIM_IT_UPDATE );
+				__HAL_TIM_CLEAR_FLAG( _scope->htim2, TIM_FLAG_CC1 );
+				__HAL_TIM_CLEAR_FLAG( _scope->htim2, TIM_FLAG_CC2 );
+				__HAL_TIM_CLEAR_FLAG( _scope->htim2, TIM_FLAG_UPDATE );
+				//start_cpu = SysTick->VAL;
+				HAL_TIM_Base_Start( _scope->htim2 );
+				HAL_TIM_OnePulse_Start_IT( _scope->htim2, TIM_CHANNEL_1);
+				//LL_ADC_DisableIT_AWD1( _scope->hadc2->Instance );
+				LL_ADC_DisableIT_AWD2( _scope->hadc2->Instance );
+				//__HAL_ADC_CLEAR_FLAG( _scope->hadc2, ADC_FLAG_AWD1 );
+				//__HAL_ADC_CLEAR_FLAG( _scope->hadc2, ADC_FLAG_AWD2 );
+			}
+		}
 }
 
 void HAL_ADC_LevelOutOfWindowCallback( ADC_HandleTypeDef* hadc )
@@ -487,6 +588,19 @@ void HAL_ADC_LevelOutOfWindowCallback( ADC_HandleTypeDef* hadc )
 			//__HAL_ADC_CLEAR_FLAG( _scope->hadc1, ADC_FLAG_AWD1 );
 			__HAL_ADC_CLEAR_FLAG( _scope->hadc1, ADC_FLAG_AWD2 );
 			LL_ADC_EnableIT_AWD2( _scope->hadc1->Instance );
+		}
+	}
+
+	else if( _scope && hadc == _scope->hadc2 )
+	{
+		if( _scope->state == SCOPE_STATE_WAIT_FOR_ARM )
+		{
+			_scope->state = SCOPE_STATE_WAIT_FOR_TRIGGER;
+			_scope->CNDTRs[SCOPE_STATE_WAIT_FOR_TRIGGER] = _scope->hdma_adc2->Instance->CNDTR;
+			LL_ADC_DisableIT_AWD1( _scope->hadc2->Instance );
+			//__HAL_ADC_CLEAR_FLAG( _scope->hadc2, ADC_FLAG_AWD1 );
+			__HAL_ADC_CLEAR_FLAG( _scope->hadc2, ADC_FLAG_AWD2 );
+			LL_ADC_EnableIT_AWD2( _scope->hadc2->Instance );
 		}
 	}
 }
@@ -516,6 +630,29 @@ void HAL_ADCEx_LevelOutOfWindow2Callback( ADC_HandleTypeDef* hadc )
 			LL_ADC_DisableIT_AWD2( _scope->hadc1->Instance );
 			//__HAL_ADC_CLEAR_FLAG( _scope->hadc1, ADC_FLAG_AWD1 );
 			//__HAL_ADC_CLEAR_FLAG( _scope->hadc1, ADC_FLAG_AWD2 );
+		}
+	}
+	if( _scope && hadc == _scope->hadc2 )
+	{
+		if( _scope->state == SCOPE_STATE_WAIT_FOR_TRIGGER )
+		{
+			_scope->state = SCOPE_STATE_WAIT_FOR_STOP;
+			_scope->CNDTRs[SCOPE_STATE_WAIT_FOR_STOP] = _scope->hdma_adc2->Instance->CNDTR;
+
+			//_scope->htim2->Instance->CCR1 = 127;
+			__HAL_TIM_CLEAR_IT( _scope->htim2, TIM_IT_CC1 );
+			__HAL_TIM_CLEAR_IT( _scope->htim2, TIM_IT_CC2 );
+			__HAL_TIM_CLEAR_IT( _scope->htim2, TIM_IT_UPDATE );
+			__HAL_TIM_CLEAR_FLAG( _scope->htim2, TIM_FLAG_CC1 );
+			__HAL_TIM_CLEAR_FLAG( _scope->htim2, TIM_FLAG_CC2 );
+			__HAL_TIM_CLEAR_FLAG( _scope->htim2, TIM_FLAG_UPDATE );
+			start_cpu = SysTick->VAL;
+			HAL_TIM_Base_Start( _scope->htim2 );
+			HAL_TIM_OnePulse_Start_IT( _scope->htim2, TIM_CHANNEL_1);
+			//LL_ADC_DisableIT_AWD1( _scope->hadc2->Instance );
+			LL_ADC_DisableIT_AWD2( _scope->hadc2->Instance );
+			//__HAL_ADC_CLEAR_FLAG( _scope->hadc2, ADC_FLAG_AWD1 );
+			//__HAL_ADC_CLEAR_FLAG( _scope->hadc2, ADC_FLAG_AWD2 );
 		}
 	}
 }

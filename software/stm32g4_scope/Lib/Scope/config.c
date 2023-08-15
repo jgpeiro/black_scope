@@ -377,4 +377,6 @@ void scope_config_trigger( tScope *scope, int channel, in mode, int level, int s
     HAL_ADC_AnalogWDGConfig( scope->trigger.hadc2, &AnalogWDGConfig_trig_2 );
     HAL_ADC_AnalogWDGConfig( scope->trigger.hadc3, &AnalogWDGConfig_trig_3 );
     HAL_ADC_AnalogWDGConfig( scope->trigger.hadc4, &AnalogWDGConfig_trig_4 );
-}
+
+    // disable all ADC irqs. Leave only the selected channel enabled.
+    __HAL_ADC_DISABLE_IT( scope->trigger.hadc1, ADC_IT_EOC );

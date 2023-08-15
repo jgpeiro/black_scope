@@ -194,32 +194,32 @@ void ui_build_vertical( tUi *pThis, struct nk_context *pCtx )
     if( nk_tree_push( pCtx, NK_TREE_TAB, "Vertical", NK_MINIMIZED) )
     {
         nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
-        pThis->channel_selected = nk_combo(pCtx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, UI_CHANNEL_COUNT, pThis->channel_selected, 30, nk_vec2(94, 160));
-        if( nk_button_label( pCtx, pThis->channels[pThis->channel_selected].enabled ? "On" : "Off" ) )
+        pThis->vertical.channel_selected = nk_combo(pCtx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, UI_CHANNEL_COUNT, pThis->vertical.channel_selected, 30, nk_vec2(94, 160));
+        if( nk_button_label( pCtx, pThis->vertical.channels[pThis->vertical.channel_selected].enabled ? "On" : "Off" ) )
         {
-            pThis->channels[pThis->channel_selected].enabled = !pThis->channels[pThis->channel_selected].enabled;
+            pThis->vertical.channels[pThis->vertical.channel_selected].enabled = !pThis->vertical.channels[pThis->vertical.channel_selected].enabled;
         }
-        if( pThis->channels[pThis->channel_selected].enabled )
+        if( pThis->vertical.channels[pThis->vertical.channel_selected].enabled )
         {
         	nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
             nk_label( pCtx, "Coupling", NK_TEXT_LEFT );
-            pThis->channels[pThis->channel_selected].coupling = nk_combo( pCtx, (const char*[]){"DC", "Gnd"}, 2, pThis->channels[pThis->channel_selected].coupling, 30, nk_vec2(94, 120));
+            pThis->vertical.channels[pThis->vertical.channel_selected].coupling = nk_combo( pCtx, (const char*[]){"DC", "Gnd"}, 2, pThis->vertical.channels[pThis->vertical.channel_selected].coupling, 30, nk_vec2(94, 120));
             if( nk_property_keypad( pCtx, "Offset", 0, &pThis->vertical.offset, 4095, &show_keypad_offset ) )
 			{
 				scope_config_vertical( &scope,
-					pThis->channels[0].scale,
-					pThis->channels[1].scale,
-					pThis->channels[2].scale,
-					pThis->channels[3].scale,
+					pThis->vertical.channels[0].scale,
+					pThis->vertical.channels[1].scale,
+					pThis->vertical.channels[2].scale,
+					pThis->vertical.channels[3].scale,
 					pThis->vertical.offset );
 			}
-            if( nk_property_keypad( pCtx, "Scale", 1, &pThis->channels[pThis->channel_selected].scale, 9999, &show_keypad_scale ) )
+            if( nk_property_keypad( pCtx, "Scale", 1, &pThis->vertical.channels[pThis->vertical.channel_selected].scale, 9999, &show_keypad_scale ) )
 			{
 				scope_config_vertical( &scope,
-					pThis->channels[0].scale,
-					pThis->channels[1].scale,
-					pThis->channels[2].scale,
-					pThis->channels[3].scale,
+					pThis->vertical.channels[0].scale,
+					pThis->vertical.channels[1].scale,
+					pThis->vertical.channels[2].scale,
+					pThis->vertical.channels[3].scale,
 					pThis->vertical.offset );
 			}
         }

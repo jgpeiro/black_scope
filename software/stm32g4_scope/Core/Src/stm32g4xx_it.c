@@ -60,6 +60,9 @@ extern DMA_HandleTypeDef hdma_adc3;
 extern DMA_HandleTypeDef hdma_adc4;
 extern DMA_HandleTypeDef hdma_adc5;
 extern ADC_HandleTypeDef hadc1;
+extern ADC_HandleTypeDef hadc3;
+extern ADC_HandleTypeDef hadc4;
+extern ADC_HandleTypeDef hadc5;
 extern DMA_HandleTypeDef hdma_dac1_ch1;
 extern DMA_HandleTypeDef hdma_dac1_ch2;
 extern DMA_HandleTypeDef hdma_quadspi;
@@ -282,6 +285,20 @@ void TIM3_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles ADC3 global interrupt.
+  */
+void ADC3_IRQHandler(void)
+{
+  /* USER CODE BEGIN ADC3_IRQn 0 */
+
+  /* USER CODE END ADC3_IRQn 0 */
+  HAL_ADC_IRQHandler(&hadc3);
+  /* USER CODE BEGIN ADC3_IRQn 1 */
+
+  /* USER CODE END ADC3_IRQn 1 */
+}
+
+/**
   * @brief This function handles DMA2 channel1 global interrupt.
   */
 void DMA2_Channel1_IRQHandler(void)
@@ -307,6 +324,34 @@ void DMA2_Channel2_IRQHandler(void)
   /* USER CODE BEGIN DMA2_Channel2_IRQn 1 */
 
   /* USER CODE END DMA2_Channel2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles ADC4 global interrupt.
+  */
+void ADC4_IRQHandler(void)
+{
+  /* USER CODE BEGIN ADC4_IRQn 0 */
+
+  /* USER CODE END ADC4_IRQn 0 */
+  HAL_ADC_IRQHandler(&hadc4);
+  /* USER CODE BEGIN ADC4_IRQn 1 */
+
+  /* USER CODE END ADC4_IRQn 1 */
+}
+
+/**
+  * @brief This function handles ADC5 global interrupt.
+  */
+void ADC5_IRQHandler(void)
+{
+  /* USER CODE BEGIN ADC5_IRQn 0 */
+
+  /* USER CODE END ADC5_IRQn 0 */
+  HAL_ADC_IRQHandler(&hadc5);
+  /* USER CODE BEGIN ADC5_IRQn 1 */
+
+  /* USER CODE END ADC5_IRQn 1 */
 }
 
 /**

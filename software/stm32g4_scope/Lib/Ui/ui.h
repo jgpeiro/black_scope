@@ -25,7 +25,7 @@ enum UI_TRIGGER_SLOPE {
     UI_TRIGGER_SLOPE_FALLING,
 };
 
-enum UI_CHANNEL_COUPLING {
+enum UI_VERTICAL_CHANNEL_COUPLING {
     UI_CHANNEL_COUPLING_AC,
     UI_CHANNEL_COUPLING_DC,
     UI_CHANNEL_COUPLING_GND
@@ -45,10 +45,19 @@ struct sUi_Horizontal
 };
 typedef struct sUi_Horizontal tUi_Horizontal;
 
+struct sUi_Vertical_Channel
+{
+    uint8_t enabled;
+    enum UI_VERTICAL_CHANNEL_COUPLING coupling;
+    int32_t scale;
+};
+typedef struct sUi_Vertical_Channel tUi_Vertical_Channel;
+
 struct sUi_Vertical
 {
     int32_t offset;
-    int32_t scale;
+    tUi_Vertical_Channel channels[UI_CHANNEL_COUNT];
+    uint8_t channel_selected;
 };
 typedef struct sUi_Vertical tUi_Vertical;
 
@@ -58,19 +67,9 @@ struct sUi_Trigger
     enum UI_TRIGGER_SLOPE slope;
     int32_t level;
     int32_t source;
-    uint8_t armed;
+    //uint8_t armed;
 };
 typedef struct sUi_Trigger tUi_Trigger;
-
-struct sUi_Channel
-{
-    uint8_t enabled;
-    enum UI_CHANNEL_COUPLING coupling;
-    int32_t offset;
-    int32_t scale;
-    struct nk_color color;
-};
-typedef struct sUi_Channel tUi_Channel;
 
 struct sUi_Waveform
 {
@@ -125,8 +124,6 @@ struct sUi
     tUi_Horizontal horizontal;
     tUi_Vertical vertical;
     tUi_Trigger trigger;
-    tUi_Channel channels[UI_CHANNEL_COUNT];
-    uint8_t channel_selected;
     tUi_Waveform waveforms[UI_WAVEGEN_COUNT];
     uint8_t waveform_selected;
     tUi_Cursor cursors[UI_CURSOR_COUNT];
