@@ -24,6 +24,41 @@ enum eScopeState
 };
 typedef enum eScopeState tScopeState;
 
+
+struct sScope_Horizontal
+{
+	TIM_HandleTypeDef *htim_clock; // ADC clock. TIMER2
+	TIM_HandleTypeDef *htim_stop;  // Stop timer. TIMER3
+};
+typedef struct sScope_Horizontal tScope_Horizontal;
+
+struct sScope_Vertical
+{
+    OPAMP_HandleTypeDef *hopamp1; // CH1 OPAMP1
+    OPAMP_HandleTypeDef *hopamp2; // CH2 OPAMP3
+    OPAMP_HandleTypeDef *hopamp3; // CH3 OPAMP5
+    OPAMP_HandleTypeDef *hopamp4; // CH4 OPAMP6
+    DAC_HandleTypeDef *hdac;      // Offset DAC
+};
+typedef struct sScope_Vertical tScope_Vertical;
+
+struct sScope_Trigger
+{
+    ADC_HandleTypeDef *hadc1; // CH1 ADC1
+    ADC_HandleTypeDef *hadc2; // CH2 ADC3
+    ADC_HandleTypeDef *hadc3; // CH3 ADC5
+    ADC_HandleTypeDef *hadc4; // CH4 ADC4
+};
+typedef struct sScope_Trigger tScope_Trigger;
+
+struct sScope_Wavegen
+{
+    DAC_HandleTypeDef *hdac;  // DAC1 for CH1 and CH2
+    TIM_HandleTypeDef *htim1; // CH1 clock. TIMER4
+    TIM_HandleTypeDef *htim2; // CH2 clock. TIMER6
+};
+typedef struct sScope_Wavegen tScope_Wavegen;
+
 struct sScope
 {
 	volatile tScopeState state;
@@ -55,6 +90,12 @@ struct sScope
 	TIM_HandleTypeDef *htim2;
 
 	volatile int32_t CNDTRs[SCOPE_STATE_MAX];
+
+    tScope_Horizontal horizontal;
+    tScope_Vertical vertical;
+    tScope_Trigger trigger;
+    tScope_Wavegen wavegen;
+
 };
 typedef struct sScope tScope;
 
@@ -66,5 +107,9 @@ uint8_t scope_is_busy( tScope *scope );
 int32_t scope_get_trigger( tScope *scope );
 
 void test_scope( tLcd *pLcd, int collapsed );
+
+void scope_config_horizontal( tScope *scope, int sample_rate, int buffer_len );
+void scope_config_vertical( tScope *scope, int gain1, int gain2, int gain3, int gain4, int offset );
+void scope_config_trigger( tScope *scope, int channel, int mode, int level, int slope );
 
 #endif /* INC_SCOPE_H_ */

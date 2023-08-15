@@ -26,7 +26,8 @@ enum eWaveGenType
 struct sWaveGen
 {
 	DAC_HandleTypeDef *hdac;
-	TIM_HandleTypeDef *htim;
+	TIM_HandleTypeDef *htim1;
+	TIM_HandleTypeDef *htim2;
 
 	uint16_t *buffer0;
 	uint16_t *buffer1;
@@ -38,7 +39,8 @@ typedef struct sWaveGen tWaveGen;
 
 void wavegen_init( tWaveGen *pThis, 
 	DAC_HandleTypeDef *hdac,
-	TIM_HandleTypeDef *htim,
+	TIM_HandleTypeDef *htim1,
+	TIM_HandleTypeDef *htim2,
 	uint16_t *buffer0, 
 	uint16_t *buffer1, 
 	uint16_t len,

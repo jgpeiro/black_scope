@@ -10,6 +10,268 @@
 
 static tScope *_scope = NULL;
 
+#include <stdio.h>
+#include <stdlib.h>
+
+void get_prescaler_and_period(int clock, int freq, int *prescaler, int *period) {
+    int best_prescaler = 0;
+    int best_period = 0;
+    double min_error = 1e9;  // A large initial value
+
+    for (int prescaler_val = 1; prescaler_val <= 65535; prescaler_val++) {
+        int period_val = (int)(0.5 + (double)clock / (prescaler_val * freq));
+
+        // Limit the period to fit within timer limitations
+        if (period_val > 65535) {
+            period_val = 65535;
+        }
+
+        // Calculate the actual frequency using the found prescaler and period
+        double actual_freq = (double)clock / (prescaler_val * period_val);
+
+        double error = abs(actual_freq - (double)freq);
+
+        if (error < min_error) {
+            min_error = error;
+            best_prescaler = prescaler_val;
+            best_period = period_val;
+        }
+    }
+
+    *prescaler = best_prescaler;
+    *period = best_period;
+}
+
+
+void scope_config_horizontal( tScope *scope, int sample_rate, int buffer_len )
+{
+    // This function configures the timers so that the ADC is triggered at the frequency and to stop the conversion when the buffer is completed.
+    int tim_freq = 170e6;
+    int prescaler = 0;
+    int period = 0;
+
+    /*get_prescaler_and_period( tim_freq, sample_rate, &prescaler, &period );
+    // Compute required Prescaler and Period for the ADC clock.
+    scope->horizontal.htim_clock->Init.Prescaler = prescaler-1;
+    scope->horizontal.htim_clock->Init.Period = period-1;
+    HAL_TIM_Base_Init( scope->horizontal.htim_clock );
+
+    get_prescaler_and_period( tim_freq, sample_rate/512, &prescaler, &period );
+    // Compute required Prescaler and Period for the Stop timer.
+    scope->horizontal.htim_stop->Init.Prescaler = prescaler-1;
+    scope->horizontal.htim_stop->Init.Period = period-1;
+    HAL_TIM_Base_Init( scope->horizontal.htim_stop );
+	*/
+
+    // Compute required Prescaler and Period for the ADC clock.
+    scope->horizontal.htim_clock->Init.Prescaler = (tim_freq / sample_rate)/2 - 1;
+    scope->horizontal.htim_clock->Init.Period = 1;
+    HAL_TIM_Base_Init( scope->horizontal.htim_clock );
+
+    // Compute required Prescaler and Period for the Stop timer.
+    scope->horizontal.htim_stop->Init.Prescaler = (tim_freq / sample_rate)/2 - 1;
+    scope->horizontal.htim_stop->Init.Period = buffer_len - 1;
+    HAL_TIM_Base_Init( scope->horizontal.htim_stop );
+
+}
+
+int PgaGain_from_gain[6] =
+{ // Table to convert gain to OPAMP PGA gain.{
+    OPAMP_PGA_GAIN_2_OR_MINUS_1,
+    OPAMP_PGA_GAIN_4_OR_MINUS_3,
+    OPAMP_PGA_GAIN_8_OR_MINUS_7,
+    OPAMP_PGA_GAIN_16_OR_MINUS_15,
+    OPAMP_PGA_GAIN_32_OR_MINUS_31,
+    OPAMP_PGA_GAIN_64_OR_MINUS_63,
+};
+
+int gain_to_pgagain( int gain )
+{
+    // convert gain from 1, 2, 5, 10, 20, 50 to a values from 0 t0 5.
+    if( 0 <= gain && gain <= 1 )
+    {
+        return 0;
+    }
+    else if( 1 < gain && gain <= 5 )
+    {
+        return 1;
+    }
+    else if( 5 <= gain && gain <= 10 )
+    {
+        return 2;
+    }
+    else if( 10 <= gain && gain <= 20 )
+    {
+        return 3;
+    }
+    else if( 20 <= gain && gain <= 50 )
+    {
+        return 4;
+    }
+    else if( 50 <= gain )
+    {
+        return 5;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+void scope_config_vertical( tScope *scope, int gain1, int gain2, int gain3, int gain4, int offset )
+{
+    // This function configures the OPAMPs and DACs for the vertical channels.
+    gain1 = gain_to_pgagain( gain1 );
+    gain2 = gain_to_pgagain( gain2 );
+    gain3 = gain_to_pgagain( gain3 );
+    gain4 = gain_to_pgagain( gain4 );
+
+    scope->vertical.hopamp1->Init.PgaGain = PgaGain_from_gain[gain1];
+    HAL_OPAMP_Init( scope->vertical.hopamp1 );
+    scope->vertical.hopamp2->Init.PgaGain = PgaGain_from_gain[gain2];
+    HAL_OPAMP_Init( scope->vertical.hopamp2 );
+    scope->vertical.hopamp3->Init.PgaGain = PgaGain_from_gain[gain3];
+    HAL_OPAMP_Init( scope->vertical.hopamp3 );
+    scope->vertical.hopamp4->Init.PgaGain = PgaGain_from_gain[gain4];
+    HAL_OPAMP_Init( scope->vertical.hopamp4 );
+
+    HAL_OPAMP_SelfCalibrate( scope->vertical.hopamp1 );
+    HAL_OPAMP_SelfCalibrate( scope->vertical.hopamp2 );
+    HAL_OPAMP_SelfCalibrate( scope->vertical.hopamp3 );
+    HAL_OPAMP_SelfCalibrate( scope->vertical.hopamp4 );
+    HAL_OPAMP_Start( scope->vertical.hopamp1 );
+    HAL_OPAMP_Start( scope->vertical.hopamp2 );
+    HAL_OPAMP_Start( scope->vertical.hopamp3 );
+    HAL_OPAMP_Start( scope->vertical.hopamp4 );
+
+    HAL_DAC_SetValue( scope->vertical.hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, offset );
+	HAL_DAC_Start( scope->vertical.hdac, DAC_CHANNEL_1 );
+}
+
+void scope_config_trigger( tScope *scope, int channel, int mode, int level, int slope )
+{
+    ADC_AnalogWDGConfTypeDef AnalogWDGConfig_arm_1 = {0};
+    ADC_AnalogWDGConfTypeDef AnalogWDGConfig_arm_2 = {0};
+    ADC_AnalogWDGConfTypeDef AnalogWDGConfig_arm_3 = {0};
+    ADC_AnalogWDGConfTypeDef AnalogWDGConfig_arm_4 = {0};
+    ADC_AnalogWDGConfTypeDef AnalogWDGConfig_trig_1 = {0};
+    ADC_AnalogWDGConfTypeDef AnalogWDGConfig_trig_2 = {0};
+    ADC_AnalogWDGConfTypeDef AnalogWDGConfig_trig_3 = {0};
+    ADC_AnalogWDGConfTypeDef AnalogWDGConfig_trig_4 = {0};
+
+    AnalogWDGConfig_arm_1.WatchdogNumber = ADC_ANALOGWATCHDOG_1;
+    AnalogWDGConfig_arm_1.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REG;
+    AnalogWDGConfig_arm_1.Channel = ADC_CHANNEL_VOPAMP1;
+    AnalogWDGConfig_arm_1.ITMode = ENABLE;
+    AnalogWDGConfig_arm_1.HighThreshold = 0; // 0 and 0, forces automatically the trigger, so its auto mode.
+    AnalogWDGConfig_arm_1.LowThreshold = 0;
+    AnalogWDGConfig_arm_1.FilteringConfig = ADC_AWD_FILTERING_NONE;
+    AnalogWDGConfig_arm_2 = AnalogWDGConfig_arm_1;
+    AnalogWDGConfig_arm_3 = AnalogWDGConfig_arm_1;
+    AnalogWDGConfig_arm_4 = AnalogWDGConfig_arm_1;
+
+    AnalogWDGConfig_trig_1 = AnalogWDGConfig_arm_1;
+    AnalogWDGConfig_trig_1.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REGINJEC;
+    AnalogWDGConfig_trig_2 = AnalogWDGConfig_trig_1;
+    AnalogWDGConfig_trig_3 = AnalogWDGConfig_trig_1;
+    AnalogWDGConfig_trig_4 = AnalogWDGConfig_trig_1;
+
+    // reset all
+    AnalogWDGConfig_arm_1.WatchdogNumber = ADC_ANALOGWATCHDOG_1;
+    AnalogWDGConfig_arm_2.WatchdogNumber = ADC_ANALOGWATCHDOG_1;
+    AnalogWDGConfig_arm_3.WatchdogNumber = ADC_ANALOGWATCHDOG_1;
+    AnalogWDGConfig_arm_4.WatchdogNumber = ADC_ANALOGWATCHDOG_1;
+    AnalogWDGConfig_trig_1.WatchdogNumber = ADC_ANALOGWATCHDOG_2;
+    AnalogWDGConfig_trig_2.WatchdogNumber = ADC_ANALOGWATCHDOG_2;
+    AnalogWDGConfig_trig_3.WatchdogNumber = ADC_ANALOGWATCHDOG_2;
+    AnalogWDGConfig_trig_4.WatchdogNumber = ADC_ANALOGWATCHDOG_2;
+
+    // Configure the required for arm the oscilloscope.
+    if( mode == 1 ) // normal
+    {
+        if( slope == 0 ) // Rising. This is inverted PGA gain is negative.
+        {
+            if( channel == 0 )
+            {
+                // Configure arm and trigger high and low threshold values.
+                AnalogWDGConfig_arm_1.HighThreshold = 4095;
+                AnalogWDGConfig_arm_1.LowThreshold = level;
+                AnalogWDGConfig_trig_1.HighThreshold = level;
+                AnalogWDGConfig_trig_1.LowThreshold = 0;
+            }
+            else if( channel == 1 )
+            {
+                // Configure arm and trigger high and low threshold values.
+                AnalogWDGConfig_arm_2.HighThreshold = 4095;
+                AnalogWDGConfig_arm_2.LowThreshold = level;
+                AnalogWDGConfig_trig_2.HighThreshold = level;
+                AnalogWDGConfig_trig_2.LowThreshold = 0;
+            }
+            else if( channel == 2 )
+            {
+                // Configure arm and trigger high and low threshold values.
+                AnalogWDGConfig_arm_3.HighThreshold = 4095;
+                AnalogWDGConfig_arm_3.LowThreshold = level;
+                AnalogWDGConfig_trig_3.HighThreshold = level;
+                AnalogWDGConfig_trig_3.LowThreshold = 0;
+            }
+            else if( channel == 3 )
+            {
+                // Configure arm and trigger high and low threshold values.
+                AnalogWDGConfig_arm_4.HighThreshold = 4095;
+                AnalogWDGConfig_arm_4.LowThreshold = level;
+                AnalogWDGConfig_trig_4.HighThreshold = level;
+                AnalogWDGConfig_trig_4.LowThreshold = 0;
+            }
+        }
+        else
+        {
+            if( channel == 0 )
+            {
+                // Configure arm and trigger high and low threshold values.
+                AnalogWDGConfig_arm_1.HighThreshold = level;
+                AnalogWDGConfig_arm_1.LowThreshold = 0;
+                AnalogWDGConfig_trig_1.HighThreshold = 4095;
+                AnalogWDGConfig_trig_1.LowThreshold = level;
+            }
+            else if( channel == 1 )
+            {
+                // Configure arm and trigger high and low threshold values.
+                AnalogWDGConfig_arm_2.HighThreshold = level;
+                AnalogWDGConfig_arm_2.LowThreshold = 0;
+                AnalogWDGConfig_trig_2.HighThreshold = 4095;
+                AnalogWDGConfig_trig_2.LowThreshold = level;
+            }
+            else if( channel == 2 )
+            {
+                // Configure arm and trigger high and low threshold values.
+                AnalogWDGConfig_arm_3.HighThreshold = level;
+                AnalogWDGConfig_arm_3.LowThreshold = 0;
+                AnalogWDGConfig_trig_3.HighThreshold = 4095;
+                AnalogWDGConfig_trig_3.LowThreshold = level;
+            }
+            else if( channel == 3 )
+            {
+                // Configure arm and trigger high and low threshold values.
+                AnalogWDGConfig_arm_4.HighThreshold = level;
+                AnalogWDGConfig_arm_4.LowThreshold = 0;
+                AnalogWDGConfig_trig_4.HighThreshold = 4095;
+                AnalogWDGConfig_trig_4.LowThreshold = level;
+            }
+        }
+    }
+
+    HAL_ADC_AnalogWDGConfig( scope->trigger.hadc1, &AnalogWDGConfig_arm_1 );
+    HAL_ADC_AnalogWDGConfig( scope->trigger.hadc2, &AnalogWDGConfig_arm_2 );
+    HAL_ADC_AnalogWDGConfig( scope->trigger.hadc3, &AnalogWDGConfig_arm_3 );
+    HAL_ADC_AnalogWDGConfig( scope->trigger.hadc4, &AnalogWDGConfig_arm_4 );
+
+    HAL_ADC_AnalogWDGConfig( scope->trigger.hadc1, &AnalogWDGConfig_trig_1 );
+    HAL_ADC_AnalogWDGConfig( scope->trigger.hadc2, &AnalogWDGConfig_trig_2 );
+    HAL_ADC_AnalogWDGConfig( scope->trigger.hadc3, &AnalogWDGConfig_trig_3 );
+    HAL_ADC_AnalogWDGConfig( scope->trigger.hadc4, &AnalogWDGConfig_trig_4 );
+}
+
 void scope_init( tScope *scope, uint16_t trigger_level, uint16_t sample_rate, uint16_t *buffer1, uint16_t *buffer2, uint16_t *buffer3, uint16_t *buffer4, uint16_t len )
 {
 	scope->trigger_level = trigger_level;
@@ -65,6 +327,20 @@ void scope_init( tScope *scope, uint16_t trigger_level, uint16_t sample_rate, ui
 	//MX_OPAMP1_Init();
 	//MX_TIM1_Init();
 	//MX_TIM2_Init();
+
+	extern DAC_HandleTypeDef hdac2;
+	scope->horizontal.htim_clock = &htim2;
+	scope->horizontal.htim_stop =  &htim3;
+	scope->vertical.hdac = &hdac2;
+	scope->vertical.hopamp1 = &hopamp1;
+	scope->vertical.hopamp2 = &hopamp3;
+	scope->vertical.hopamp3 = &hopamp5;
+	scope->vertical.hopamp4 = &hopamp6;
+	scope->trigger.hadc1 = &hadc1;
+	scope->trigger.hadc2 = &hadc3;
+	scope->trigger.hadc3 = &hadc5;
+	scope->trigger.hadc4 = &hadc4;
+
 }
 
 void scope_reset( tScope *scope )

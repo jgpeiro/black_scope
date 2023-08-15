@@ -65,7 +65,7 @@ void MX_FMC_Init(void)
   /* Timing */
   Timing.AddressSetupTime = 0;
   Timing.AddressHoldTime = 0;
-  Timing.DataSetupTime = 0;
+  Timing.DataSetupTime = 1;
   Timing.DataHoldTime = 0;
   Timing.BusTurnAroundDuration = 0;
   Timing.CLKDivision = 0;
@@ -79,6 +79,18 @@ void MX_FMC_Init(void)
   }
 
   /* USER CODE BEGIN FMC_Init 2 */
+
+  /*
+  Timing.AddressSetupTime = 0;
+  Timing.AddressHoldTime = 0;
+  Timing.DataSetupTime = 1;
+  Timing.DataHoldTime = 0;
+  Timing.BusTurnAroundDuration = 0;
+  Timing.CLKDivision = 0;
+  Timing.DataLatency = 0;
+  Timing.AccessMode = FMC_ACCESS_MODE_A;
+   */
+
 
   /* USER CODE END FMC_Init 2 */
 }

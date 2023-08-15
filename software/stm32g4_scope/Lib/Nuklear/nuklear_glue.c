@@ -53,13 +53,16 @@ void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd) {
 	int y0;
 	const struct nk_command *cmd = NULL;
 	struct nk_command_scissor gs = {0};
+	volatile int cmd_count = 0;
 	for (y0 = 0; y0 < pLcd->height; y0 += pfb->height) {
 		framebuf_fill(pfb, 0x00000000);
 		gs.x = 0;
 		gs.y = y0;
 		gs.w = pfb->width;
 		gs.h = pfb->height;
+		cmd_count = 0;
 		for (cmd = nk__begin(ctx); cmd != 0; cmd = nk__next(ctx, cmd)) {
+			cmd_count += 1;
 			//printf( "cmd->type = %d\n", cmd->type );
 			switch (cmd->type) {
 			case NK_COMMAND_NOP:

@@ -213,7 +213,7 @@ extern const tGlyph fontUbuntuBookRNormal16braceleft;
 extern const tGlyph fontUbuntuBookRNormal16bar;
 extern const tGlyph fontUbuntuBookRNormal16braceright;
 extern const tGlyph fontUbuntuBookRNormal16asciitilde;
-extern const tGlyph* fontUbuntuBookRNormal16GlyphArray[95];
+extern const tGlyph* const fontUbuntuBookRNormal16GlyphArray[95];
 
 /****************************************************************************
  * Private Variables Definitions.
@@ -978,7 +978,7 @@ const tGlyph fontUbuntuBookRNormal16asciitilde = {
 	.bbxw = 7, .bbxh = 2, .bbxx = 1, .bbxy = 4,
 	.pBitmap = fontUbuntuBookRNormal16asciitildeBitmap
 };
-const tGlyph* fontUbuntuBookRNormal16GlyphArray[95] = {
+const tGlyph* const fontUbuntuBookRNormal16GlyphArray[95] = {
 	&fontUbuntuBookRNormal16space,
 	&fontUbuntuBookRNormal16exclam,
 	&fontUbuntuBookRNormal16quotedbl,

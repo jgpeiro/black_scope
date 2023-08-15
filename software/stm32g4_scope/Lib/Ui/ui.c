@@ -95,6 +95,38 @@ uint8_t nk_property_keypad( struct nk_context *pCtx, uint8_t *pLabel, int32_t mi
     return retval;
 }
 
+static int show_keypad_red = 0;
+static int show_keypad_green = 0;
+static int show_keypad_blue = 0;
+static int show_keypad_alpha = 0;
+static struct nk_color color = {0,0,0,0};
+
+static int red = 0;
+static int green = 0;
+static int blue = 0;
+static int alpha = 255;
+void ui_build_color_picker( tUi *pThis, struct nk_context *pCtx )
+{
+    // This menu shows thre nk_property_keypad widgets for red, green and blue.
+    // The color choosed is used to draw a button.
+
+    if( nk_tree_push( pCtx, NK_TREE_TAB, "Color", NK_MINIMIZED) )
+    {
+        nk_property_keypad( pCtx, "Red", 0, &red, 255, &show_keypad_red );
+        nk_property_keypad( pCtx, "Green", 0, &green, 255, &show_keypad_green );
+        nk_property_keypad( pCtx, "Blue", 0, &blue, 255, &show_keypad_blue );
+        nk_property_keypad( pCtx, "Alpha", 0, &alpha, 255, &show_keypad_alpha );
+        
+        nk_layout_row( pCtx, NK_STATIC, 30, 4, (float[]){60, 30, 60, 30});
+        struct nk_color tmp = pCtx->style.button.normal.data.color;
+        pCtx->style.button.normal.data.color = nk_rgba(red, green, blue, alpha);
+        nk_button_label( pCtx, "Test" );
+        pCtx->style.button.normal.data.color = tmp;
+
+        nk_tree_pop( pCtx );
+    }
+}
+
 void ui_build( tUi *pThis, struct nk_context *pCtx )
 {
     if( nk_begin( pCtx, "STM32G4 Scope", nk_rect(0, 0, 240, 320), NK_WINDOW_MINIMIZABLE ) )
@@ -107,6 +139,7 @@ void ui_build( tUi *pThis, struct nk_context *pCtx )
         ui_build_cursor( pThis, pCtx );
         ui_build_measurements( pThis, pCtx );
         ui_build_info( pThis, pCtx );
+        ui_build_color_picker( pThis, pCtx );
     }
 	nk_end( pCtx );
 }
@@ -122,6 +155,8 @@ void ui_build_acquire( tUi *pThis, struct nk_context *pCtx )
     }
 }
 #include "main.h"
+#include "scope.h"
+extern tScope scope;
 void ui_build_horizontal( tUi *pThis, struct nk_context *pCtx )
 {
     static uint8_t show_keypad_offset = 0;
@@ -146,11 +181,7 @@ void ui_build_horizontal( tUi *pThis, struct nk_context *pCtx )
     	}
     	if( nk_property_keypad( pCtx, "Scale", 1, &pThis->horizontal.scale, 9999, &show_keypad_scale ) )
     	{
-
-    		extern TIM_HandleTypeDef htim2;
-    		extern TIM_HandleTypeDef htim3;
-    		htim2.Instance->PSC = pThis->horizontal.scale;
-    		htim3.Instance->PSC = pThis->horizontal.scale;
+    		scope_config_horizontal( &scope, pThis->horizontal.scale*1000, 512 );
     	}
         nk_tree_pop( pCtx );
     }
@@ -173,8 +204,24 @@ void ui_build_vertical( tUi *pThis, struct nk_context *pCtx )
         	nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
             nk_label( pCtx, "Coupling", NK_TEXT_LEFT );
             pThis->channels[pThis->channel_selected].coupling = nk_combo( pCtx, (const char*[]){"DC", "Gnd"}, 2, pThis->channels[pThis->channel_selected].coupling, 30, nk_vec2(94, 120));
-            nk_property_keypad( pCtx, "Offset", -9999, &pThis->vertical.offset, 9999, &show_keypad_offset );
-			nk_property_keypad( pCtx, "Scale", 1, &pThis->vertical.scale, 9999, &show_keypad_scale );
+            if( nk_property_keypad( pCtx, "Offset", 0, &pThis->vertical.offset, 4095, &show_keypad_offset ) )
+			{
+				scope_config_vertical( &scope,
+					pThis->channels[0].scale,
+					pThis->channels[1].scale,
+					pThis->channels[2].scale,
+					pThis->channels[3].scale,
+					pThis->vertical.offset );
+			}
+            if( nk_property_keypad( pCtx, "Scale", 1, &pThis->channels[pThis->channel_selected].scale, 9999, &show_keypad_scale ) )
+			{
+				scope_config_vertical( &scope,
+					pThis->channels[0].scale,
+					pThis->channels[1].scale,
+					pThis->channels[2].scale,
+					pThis->channels[3].scale,
+					pThis->vertical.offset );
+			}
         }
         nk_tree_pop( pCtx );
     }
@@ -185,12 +232,18 @@ void ui_build_trigger( tUi *pThis, struct nk_context *pCtx )
     static uint8_t show_keypad_level = 0;
     if( nk_tree_push( pCtx, NK_TREE_TAB, "Trigger", NK_MINIMIZED) )
     {
+    	tUi_Trigger tmp = pThis->trigger;
         nk_layout_row(pCtx, NK_STATIC, 30, 1, (float[]){94});
         pThis->trigger.source = nk_combo(pCtx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, UI_CHANNEL_COUNT, pThis->trigger.source, 30, nk_vec2(94, 160));
         nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
         pThis->trigger.mode = nk_combo( pCtx, (const char*[]){"Auto", "Normal"}, 2, pThis->trigger.mode, 30, nk_vec2(94, 120));
         pThis->trigger.slope = nk_combo( pCtx, (const char*[]){"Rising", "Falling"}, 2, pThis->trigger.slope, 30, nk_vec2(94, 120));
         nk_property_keypad( pCtx, "Level", -9999, &pThis->trigger.level, 9999, &show_keypad_level );
+
+        if( memcmp( &tmp, &pThis->trigger, sizeof(tUi_Trigger) ) )
+        {
+        	scope_config_trigger( &scope, pThis->trigger.source, pThis->trigger.mode, pThis->trigger.level, pThis->trigger.slope );
+        }
         nk_tree_pop( pCtx );
     }
 }
@@ -253,6 +306,33 @@ void ui_build_waveform( tUi *pThis, struct nk_context *pCtx )
     {
         nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
         pThis->waveform_selected = nk_combo(pCtx, (const char*[]){"Wg1", "Wg2"}, UI_WAVEGEN_COUNT, pThis->waveform_selected, 30, nk_vec2(94, 160));
+        struct nk_color tmp1 = pCtx->style.button.normal.data.color;
+        struct nk_color tmp2 = pCtx->style.button.hover.data.color;
+        struct nk_color tmp3 = pCtx->style.button.active.data.color;
+
+        if( pThis->waveforms[pThis->waveform_selected].enabled )
+		{
+        	// blue
+        	//table[NK_COLOR_BUTTON] = nk_rgba(137, 182, 224, 255);
+        	//table[NK_COLOR_BUTTON_HOVER] = nk_rgba(142, 187, 229, 255);
+        	//table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(147, 192, 234, 255);
+        	// green
+			//table[NK_COLOR_BUTTON] = nk_rgba(137, 182, 224, 255);
+			//table[NK_COLOR_BUTTON_HOVER] = nk_rgba(142, 187, 229, 255);
+			//table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(147, 192, 234, 255);
+
+
+            pCtx->style.button.normal.data.color = nk_rgba(137, 224, 179, 255);
+            pCtx->style.button.hover.data.color = nk_rgba(142, 230, 185, 255);
+            pCtx->style.button.active.data.color = nk_rgba(148, 235, 190, 255);
+		}
+        else
+        {
+            pCtx->style.button.normal.data.color = nk_rgba(224, 137, 182, 255);
+            pCtx->style.button.hover.data.color = nk_rgba(230, 142, 187, 255);
+            pCtx->style.button.active.data.color = nk_rgba(235, 148, 193, 255);
+        }
+
         if( nk_button_label( pCtx, pThis->waveforms[pThis->waveform_selected].enabled ? "On" : "Off" ) )
         {
             pThis->waveforms[pThis->waveform_selected].enabled = !pThis->waveforms[pThis->waveform_selected].enabled;
@@ -265,6 +345,10 @@ void ui_build_waveform( tUi *pThis, struct nk_context *pCtx )
                 wavegen_stop( &wavegen, 1 << pThis->waveform_selected );
             }
         }
+        pCtx->style.button.normal.data.color = tmp1;
+        pCtx->style.button.hover.data.color = tmp2;
+        pCtx->style.button.active.data.color = tmp3;
+
         if( pThis->waveforms[pThis->waveform_selected].enabled )
         {
             nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
@@ -285,7 +369,7 @@ void ui_build_waveform( tUi *pThis, struct nk_context *pCtx )
                 {
                     ui_wavegen_build( pThis, &wavegen );
                 }
-                if( nk_property_keypad( pCtx, "Freq", 1, &pThis->waveforms[pThis->waveform_selected].frequency, 9999, &show_keypad_freq ) )
+                if( nk_property_keypad( pCtx, "Freq", 1, &pThis->waveforms[pThis->waveform_selected].frequency, 999999, &show_keypad_freq ) )
                 {
                     ui_wavegen_build( pThis, &wavegen );
                 }

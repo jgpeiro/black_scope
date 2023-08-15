@@ -27,7 +27,7 @@ struct sFont{
     uint8_t ascent;
     uint8_t descent;
     int8_t bbxw, bbxh, bbxx, bbxy;
-    const tGlyph **pGlyphs;
+    const tGlyph const **pGlyphs;
 };
 typedef struct sFont tFont;
 

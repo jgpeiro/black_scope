@@ -49,17 +49,17 @@
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
-osThreadAttr_t defaultTask_attributes = {
+const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 1024 * 2
+  .stack_size = 2048
 };
 /* Definitions for taskTsc */
 osThreadId_t taskTscHandle;
 const osThreadAttr_t taskTsc_attributes = {
   .name = "taskTsc",
   .priority = (osPriority_t) osPriorityNormal1,
-  .stack_size = 128 * 4
+  .stack_size = 256
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -159,8 +159,8 @@ uint16_t buffer_tmp[BUFFER_LEN];
 uint16_t fb_buf[FB_WIDTH*FB_HEIGHT];
 uint16_t fb2_buf[FB2_WIDTH*FB2_HEIGHT];
 
-#define NK_BUFFER_CMDS_LEN 	(1024*8)
-#define NK_BUFFER_POOL_LEN 	(1024*8)
+#define NK_BUFFER_CMDS_LEN 	(1024*6)
+#define NK_BUFFER_POOL_LEN 	(1024*6)
 
 uint8_t nk_buf_cmds[NK_BUFFER_CMDS_LEN] = {0};
 uint8_t nk_buf_pool[NK_BUFFER_POOL_LEN] = {0};
@@ -1143,6 +1143,7 @@ uint16_t p_tsc = 0;
 
 struct nk_context ctx = {0};
 tWaveGen wavegen;
+tScope scope = {0};
 
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
@@ -1150,7 +1151,6 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN StartDefaultTask */
 	tLcd lcd = {0};
 	//tTsc tsc = {0};
-	tScope scope = {0};
 	tFramebuf fb = {0};
 
 	//struct nk_context ctx = {0};
@@ -1197,13 +1197,11 @@ void StartDefaultTask(void *argument)
 	//}
 
 	__HAL_DBGMCU_FREEZE_TIM4();
-	//HAL_DAC_Start_DMA( &hdac1, DAC_CHANNEL_1, (uint32_t*)dac1_buffer, BUFFER_LEN, DAC_ALIGN_12B_R );
-	//HAL_DAC_Start_DMA( &hdac1, DAC_CHANNEL_2, (uint32_t*)dac2_buffer, BUFFER_LEN, DAC_ALIGN_12B_R );
-	//HAL_TIM_Base_Start( &htim4 );
-
+	__HAL_DBGMCU_FREEZE_TIM6();
 	wavegen_init( &wavegen,
 		&hdac1,
 		&htim4,
+		&htim6,
 		dac1_buffer,
 		dac2_buffer,
 		100,
@@ -1223,7 +1221,7 @@ void StartDefaultTask(void *argument)
 	HAL_DAC_Start(&hdac2, DAC_CHANNEL_1);
 
 	TickType_t xLastWakeTime;
-	const TickType_t xFrequency = 20;
+	const TickType_t xFrequency = 50;
 	xLastWakeTime = xTaskGetTickCount();
 	int key_cnt = 0;
 	int key = NK_KEY_RIGHT;

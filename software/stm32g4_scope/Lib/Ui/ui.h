@@ -145,7 +145,7 @@ void ui_build_waveform( tUi *pThis, struct nk_context *pCtx );
 void ui_build_cursor( tUi *pThis, struct nk_context *pCtx );
 void ui_build_measurements( tUi *pThis, struct nk_context *pCtx );
 void ui_build_info( tUi *pThis, struct nk_context *pCtx );
-
+void ui_build_color_picker( tUi *pThis, struct nk_context *pCtx );
 
 
 #endif /* UI_H_ */

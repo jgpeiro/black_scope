@@ -112,6 +112,7 @@ int main(void)
   MX_ADC5_Init();
   MX_SPI3_Init();
   MX_QUADSPI1_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */

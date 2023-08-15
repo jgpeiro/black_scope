@@ -34,14 +34,16 @@ void wavegen_build_sine( uint16_t *buffer, uint16_t len, float sample_rate, floa
 
 void wavegen_init( tWaveGen *pThis, 
 	DAC_HandleTypeDef *hdac,
-	TIM_HandleTypeDef *htim,
+	TIM_HandleTypeDef *htim1,
+	TIM_HandleTypeDef *htim2,
 	uint16_t *buffer0, 
 	uint16_t *buffer1, 
 	uint16_t len,
 	float sample_rate )
 {
     pThis->hdac = hdac;
-    pThis->htim = htim;
+    pThis->htim1 = htim1;
+    pThis->htim2 = htim2;
     pThis->buffer0 = buffer0;
     pThis->buffer1 = buffer1;
     pThis->len = len;
@@ -54,33 +56,29 @@ void wavegen_init( tWaveGen *pThis,
 
 void wavegen_start( tWaveGen *pThis, uint8_t channels )
 {
-	//if( channels & 0x01 )
+	if( channels & 0x01 )
     {
         HAL_DAC_Start_DMA( pThis->hdac, DAC_CHANNEL_1, (uint32_t*)pThis->buffer0, pThis->len, DAC_ALIGN_12B_R );
+        HAL_TIM_Base_Start( pThis->htim1 );
     }
-    //if( channels & 0x02 )
+    if( channels & 0x02 )
     {
         HAL_DAC_Start_DMA( pThis->hdac, DAC_CHANNEL_2, (uint32_t*)pThis->buffer1, pThis->len, DAC_ALIGN_12B_R );
-    }
-    //if( channels )
-    {
-        HAL_TIM_Base_Start( pThis->htim );
+        HAL_TIM_Base_Start( pThis->htim2 );
     }
 }
 
 void wavegen_stop( tWaveGen *pThis, uint8_t channels )
 {
-	//if( channels & 0x01 )
+	if( channels & 0x01 )
     {
         HAL_DAC_Stop_DMA( pThis->hdac, DAC_CHANNEL_1 );
+        HAL_TIM_Base_Stop( pThis->htim1 );
     }
-    //if( channels & 0x02 )
+    if( channels & 0x02 )
     {
         HAL_DAC_Stop_DMA( pThis->hdac, DAC_CHANNEL_2 );
-    }
-    //if( channels == 0x03 )
-    {
-        HAL_TIM_Base_Start( pThis->htim );
+        HAL_TIM_Base_Stop( pThis->htim2 );
     }
 }
 
@@ -205,7 +203,7 @@ void wavegen_build_pwm( tWaveGen *pThis, uint8_t channels, float frequency, floa
         t = i * dt;
         if( channels & 0x01 )
         {
-            if( ( t - floorf( t ) ) < duty_cycle )
+            if( ( t - floorf( t ) ) < duty_cycle/100.0 )
             {
                 pThis->buffer0[i] = amplitude + offset;
             }
@@ -216,7 +214,7 @@ void wavegen_build_pwm( tWaveGen *pThis, uint8_t channels, float frequency, floa
         }
         if( channels & 0x02 )
         {
-            if( ( t - floorf( t ) ) < duty_cycle )
+            if( ( t - floorf( t ) ) < duty_cycle/100.0 )
             {
                 pThis->buffer0[i] = amplitude + offset;
             }
