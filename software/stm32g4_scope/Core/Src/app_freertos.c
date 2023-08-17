@@ -298,22 +298,88 @@ void draw_buffers(
 		yb = height-((a_b?buffer6[n2]:buffer2[n2])*height)/4096;
 		yc = height-((a_b?buffer7[n2]:buffer3[n2])*height)/4096;
 		yd = height-((a_b?buffer8[n2]:buffer4[n2])*height)/4096;
-		lcd_set_pixel( pLcd, x0, ya, 0x0000 );
-		lcd_set_pixel( pLcd, x0, yb, 0x0000 );
-		lcd_set_pixel( pLcd, x0, yc, 0x0000 );
-		lcd_set_pixel( pLcd, x0, yd, 0x0000 );
+		//lcd_set_pixel( pLcd, x0, ya, 0x0000 );
+		//lcd_set_pixel( pLcd, x0, yb, 0x0000 );
+		//lcd_set_pixel( pLcd, x0, yc, 0x0000 );
+		//lcd_set_pixel( pLcd, x0, yd, 0x0000 );
+		lcd_rect( pLcd, x0-1, ya-1, 2, 2, 0x0000 );
+		lcd_rect( pLcd, x0-1, yb-1, 2, 2, 0x0000 );
+		lcd_rect( pLcd, x0-1, yc-1, 2, 2, 0x0000 );
+		lcd_rect( pLcd, x0-1, yd-1, 2, 2, 0x0000 );
 
-		ya = height-((a_b?buffer1[n]:buffer5[n])*height)/4096;
-		yb = height-((a_b?buffer2[n]:buffer6[n])*height)/4096;
-		yc = height-((a_b?buffer3[n]:buffer7[n])*height)/4096;
-		yd = height-((a_b?buffer4[n]:buffer8[n])*height)/4096;
-		lcd_set_pixel( pLcd, x0, ya, 0x001F );
-		lcd_set_pixel( pLcd, x0, yb, 0x07E0 );
-		lcd_set_pixel( pLcd, x0, yc, 0xF800 );
-		lcd_set_pixel( pLcd, x0, yd, 0xF81F );
+		int jj = j - 4;
+		if( j > 4 )
+		{
+			j2 = (jj*len)/width;
+			n = trigger + j2;
+			if( n < 0 )
+			{
+				n += len;
+			}
+			else if( n >= len )
+			{
+				n -= len;
+			}
+
+			n2 = trigger_bck + j2;
+			if( n2 < 0 )
+			{
+				n2 += len;
+			}
+			else if( n2 >= len )
+			{
+				n2 -= len;
+			}
+
+			x0 = collapsed? jj : width/2 + jj/2;
+			ya = height-((a_b?buffer1[n]:buffer5[n])*height)/4096;
+			yb = height-((a_b?buffer2[n]:buffer6[n])*height)/4096;
+			yc = height-((a_b?buffer3[n]:buffer7[n])*height)/4096;
+			yd = height-((a_b?buffer4[n]:buffer8[n])*height)/4096;
+			//lcd_set_pixel( pLcd, x0, ya, 0x001F );
+			//lcd_set_pixel( pLcd, x0, yb, 0x07E0 );
+			//lcd_set_pixel( pLcd, x0, yc, 0xF800 );
+			//lcd_set_pixel( pLcd, x0, yd, 0xF81F );
+			lcd_rect( pLcd, x0-1, ya-1, 2, 2, 0x001F );
+			lcd_rect( pLcd, x0-1, yb-1, 2, 2, 0x07E0 );
+			lcd_rect( pLcd, x0-1, yc-1, 2, 2, 0xF800 );
+			lcd_rect( pLcd, x0-1, yd-1, 2, 2, 0xF81F );
+		}
 
 		buffer_tmp[j] = a_b?buffer5[n]:buffer1[n];
 	}
+}
+
+void draw_horizontal_offset( tLcd *pLcd, int32_t offset, uint32_t collapsed )
+{
+	static int last_offset = 0;
+	if( collapsed )
+	{
+		lcd_rect( pLcd, last_offset/2+480/2, 0, 1, pLcd->height, 0x0000 );
+		lcd_rect( pLcd, offset/2+480/2, 0, 1, pLcd->height, 0x07FF );
+	}
+	else
+	{
+		lcd_rect( pLcd, 480/2+last_offset/4+480/4, 0, 1, pLcd->height, 0x0000 );
+		lcd_rect( pLcd, 480/2+offset/4+480/4, 0, 1, pLcd->height, 0x07FF );
+	}
+	last_offset = offset;
+}
+
+void draw_trigger( tLcd *pLcd, int32_t level, uint32_t collapsed )
+{
+	static int last_level = 0;
+	if( collapsed )
+	{ 
+		lcd_rect( pLcd, 0, pLcd->height-((last_level)*pLcd->height)/4096, pLcd->width, 1, 0x0000 );
+		lcd_rect( pLcd, 0, pLcd->height-((level)*pLcd->height)/4096, pLcd->width, 1, 0x07FF );
+	}
+	else
+	{
+		lcd_rect( pLcd, 0/2+pLcd->width/2, pLcd->height-((last_level)*pLcd->height)/4096, pLcd->width, 1, 0x0000 );
+		lcd_rect( pLcd, 0/2+pLcd->width/2, pLcd->height-((level)*pLcd->height)/4096, pLcd->width, 1, 0x07FF );
+	}
+	last_level = level;
 }
 
 void draw_grid( tLcd *pLcd, uint32_t collapsed )
@@ -355,8 +421,6 @@ void draw_grid( tLcd *pLcd, uint32_t collapsed )
 			}
 		}
 		lcd_rect( pLcd, 0, pLcd->height, pLcd->width, 1, 0x8410 );
-
-		lcd_rect( pLcd, 0, pLcd->height-((2048+768)*pLcd->height)/4096, pLcd->width, 1, 0x07FF );
 	}
 	else
 	{
@@ -371,8 +435,6 @@ void draw_grid( tLcd *pLcd, uint32_t collapsed )
 			lcd_rect( pLcd, 0/2+pLcd->width/2, d, pLcd->width, 1, 0x8410 );
 		}
 		lcd_rect( pLcd, 0/2+pLcd->width/2, pLcd->height, pLcd->width, 1, 0x8410 );
-
-		lcd_rect( pLcd, 0/2+pLcd->width/2, pLcd->height-((2048+768)*pLcd->height)/4096, pLcd->width, 1, 0x07FF );
 	}
 
 }
@@ -510,6 +572,9 @@ void StartDefaultTask(void *argument)
 	scope.trigger.hadc2 = &hadc3;
 	scope.trigger.hadc3 = &hadc5;
 	scope.trigger.hadc4 = &hadc4;
+	scope.wavegen.htim1 = &htim4;
+	scope.wavegen.htim2 = &htim6;
+
 
     ui.acquire.run = 1;
     ui.acquire.single = 0;
@@ -538,19 +603,30 @@ void StartDefaultTask(void *argument)
 		ui.vertical.channels[3].scale,
 		ui.vertical.offset );
 
-	ui.waveforms[0].enabled = 0;
-	ui.waveforms[0].type = 1;
-	ui.waveforms[0].offset = 2000;
-	ui.waveforms[0].scale = 2000;
-	ui.waveforms[0].frequency = 10000;
-	ui.waveforms[0].duty_cycle = 0;
+	ui.wavegen.waveforms[0].enabled = 1;
+	ui.wavegen.waveforms[0].type = 1;
+	ui.wavegen.waveforms[0].offset = 2048;
+	ui.wavegen.waveforms[0].scale = 2000;
+	ui.wavegen.waveforms[0].frequency = 10000;
+	ui.wavegen.waveforms[0].duty_cycle = 0;
 
-	ui.waveforms[1].enabled = 1;
-	ui.waveforms[1].type = 1;
-	ui.waveforms[1].offset = 2000;
-	ui.waveforms[1].scale = 1000;
-	ui.waveforms[1].frequency = 10000;
-	ui.waveforms[1].duty_cycle = 0;
+	ui.wavegen.waveforms[1].enabled = 1;
+	ui.wavegen.waveforms[1].type = 1;
+	ui.wavegen.waveforms[1].offset = 2048;
+	ui.wavegen.waveforms[1].scale = 2000;
+	ui.wavegen.waveforms[1].frequency = 10000;
+	ui.wavegen.waveforms[1].duty_cycle = 0;
+
+    wavegen_build_sine( &wavegen,
+    	1 << 0,
+    	ui.wavegen.waveforms[0].frequency,
+		ui.wavegen.waveforms[0].scale,
+		ui.wavegen.waveforms[0].offset );
+    wavegen_build_sine( &wavegen,
+    	1 << 1,
+    	ui.wavegen.waveforms[1].frequency,
+		ui.wavegen.waveforms[1].scale,
+		ui.wavegen.waveforms[1].offset );
 
 	ui.trigger.level = 2048+512;
 	ui.trigger.mode = UI_TRIGGER_MODE_NORMAL;
@@ -664,6 +740,9 @@ void StartDefaultTask(void *argument)
 			);
 
 			draw_measurements( &lcd, collapsed );
+
+			draw_horizontal_offset( &lcd, ui.horizontal.offset, collapsed );
+			draw_trigger( &lcd, ui.trigger.level, collapsed );
 
 			trigger_bck = trigger;
 			i += 1;

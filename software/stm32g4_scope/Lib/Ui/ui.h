@@ -12,7 +12,7 @@
 #include "nuklear.h"
 
 #define UI_CHANNEL_COUNT    (4)
-#define UI_WAVEGEN_COUNT    (2)
+#define UI_WAVEFORM_COUNT   (2)
 #define UI_CURSOR_COUNT     (2)
 
 enum UI_TRIGGER_MODE {
@@ -82,6 +82,14 @@ struct sUi_Waveform
 };
 typedef struct sUi_Waveform tUi_Waveform;
 
+struct sUi_Wavegen
+{
+    tUi_Waveform waveforms[UI_WAVEFORM_COUNT];
+    uint8_t waveform_selected;
+};
+typedef struct sUi_Wavegen tUi_Wavegen;
+
+
 struct sUi_Cursor
 {
     uint8_t enabled;
@@ -124,8 +132,7 @@ struct sUi
     tUi_Horizontal horizontal;
     tUi_Vertical vertical;
     tUi_Trigger trigger;
-    tUi_Waveform waveforms[UI_WAVEGEN_COUNT];
-    uint8_t waveform_selected;
+    tUi_Wavegen wavegen;
     tUi_Cursor cursors[UI_CURSOR_COUNT];
     uint8_t cursor_selected;
     tUi_Measurements measurements;
@@ -138,7 +145,7 @@ void ui_build_acquire( tUi *pThis, struct nk_context *pCtx );
 void ui_build_horizontal( tUi *pThis, struct nk_context *pCtx );
 void ui_build_vertical( tUi *pThis, struct nk_context *pCtx );
 void ui_build_trigger( tUi *pThis, struct nk_context *pCtx );
-void ui_build_waveform( tUi *pThis, struct nk_context *pCtx );
+void ui_build_wavegen( tUi *pThis, struct nk_context *pCtx );
 void ui_build_cursor( tUi *pThis, struct nk_context *pCtx );
 void ui_build_measurements( tUi *pThis, struct nk_context *pCtx );
 void ui_build_info( tUi *pThis, struct nk_context *pCtx );

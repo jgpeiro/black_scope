@@ -73,6 +73,13 @@ void scope_config_horizontal( tScope *scope, int sample_rate, int buffer_len )
     scope->horizontal.htim_stop->Init.Period = buffer_len - 1;
     HAL_TIM_Base_Init( scope->horizontal.htim_stop );
 
+    TIM_OC_InitTypeDef sConfigOC = {0};
+    sConfigOC.OCMode = TIM_OCMODE_TIMING;
+    sConfigOC.Pulse = buffer_len - 1;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    HAL_TIM_OC_ConfigChannel(scope->horizontal.htim_stop, &sConfigOC, TIM_CHANNEL_1);
+
 }
 
 int PgaGain_from_gain[6] =
@@ -127,18 +134,25 @@ void scope_config_vertical( tScope *scope, int gain1, int gain2, int gain3, int 
     gain4 = gain_to_pgagain( gain4 );
 
     scope->vertical.hopamp1->Init.PgaGain = PgaGain_from_gain[gain1];
-    HAL_OPAMP_Init( scope->vertical.hopamp1 );
     scope->vertical.hopamp2->Init.PgaGain = PgaGain_from_gain[gain2];
-    HAL_OPAMP_Init( scope->vertical.hopamp2 );
     scope->vertical.hopamp3->Init.PgaGain = PgaGain_from_gain[gain3];
-    HAL_OPAMP_Init( scope->vertical.hopamp3 );
     scope->vertical.hopamp4->Init.PgaGain = PgaGain_from_gain[gain4];
+
+    HAL_OPAMP_Stop( scope->vertical.hopamp1 );
+    HAL_OPAMP_Stop( scope->vertical.hopamp2 );
+    HAL_OPAMP_Stop( scope->vertical.hopamp3 );
+    HAL_OPAMP_Stop( scope->vertical.hopamp4 );
+
+    HAL_OPAMP_Init( scope->vertical.hopamp1 );
+    HAL_OPAMP_Init( scope->vertical.hopamp2 );
+    HAL_OPAMP_Init( scope->vertical.hopamp3 );
     HAL_OPAMP_Init( scope->vertical.hopamp4 );
 
     HAL_OPAMP_SelfCalibrate( scope->vertical.hopamp1 );
     HAL_OPAMP_SelfCalibrate( scope->vertical.hopamp2 );
     HAL_OPAMP_SelfCalibrate( scope->vertical.hopamp3 );
     HAL_OPAMP_SelfCalibrate( scope->vertical.hopamp4 );
+
     HAL_OPAMP_Start( scope->vertical.hopamp1 );
     HAL_OPAMP_Start( scope->vertical.hopamp2 );
     HAL_OPAMP_Start( scope->vertical.hopamp3 );
@@ -487,7 +501,8 @@ uint8_t scope_is_busy( tScope *scope )
 
 int32_t scope_get_trigger( tScope *scope )
 {
-	return scope->len - scope->CNDTRs[SCOPE_STATE_WAIT_FOR_STOP];
+	//return scope->len - scope->CNDTRs[SCOPE_STATE_WAIT_FOR_STOP];
+	return scope->len - scope->CNDTRs[SCOPE_STATE_DONE] - 256;
 }
 
 // ********************** IRQs ********************** //

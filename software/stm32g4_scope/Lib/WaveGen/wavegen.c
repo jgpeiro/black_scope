@@ -102,8 +102,8 @@ void wavegen_build_sine( tWaveGen *pThis, uint8_t channels, float frequency, flo
 {
     uint16_t i;
     float t;
-    float dt = 1.0f / pThis->sample_rate;
-    float omega = 2.0f * M_PI * frequency;
+    float dt = 1.0f / pThis->len;//pThis->sample_rate;
+    float omega = 2.0f * M_PI * 1;// * frequency;
     for( i = 0; i < pThis->len; i++ )
     {
         t = i * dt;

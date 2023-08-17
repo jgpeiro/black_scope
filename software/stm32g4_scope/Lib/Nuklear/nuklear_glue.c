@@ -101,7 +101,7 @@ void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd) {
 				r->w = r1.w;
 				r->h = r1.h;*/
 				
-				int rad = 4;
+				int rad = 0;//4;
 				framebuf_circle_quadrant(pfb, r->x + r->w - rad,
 						r->y - y0 + r->h - rad, rad,
 						nk_color_to_rgb565(r->color), QUADRANT_0);
@@ -135,7 +135,7 @@ void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd) {
 				r->y = r1.y;
 				r->w = r1.w;
 				r->h = r1.h;*/
-				int rad = 4;
+				int rad = 0;//4;
 				framebuf_fill_circle_quadrant(pfb, r->x + r->w - rad,
 						r->y - y0 + r->h - rad, rad,
 						nk_color_to_rgb565(r->color), QUADRANT_90);
