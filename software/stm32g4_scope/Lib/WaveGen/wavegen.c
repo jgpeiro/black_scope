@@ -59,11 +59,17 @@ void wavegen_start( tWaveGen *pThis, uint8_t channels )
 	if( channels & 0x01 )
     {
         HAL_DAC_Start_DMA( pThis->hdac, DAC_CHANNEL_1, (uint32_t*)pThis->buffer0, pThis->len, DAC_ALIGN_12B_R );
-        HAL_TIM_Base_Start( pThis->htim1 );
     }
     if( channels & 0x02 )
     {
         HAL_DAC_Start_DMA( pThis->hdac, DAC_CHANNEL_2, (uint32_t*)pThis->buffer1, pThis->len, DAC_ALIGN_12B_R );
+    }
+	if( channels & 0x01 )
+    {
+        HAL_TIM_Base_Start( pThis->htim1 );
+    }
+    if( channels & 0x02 )
+    {
         HAL_TIM_Base_Start( pThis->htim2 );
     }
 }
@@ -72,12 +78,14 @@ void wavegen_stop( tWaveGen *pThis, uint8_t channels )
 {
 	if( channels & 0x01 )
     {
+		wavegen_build_dc( pThis, 0x01, 0 );
         HAL_DAC_Stop_DMA( pThis->hdac, DAC_CHANNEL_1 );
         HAL_TIM_Base_Stop( pThis->htim1 );
     }
     if( channels & 0x02 )
     {
-        HAL_DAC_Stop_DMA( pThis->hdac, DAC_CHANNEL_2 );
+		wavegen_build_dc( pThis, 0x02, 0 );
+    	HAL_DAC_Stop_DMA( pThis->hdac, DAC_CHANNEL_2 );
         HAL_TIM_Base_Stop( pThis->htim2 );
     }
 }
@@ -122,8 +130,8 @@ void wavegen_build_square( tWaveGen *pThis, uint8_t channels, float frequency, f
 {
     uint16_t i;
     float t;
-    float dt = 1.0f / pThis->sample_rate;
-    float omega = 2.0f * M_PI * frequency;
+    float dt = 1.0f / pThis->len;//pThis->sample_rate;
+    float omega = 2.0f * M_PI * 1;// * frequency;
     for( i = 0; i < pThis->len; i++ )
     {
         t = i * dt;
@@ -142,11 +150,11 @@ void wavegen_build_square( tWaveGen *pThis, uint8_t channels, float frequency, f
         {
             if( sinf( omega * t ) > 0.0f )
             {
-                pThis->buffer0[i] = amplitude + offset;
+                pThis->buffer1[i] = amplitude + offset;
             }
             else
             {
-                pThis->buffer0[i] = -amplitude + offset;
+                pThis->buffer1[i] = -amplitude + offset;
             }
         }
     }
@@ -156,18 +164,18 @@ void wavegen_build_triangle( tWaveGen *pThis, uint8_t channels, float frequency,
 {
     uint16_t i;
     float t;
-    float dt = 1.0f / pThis->sample_rate;
-    float omega = 2.0f * M_PI * frequency;
+    float dt = 1.0f / pThis->len;//pThis->sample_rate;
+    float omega = 2.0f * M_PI * 1;// * frequency;
     for( i = 0; i < pThis->len; i++ )
     {
         t = i * dt;
         if( channels & 0x01 )
         {
-            pThis->buffer0[i] = amplitude * asinf( sinf( omega * t ) ) + offset;
+            pThis->buffer0[i] = 2/(float)M_PI * amplitude * asinf( sinf( omega * t ) ) + offset;
         }
         if( channels & 0x02 )
         {
-            pThis->buffer1[i] = amplitude * asinf( sinf( omega * t ) ) + offset;
+            pThis->buffer1[i] = 2/(float)M_PI * amplitude * asinf( sinf( omega * t ) ) + offset;
         }
     }
 }
@@ -176,8 +184,8 @@ void wavegen_build_sawtooth( tWaveGen *pThis, uint8_t channels, float frequency,
 {
     uint16_t i;
     float t;
-    float dt = 1.0f / pThis->sample_rate;
-    float omega = 2.0f * M_PI * frequency;
+    float dt = 1.0f / pThis->len;//pThis->sample_rate;
+    float omega = 2.0f * M_PI * 1;// * frequency;
     for( i = 0; i < pThis->len; i++ )
     {
         t = i * dt;
@@ -196,8 +204,8 @@ void wavegen_build_pwm( tWaveGen *pThis, uint8_t channels, float frequency, floa
 {
     uint16_t i;
     float t;
-    float dt = 1.0f / pThis->sample_rate;
-    float omega = 2.0f * M_PI * frequency;
+    float dt = 1.0f / pThis->len;//pThis->sample_rate;
+    float omega = 2.0f * M_PI * 1;// * frequency;
     for( i = 0; i < pThis->len; i++ )
     {
         t = i * dt;
@@ -216,11 +224,11 @@ void wavegen_build_pwm( tWaveGen *pThis, uint8_t channels, float frequency, floa
         {
             if( ( t - floorf( t ) ) < duty_cycle/100.0 )
             {
-                pThis->buffer0[i] = amplitude + offset;
+                pThis->buffer1[i] = amplitude + offset;
             }
             else
             {
-                pThis->buffer0[i] = -amplitude + offset;
+                pThis->buffer1[i] = -amplitude + offset;
             }
         }
     }
@@ -229,8 +237,8 @@ void wavegen_build_noise( tWaveGen *pThis, uint8_t channels, float frequency, fl
 {
     uint16_t i;
     float t;
-    float dt = 1.0f / pThis->sample_rate;
-    float omega = 2.0f * M_PI * frequency;
+    float dt = 1.0f / pThis->len;//pThis->sample_rate;
+    float omega = 2.0f * M_PI * 1;// * frequency;
     for( i = 0; i < pThis->len; i++ )
     {
         t = i * dt;

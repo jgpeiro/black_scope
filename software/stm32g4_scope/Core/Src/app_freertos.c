@@ -59,7 +59,7 @@ osThreadId_t taskTscHandle;
 const osThreadAttr_t taskTsc_attributes = {
   .name = "taskTsc",
   .priority = (osPriority_t) osPriorityNormal1,
-  .stack_size = 1024 * 4
+  .stack_size = 256 * 4
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -177,58 +177,6 @@ int _write(int file, char *ptr, int len)
     return len;
 }
 
-struct nk_rect keypad_size = {0, 30, 108, 208};
-int nk_keypad( struct nk_context *ctx, int32_t *value )
-{
-	int retval = 0;
-	char buffer[32];
-
-    if (nk_popup_begin(ctx, NK_POPUP_STATIC, "Keypad", NK_WINDOW_CLOSABLE | NK_WINDOW_NO_SCROLLBAR, keypad_size ) )
-    {
-    	retval = 1;
-    	nk_layout_row(ctx, NK_STATIC, 30, 1, (float[]){30+30+30});
-
-		sprintf( buffer, "%d", *value );
-
-    	nk_label(ctx, buffer, NK_TEXT_RIGHT );
-        nk_layout_row(ctx, NK_STATIC, 30, 3, (float[]){30, 30, 30});
-
-        nk_button_set_behavior( ctx, 0 );
-        if( nk_button_label( ctx, "7" ) )	*value = *value*10 + 7;
-        if( nk_button_label( ctx, "8" ) )	*value = *value*10 + 8;
-        if( nk_button_label( ctx, "9" ) )	*value = *value*10 + 9;
-        if( nk_button_label( ctx, "4" ) )	*value = *value*10 + 4;
-        if( nk_button_label( ctx, "5" ) )	*value = *value*10 + 5;
-        if( nk_button_label( ctx, "6" ) )	*value = *value*10 + 6;
-        if( nk_button_label( ctx, "1" ) )	*value = *value*10 + 1;
-        if( nk_button_label( ctx, "2" ) )	*value = *value*10 + 2;
-        if( nk_button_label( ctx, "3" ) )	*value = *value*10 + 3;
-        if( nk_button_label( ctx, "C" ) )	*value = *value/10;
-        if( nk_button_label( ctx, "0" ) )	*value = *value*10 + 0;
-        if( nk_button_label( ctx, "-" ) )	*value = -*value;
-        //if( nk_button_symbol( ctx, NK_SYMBOL_TRIANGLE_RIGHT ) )	{
-        //	nk_popup_close(ctx);
-        //	retval = 0;
-        //}
-        if( *value > 999999 )
-        {
-        	*value = 999999;
-        }
-        if( *value < -999999 )
-        {
-        	*value = -999999;
-        }
-        nk_popup_end(ctx);
-    }
-    else
-    {
-    	retval = 0;
-    }
-    return retval;
-}
-
-
-
 void lcd_draw_cross( tLcd *pLcd, uint16_t x, uint16_t y, uint16_t color )
 {
 	lcd_rect( pLcd, x-4, y, 4, 2, color );
@@ -244,6 +192,10 @@ float text_width_f( nk_handle handle, float h, const char* text, int len )
 
 extern void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd);
 extern void nk_set_theme(struct nk_context *ctx, int theme);
+
+#define MIN(a,b) ((a)<(b))?(a):(b)
+#define MAX(a,b) ((a)>(b))?(a):(b)
+#define ABS(a) ((a)>(0))?(a):-(a)
 
 void draw_buffers(
 		tLcd *pLcd,
@@ -268,6 +220,16 @@ void draw_buffers(
 	uint16_t height = pLcd->height;
 
 	lcd_set_window( pLcd, 0, 0, pLcd->width, pLcd->height );
+	int _ya = 0;
+	int _yb = 0;
+	int _yc = 0;
+	int _yd = 0;
+	int _ya2 = 0;
+	int _yb2 = 0;
+	int _yc2 = 0;
+	int _yd2 = 0;
+
+	int line_width = 1;
 
 	for( j = 0; j < width; j++ )
 	{
@@ -302,10 +264,23 @@ void draw_buffers(
 		//lcd_set_pixel( pLcd, x0, yb, 0x0000 );
 		//lcd_set_pixel( pLcd, x0, yc, 0x0000 );
 		//lcd_set_pixel( pLcd, x0, yd, 0x0000 );
-		lcd_rect( pLcd, x0-1, ya-1, 2, 2, 0x0000 );
-		lcd_rect( pLcd, x0-1, yb-1, 2, 2, 0x0000 );
-		lcd_rect( pLcd, x0-1, yc-1, 2, 2, 0x0000 );
-		lcd_rect( pLcd, x0-1, yd-1, 2, 2, 0x0000 );
+		//lcd_rect( pLcd, x0-1, ya-1, 2, 2, 0x0000 );
+		//lcd_rect( pLcd, x0-1, yb-1, 2, 2, 0x0000 );
+		//lcd_rect( pLcd, x0-1, yc-1, 2, 2, 0x0000 );
+		//lcd_rect( pLcd, x0-1, yd-1, 2, 2, 0x0000 );
+
+		if( j > 0 )
+		{
+
+			lcd_rect( pLcd, x0+1, MIN(ya-1,_ya-1), line_width, MAX( ABS((ya-1)-(_ya-1)), 2), 0x0000 );
+			lcd_rect( pLcd, x0+1, MIN(yb-1,_yb-1), line_width, MAX( ABS((yb-1)-(_yb-1)), 2), 0x0000 );
+			lcd_rect( pLcd, x0+1, MIN(yc-1,_yc-1), line_width, MAX( ABS((yc-1)-(_yc-1)), 2), 0x0000 );
+			lcd_rect( pLcd, x0+1, MIN(yd-1,_yd-1), line_width, MAX( ABS((yd-1)-(_yd-1)), 2), 0x0000 );
+		}
+		_ya = ya;
+		_yb = yb;
+		_yc = yc;
+		_yd = yd;
 
 		int jj = j - 4;
 		if( j > 4 )
@@ -340,10 +315,24 @@ void draw_buffers(
 			//lcd_set_pixel( pLcd, x0, yb, 0x07E0 );
 			//lcd_set_pixel( pLcd, x0, yc, 0xF800 );
 			//lcd_set_pixel( pLcd, x0, yd, 0xF81F );
-			lcd_rect( pLcd, x0-1, ya-1, 2, 2, 0x001F );
-			lcd_rect( pLcd, x0-1, yb-1, 2, 2, 0x07E0 );
-			lcd_rect( pLcd, x0-1, yc-1, 2, 2, 0xF800 );
-			lcd_rect( pLcd, x0-1, yd-1, 2, 2, 0xF81F );
+			//lcd_rect( pLcd, x0-1, ya-1, 2, 2, 0x001F );
+			//lcd_rect( pLcd, x0-1, yb-1, 2, 2, 0x07E0 );
+			//lcd_rect( pLcd, x0-1, yc-1, 2, 2, 0xF800 );
+			//lcd_rect( pLcd, x0-1, yd-1, 2, 2, 0xF81F );
+
+			if( j > 5 )
+			{
+
+				lcd_rect( pLcd, x0+1, MIN(ya-1,_ya2-1), line_width, MAX( ABS((ya-1)-(_ya2-1)), 2), 0x001F );
+				lcd_rect( pLcd, x0+1, MIN(yb-1,_yb2-1), line_width, MAX( ABS((yb-1)-(_yb2-1)), 2), 0x07E0 );
+				lcd_rect( pLcd, x0+1, MIN(yc-1,_yc2-1), line_width, MAX( ABS((yc-1)-(_yc2-1)), 2), 0xF800 );
+				lcd_rect( pLcd, x0+1, MIN(yd-1,_yd2-1), line_width, MAX( ABS((yd-1)-(_yd2-1)), 2), 0xF81F );
+			}
+			_ya2 = ya;
+			_yb2 = yb;
+			_yc2 = yc;
+			_yd2 = yd;
+
 		}
 
 		buffer_tmp[j] = a_b?buffer5[n]:buffer1[n];
@@ -353,6 +342,7 @@ void draw_buffers(
 void draw_horizontal_offset( tLcd *pLcd, int32_t offset, uint32_t collapsed )
 {
 	static int last_offset = 0;
+	offset = (offset*480)/512;
 	if( collapsed )
 	{
 		lcd_rect( pLcd, last_offset/2+480/2, 0, 1, pLcd->height, 0x0000 );
@@ -538,7 +528,7 @@ void StartDefaultTask(void *argument)
 		&htim6,
 		dac1_buffer,
 		dac2_buffer,
-		100,
+		512,
 		1e6 );
     wavegen_build_sine( &wavegen, 0x01, 10e3, 2047, 1500 );
     wavegen_build_sine( &wavegen, 0x02, 20e3, 2047, 1500 );
@@ -644,7 +634,7 @@ void StartDefaultTask(void *argument)
 
 
 	TickType_t xLastWakeTime;
-	const TickType_t xFrequency = 50;
+	const TickType_t xFrequency = 40;
 	xLastWakeTime = xTaskGetTickCount();
 	int key_cnt = 0;
 	int key = NK_KEY_RIGHT;
@@ -652,6 +642,9 @@ void StartDefaultTask(void *argument)
 	for(;;)
 	{
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
+
+
+
 		x_bck = x;
 		y_bck = y;
 		//tsc_read( &tsc, &x, &y );
@@ -695,7 +688,6 @@ void StartDefaultTask(void *argument)
 				collapsed_bck = collapsed;
 				lcd_clear( &lcd, 0x0000 );
 			}
-
 			nk_draw_fb( &ctx, &fb, &lcd );
 			nk_clear(&ctx);
 	    }
@@ -793,6 +785,11 @@ void StartTaskTsc(void *argument)
   for(;;)
   {
 	  vTaskDelayUntil( &xLastWakeTime, xFrequency );
+
+	  while( scope_is_busy( &scope ) ){
+		  vTaskDelay( 1 );
+	  }
+
 	  uint16_t xx;
 	  uint16_t yy;
 	  int acc_x = 0;

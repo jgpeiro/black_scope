@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "ui.h"
 
-uint8_t _nk_keypad( struct nk_context *pCtx, int min, int *pValue, int max )
+uint8_t nk_keypad( struct nk_context *pCtx, int min, int *pValue, int max )
 {
     int value = *pValue;
 	int retval = 0;
@@ -78,7 +78,7 @@ uint8_t nk_property_keypad( struct nk_context *pCtx, uint8_t *pLabel, int32_t mi
     *pShow_keypad |= nk_button_label( pCtx, buffer );
     if( *pShow_keypad )
     {
-        *pShow_keypad = _nk_keypad( pCtx, min, pValue, max );
+        *pShow_keypad = nk_keypad( pCtx, min, pValue, max );
         retval = 1;
     }
 
@@ -390,14 +390,18 @@ void get_period_prescaler(int clock, int desired_freq, int *period, int *prescal
 
 void ui_wavegen_build( tUi *pThis, tWaveGen *wavegen )
 {
-    if( pThis->wavegen.waveform_selected == 0 )
+    /*if( pThis->wavegen.waveform_selected == 0 )
     {
     	HAL_TIM_Base_Stop( scope.wavegen.htim1 );
 	}
     if( pThis->wavegen.waveform_selected == 1 )
     {
 		HAL_TIM_Base_Stop( scope.wavegen.htim2 );
-	}
+	}*/
+
+    wavegen_stop( wavegen,
+    	((!pThis->wavegen.waveforms[0].enabled) << 0) |
+    	((!pThis->wavegen.waveforms[1].enabled) << 1) );
 
     if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].type == WAVEGEN_TYPE_DC )
     {
@@ -430,7 +434,7 @@ void ui_wavegen_build( tUi *pThis, tWaveGen *wavegen )
     int tim_freq = 170e6;
     int prescaler = 0;
     int period = 0;
-    int desired_freq = 100*pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency;
+    int desired_freq = wavegen->len*pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency;
     get_period_prescaler(tim_freq, desired_freq, &period, &prescaler);
 
     if( pThis->wavegen.waveform_selected == 0 )
@@ -440,7 +444,7 @@ void ui_wavegen_build( tUi *pThis, tWaveGen *wavegen )
     	scope.wavegen.htim1->Init.Prescaler = prescaler - 1;
     	scope.wavegen.htim1->Init.Period = period - 1;
     	HAL_TIM_Base_Init( scope.wavegen.htim1 );
-		HAL_TIM_Base_Start( scope.wavegen.htim1 );
+		//HAL_TIM_Base_Start( scope.wavegen.htim1 );
 	}
     if( pThis->wavegen.waveform_selected == 1 )
     {
@@ -449,8 +453,13 @@ void ui_wavegen_build( tUi *pThis, tWaveGen *wavegen )
     	scope.wavegen.htim2->Init.Prescaler = prescaler - 1;
     	scope.wavegen.htim2->Init.Period = period - 1;
 		HAL_TIM_Base_Init( scope.wavegen.htim2 );
-		HAL_TIM_Base_Start( scope.wavegen.htim2 );
+		//HAL_TIM_Base_Start( scope.wavegen.htim2 );
 	}
+
+    wavegen_start( wavegen,
+		((pThis->wavegen.waveforms[0].enabled) << 0) |
+		((pThis->wavegen.waveforms[1].enabled) << 1) );
+
 
 }
 
@@ -466,11 +475,52 @@ void ui_build_wavegen( tUi *pThis, struct nk_context *pCtx )
     	tUi_Wavegen tmp = pThis->wavegen;
 
     	nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
-		pThis->wavegen.waveform_selected = nk_combo(pCtx, (const char*[]){"Wg1", "Wg2"}, UI_WAVEFORM_COUNT, pThis->wavegen.waveform_selected, 30, nk_vec2(94, 160));
-		if( nk_button_label( pCtx, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].enabled ? "On" : "Off" ) )
+
+		struct nk_color tmp1 = pCtx->style.combo.label_normal;
+		struct nk_color tmp2 = pCtx->style.combo.label_hover;
+		struct nk_color tmp3 = pCtx->style.combo.label_active;
+		if( pThis->wavegen.waveform_selected == 0 )
+		{
+			pCtx->style.combo.label_normal = nk_rgba(255,255,0, 255);
+			pCtx->style.combo.label_hover = nk_rgba(255, 255,0, 255);
+			pCtx->style.combo.label_active = nk_rgba(255, 255,0, 255);
+		}
+		else if( pThis->wavegen.waveform_selected == 1 )
+		{
+			pCtx->style.combo.label_normal = nk_rgba(0, 255,255, 255);
+			pCtx->style.combo.label_hover = nk_rgba(0, 255,255, 255);
+			pCtx->style.combo.label_active = nk_rgba(0, 255,255, 255);
+		}
+    	pThis->wavegen.waveform_selected = nk_combo(pCtx, (const char*[]){"Wg1", "Wg2"}, UI_WAVEFORM_COUNT, pThis->wavegen.waveform_selected, 30, nk_vec2(94, 160));
+		pCtx->style.combo.label_normal = tmp1;
+		pCtx->style.combo.label_hover = tmp2;
+		pCtx->style.combo.label_active = tmp3;
+
+        tmp1 = pCtx->style.button.normal.data.color;
+        tmp2 = pCtx->style.button.hover.data.color;
+        tmp3 = pCtx->style.button.active.data.color;
+
+        if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].enabled )
+		{
+            pCtx->style.button.normal.data.color = nk_rgba(40,200,40, 255);
+            pCtx->style.button.hover.data.color = nk_rgba(40,200,40, 255);
+            pCtx->style.button.active.data.color = nk_rgba(40,200,40, 255);
+		}
+        else
+        {
+            pCtx->style.button.normal.data.color = nk_rgba(200,40,40, 255);
+            pCtx->style.button.hover.data.color = nk_rgba(200,40,40, 255);
+            pCtx->style.button.active.data.color = nk_rgba(200,40,40, 255);
+        }
+
+    	if( nk_button_label( pCtx, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].enabled ? "On" : "Off" ) )
 		{
 			pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].enabled = !pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].enabled;
 		}
+        pCtx->style.button.normal.data.color = tmp1;
+        pCtx->style.button.hover.data.color = tmp2;
+        pCtx->style.button.active.data.color = tmp3;
+
 
 		if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].enabled )
 		{
