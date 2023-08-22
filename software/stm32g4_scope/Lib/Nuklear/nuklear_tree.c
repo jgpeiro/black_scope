@@ -58,9 +58,10 @@ nk_tree_state_base(struct nk_context *ctx, enum nk_tree_type type,
                 nk_draw_nine_slice(out, header, &background->data.slice, nk_white);
                 break;
             case NK_STYLE_ITEM_COLOR:
-                nk_fill_rect(out, header, 0, style->tab.border_color);
-                nk_fill_rect(out, nk_shrink_rect(header, style->tab.border),
-                    style->tab.rounding, background->data.color);
+                //nk_fill_rect(out, header, 0, style->tab.border_color);
+                //nk_fill_rect(out, nk_shrink_rect(header, style->tab.border), style->tab.rounding, background->data.color);
+                nk_fill_rect(out, nk_shrink_rect(header, style->tab.border), style->tab.rounding, background->data.color);
+                nk_stroke_rect(out, header, style->tab.rounding, style->tab.border, style->tab.border_color);
                 break;
         }
     } else text.background = style->window.background;

@@ -245,10 +245,11 @@ void DMA1_Channel5_IRQHandler(void)
 /**
   * @brief This function handles ADC1 and ADC2 global interrupt.
   */
+int DMA1_Channel1_CNDTR = 0;
 void ADC1_2_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC1_2_IRQn 0 */
-
+  DMA1_Channel1_CNDTR = DMA1_Channel1->CNDTR;
   /* USER CODE END ADC1_2_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc1);
   /* USER CODE BEGIN ADC1_2_IRQn 1 */

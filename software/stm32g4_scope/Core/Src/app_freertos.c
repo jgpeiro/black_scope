@@ -138,25 +138,26 @@ void MX_FREERTOS_Init(void) {
 
 #include "nuklear.h"
 
-#define BUFFER_LEN 	(512)
+#define ADC_BUFFER_LEN 	(512)
+#define DAC_BUFFER_LEN 	(512)
 #define FB_WIDTH 	(240)
 #define FB_HEIGHT	(80)
 #define FB2_WIDTH 	(160-1)
 #define FB2_HEIGHT	(16)
 
-uint16_t dac1_buffer[BUFFER_LEN];
-uint16_t dac2_buffer[BUFFER_LEN];
+uint16_t dac1_buffer[DAC_BUFFER_LEN];
+uint16_t dac2_buffer[DAC_BUFFER_LEN];
 
-uint16_t buffer1[BUFFER_LEN];
-uint16_t buffer2[BUFFER_LEN];
-uint16_t buffer3[BUFFER_LEN];
-uint16_t buffer4[BUFFER_LEN];
-uint16_t buffer5[BUFFER_LEN];
-uint16_t buffer6[BUFFER_LEN];
-uint16_t buffer7[BUFFER_LEN];
-uint16_t buffer8[BUFFER_LEN];
+uint16_t buffer1[ADC_BUFFER_LEN];
+uint16_t buffer2[ADC_BUFFER_LEN];
+uint16_t buffer3[ADC_BUFFER_LEN];
+uint16_t buffer4[ADC_BUFFER_LEN];
+uint16_t buffer5[ADC_BUFFER_LEN];
+uint16_t buffer6[ADC_BUFFER_LEN];
+uint16_t buffer7[ADC_BUFFER_LEN];
+uint16_t buffer8[ADC_BUFFER_LEN];
 
-uint16_t buffer_tmp[BUFFER_LEN];
+uint16_t buffer_tmp[ADC_BUFFER_LEN];
 
 uint16_t fb_buf[FB_WIDTH*FB_HEIGHT];
 uint16_t fb2_buf[FB2_WIDTH*FB2_HEIGHT];
@@ -190,7 +191,7 @@ float text_width_f( nk_handle handle, float h, const char* text, int len )
 	return font_text_width( &fontUbuntuBookRNormal16, text );
 }
 
-extern void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd);
+extern void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd, int16_t x0 );
 extern void nk_set_theme(struct nk_context *ctx, int theme);
 
 #define MIN(a,b) ((a)<(b))?(a):(b)
@@ -229,7 +230,8 @@ void draw_buffers(
 	int _yc2 = 0;
 	int _yd2 = 0;
 
-	int line_width = 1;
+	uint16_t line_width = 1;
+	uint16_t line_height = 1;
 
 	for( j = 0; j < width; j++ )
 	{
@@ -254,7 +256,7 @@ void draw_buffers(
 			n2 -= len;
 		}
 
-		x0 = collapsed? j : width/2 + j/2;
+		x0 = collapsed? j : j/2;
 
 		ya = height-((a_b?buffer5[n2]:buffer1[n2])*height)/4096;
 		yb = height-((a_b?buffer6[n2]:buffer2[n2])*height)/4096;
@@ -272,10 +274,10 @@ void draw_buffers(
 		if( j > 0 )
 		{
 
-			lcd_rect( pLcd, x0+1, MIN(ya-1,_ya-1), line_width, MAX( ABS((ya-1)-(_ya-1)), 2), 0x0000 );
-			lcd_rect( pLcd, x0+1, MIN(yb-1,_yb-1), line_width, MAX( ABS((yb-1)-(_yb-1)), 2), 0x0000 );
-			lcd_rect( pLcd, x0+1, MIN(yc-1,_yc-1), line_width, MAX( ABS((yc-1)-(_yc-1)), 2), 0x0000 );
-			lcd_rect( pLcd, x0+1, MIN(yd-1,_yd-1), line_width, MAX( ABS((yd-1)-(_yd-1)), 2), 0x0000 );
+			lcd_rect( pLcd, x0+1, MIN(ya-1,_ya-1), line_width, MAX( ABS((ya-1)-(_ya-1)), line_height), 0x0000 );
+			lcd_rect( pLcd, x0+1, MIN(yb-1,_yb-1), line_width, MAX( ABS((yb-1)-(_yb-1)), line_height), 0x0000 );
+			lcd_rect( pLcd, x0+1, MIN(yc-1,_yc-1), line_width, MAX( ABS((yc-1)-(_yc-1)), line_height), 0x0000 );
+			lcd_rect( pLcd, x0+1, MIN(yd-1,_yd-1), line_width, MAX( ABS((yd-1)-(_yd-1)), line_height), 0x0000 );
 		}
 		_ya = ya;
 		_yb = yb;
@@ -306,7 +308,7 @@ void draw_buffers(
 				n2 -= len;
 			}
 
-			x0 = collapsed? jj : width/2 + jj/2;
+			x0 = collapsed? jj : jj/2;
 			ya = height-((a_b?buffer1[n]:buffer5[n])*height)/4096;
 			yb = height-((a_b?buffer2[n]:buffer6[n])*height)/4096;
 			yc = height-((a_b?buffer3[n]:buffer7[n])*height)/4096;
@@ -323,10 +325,10 @@ void draw_buffers(
 			if( j > 5 )
 			{
 
-				lcd_rect( pLcd, x0+1, MIN(ya-1,_ya2-1), line_width, MAX( ABS((ya-1)-(_ya2-1)), 2), 0x001F );
-				lcd_rect( pLcd, x0+1, MIN(yb-1,_yb2-1), line_width, MAX( ABS((yb-1)-(_yb2-1)), 2), 0x07E0 );
-				lcd_rect( pLcd, x0+1, MIN(yc-1,_yc2-1), line_width, MAX( ABS((yc-1)-(_yc2-1)), 2), 0xF800 );
-				lcd_rect( pLcd, x0+1, MIN(yd-1,_yd2-1), line_width, MAX( ABS((yd-1)-(_yd2-1)), 2), 0xF81F );
+				lcd_rect( pLcd, x0+1, MIN(ya-1,_ya2-1), line_width, MAX( ABS((ya-1)-(_ya2-1)), line_height), 0x001F );
+				lcd_rect( pLcd, x0+1, MIN(yb-1,_yb2-1), line_width, MAX( ABS((yb-1)-(_yb2-1)), line_height), 0x07E0 );
+				lcd_rect( pLcd, x0+1, MIN(yc-1,_yc2-1), line_width, MAX( ABS((yc-1)-(_yc2-1)), line_height), 0xF800 );
+				lcd_rect( pLcd, x0+1, MIN(yd-1,_yd2-1), line_width, MAX( ABS((yd-1)-(_yd2-1)), line_height), 0xF81F );
 			}
 			_ya2 = ya;
 			_yb2 = yb;
@@ -345,13 +347,13 @@ void draw_horizontal_offset( tLcd *pLcd, int32_t offset, uint32_t collapsed )
 	offset = (offset*480)/512;
 	if( collapsed )
 	{
-		lcd_rect( pLcd, last_offset/2+480/2, 0, 1, pLcd->height, 0x0000 );
-		lcd_rect( pLcd, offset/2+480/2, 0, 1, pLcd->height, 0x07FF );
+		lcd_rect( pLcd, last_offset/2+pLcd->width/2, 0, 1, pLcd->height, 0x0000 );
+		lcd_rect( pLcd, offset/2+pLcd->width/2, 0, 1, pLcd->height, 0x07FF );
 	}
 	else
 	{
-		lcd_rect( pLcd, 480/2+last_offset/4+480/4, 0, 1, pLcd->height, 0x0000 );
-		lcd_rect( pLcd, 480/2+offset/4+480/4, 0, 1, pLcd->height, 0x07FF );
+		lcd_rect( pLcd, last_offset/4+pLcd->width/4, 0, 1, pLcd->height, 0x0000 );
+		lcd_rect( pLcd, offset/4+pLcd->width/4, 0, 1, pLcd->height, 0x07FF );
 	}
 	last_offset = offset;
 }
@@ -366,8 +368,8 @@ void draw_trigger( tLcd *pLcd, int32_t level, uint32_t collapsed )
 	}
 	else
 	{
-		lcd_rect( pLcd, 0/2+pLcd->width/2, pLcd->height-((last_level)*pLcd->height)/4096, pLcd->width, 1, 0x0000 );
-		lcd_rect( pLcd, 0/2+pLcd->width/2, pLcd->height-((level)*pLcd->height)/4096, pLcd->width, 1, 0x07FF );
+		lcd_rect( pLcd, 0, pLcd->height-((last_level)*pLcd->height)/4096, pLcd->width/2, 1, 0x0000 );
+		lcd_rect( pLcd, 0, pLcd->height-((level)*pLcd->height)/4096, pLcd->width/2, 1, 0x07FF );
 	}
 	last_level = level;
 }
@@ -388,7 +390,7 @@ void draw_grid( tLcd *pLcd, uint32_t collapsed )
 	{
 		for( int d = 0 ; d < pLcd->width ; d += 40 )
 		{
-			if( d < 40*6 )
+			if( d > 480-40*6 )
 			{
 				lcd_rect( pLcd, d, 40, 1, pLcd->height-40, 0x8410 );
 			}
@@ -397,13 +399,13 @@ void draw_grid( tLcd *pLcd, uint32_t collapsed )
 				lcd_rect( pLcd, d, 0, 1, pLcd->height, 0x8410 );
 			}
 		}
-		lcd_rect( pLcd, pLcd->width, 0, 1, pLcd->height, 0x8410 );
+		lcd_rect( pLcd, pLcd->width, 40, 1, pLcd->height-40, 0x8410 );
 
 		for( int d = 0 ; d < pLcd->height ; d += 40 )
 		{
-			if( d < 1 )
+			if( d == 0 )
 			{
-				lcd_rect( pLcd, 40*6, d, pLcd->width-40*6, 1, 0x8410 );
+				lcd_rect( pLcd, 0, d, pLcd->width-40*6, 1, 0x8410 );
 			}
 			else
 			{
@@ -416,15 +418,15 @@ void draw_grid( tLcd *pLcd, uint32_t collapsed )
 	{
 		for( int d = 0 ; d < pLcd->width ; d += 40 )
 		{
-			lcd_rect( pLcd, d/2+pLcd->width/2, 0, 1, pLcd->height, 0x8410 );
+			lcd_rect( pLcd, d/2, 0, 1, pLcd->height, 0x8410 );
 		}
-		lcd_rect( pLcd, pLcd->width/2+pLcd->width/2, 0, 1, pLcd->height, 0x8410 );
+		lcd_rect( pLcd, pLcd->width/2, 0, 1, pLcd->height, 0x8410 );
 
 		for( int d = 0 ; d < pLcd->height ; d += 40 )
 		{
-			lcd_rect( pLcd, 0/2+pLcd->width/2, d, pLcd->width, 1, 0x8410 );
+			lcd_rect( pLcd, 0/2, d, pLcd->width/2, 1, 0x8410 );
 		}
-		lcd_rect( pLcd, 0/2+pLcd->width/2, pLcd->height, pLcd->width, 1, 0x8410 );
+		lcd_rect( pLcd, 0/2, pLcd->height, pLcd->width/2, 1, 0x8410 );
 	}
 
 }
@@ -449,11 +451,11 @@ void draw_measurements( tLcd *pLcd, int collapsed )
 	framebuf_text( &fb, &fontUbuntuBookRNormal16, 0, 0, buffer, 0xFFFF );
 	if( collapsed )
 	{
-		lcd_bmp( pLcd, 240+40+1, 1, fb.width, fb.height, fb.buf );
+		lcd_bmp( pLcd, 0+40+1, 1, fb.width, fb.height, fb.buf );
 	}
 	else
 	{
-		lcd_bmp( pLcd, 240+40+1, 1, fb.width, fb.height, fb.buf );
+		lcd_bmp( pLcd, 0+40+1, 1, fb.width, fb.height, fb.buf );
 	}
 }
 /**
@@ -609,12 +611,12 @@ void StartDefaultTask(void *argument)
 
     wavegen_build_sine( &wavegen,
     	1 << 0,
-    	ui.wavegen.waveforms[0].frequency,
+    	ui.wavegen.waveforms[0].frequency*DAC_BUFFER_LEN,
 		ui.wavegen.waveforms[0].scale,
 		ui.wavegen.waveforms[0].offset );
     wavegen_build_sine( &wavegen,
     	1 << 1,
-    	ui.wavegen.waveforms[1].frequency,
+    	ui.wavegen.waveforms[1].frequency*DAC_BUFFER_LEN,
 		ui.wavegen.waveforms[1].scale,
 		ui.wavegen.waveforms[1].offset );
 
@@ -634,16 +636,12 @@ void StartDefaultTask(void *argument)
 
 
 	TickType_t xLastWakeTime;
-	const TickType_t xFrequency = 40;
+	const TickType_t xFrequency = 10;
 	xLastWakeTime = xTaskGetTickCount();
-	int key_cnt = 0;
-	int key = NK_KEY_RIGHT;
 	/* Infinite loop */
 	for(;;)
 	{
-		vTaskDelayUntil( &xLastWakeTime, xFrequency );
-
-
+		//vTaskDelayUntil( &xLastWakeTime, xFrequency );
 
 		x_bck = x;
 		y_bck = y;
@@ -653,28 +651,17 @@ void StartDefaultTask(void *argument)
 
 		//continue;
 		pressed_bck = pressed;
-		pressed = p_tsc && x < fb.width;
+		pressed = p_tsc && (0 <= (x-240) && (x-240) < fb.width);
 		nk_input_begin( &ctx );
-
-		if( key_cnt%10 == 0 )
-		{
-			nk_input_key( &ctx, key, 1 );
-		}
-		if( key_cnt%10 == 1 )
-		{
-			nk_input_key( &ctx, key, 0 );
-		}
-		key_cnt += 1;
-
 		if( pressed )
 		{
-			nk_input_motion( &ctx, x, y );
-			nk_input_button( &ctx, 0, x, y, 1 );
+			nk_input_motion( &ctx, x-240, y );
+			nk_input_button( &ctx, 0, x-240, y, 1 );
 		}
 		else if( pressed_bck )
 		{
-			nk_input_motion( &ctx, x_bck, y_bck );
-			nk_input_button( &ctx, 0, x_bck, y_bck, 0 );
+			nk_input_motion( &ctx, x_bck-240, y_bck );
+			nk_input_button( &ctx, 0, x_bck-240, y_bck, 0 );
 		}
 		nk_input_end( &ctx );
 
@@ -688,7 +675,7 @@ void StartDefaultTask(void *argument)
 				collapsed_bck = collapsed;
 				lcd_clear( &lcd, 0x0000 );
 			}
-			nk_draw_fb( &ctx, &fb, &lcd );
+			nk_draw_fb( &ctx, &fb, &lcd, lcd.width/2 );
 			nk_clear(&ctx);
 	    }
 
@@ -704,13 +691,13 @@ void StartDefaultTask(void *argument)
 					(i&0x01)?buffer2:buffer6,
 					(i&0x01)?buffer3:buffer7,
 					(i&0x01)?buffer4:buffer8,
-					BUFFER_LEN );
+					ADC_BUFFER_LEN );
 			scope_start( &scope );
 			int t0 = HAL_GetTick();
 			while( scope_is_busy( &scope ) && HAL_GetTick()-t0 < (1000/xFrequency) );
 			scope_stop( &scope );
 
-			trigger = scope_get_trigger( &scope ) - BUFFER_LEN/2;
+			trigger = scope_get_trigger( &scope ) - ADC_BUFFER_LEN/2;
 
 			draw_grid( &lcd, collapsed );
 
@@ -726,21 +713,31 @@ void StartDefaultTask(void *argument)
 				buffer6,
 				buffer7,
 				buffer8,
-				BUFFER_LEN,
+				ADC_BUFFER_LEN,
 				collapsed,
 				i&0x01
 			);
 
-			draw_measurements( &lcd, collapsed );
+			if( ui.measurements.is_visible )
+			{
+				draw_measurements( &lcd, collapsed );
+			}
 
-			draw_horizontal_offset( &lcd, ui.horizontal.offset, collapsed );
-			draw_trigger( &lcd, ui.trigger.level, collapsed );
+			if( ui.horizontal.is_visible )
+			{
+				draw_horizontal_offset( &lcd, ui.horizontal.offset, collapsed );
+			}
+
+			if( ui.trigger.is_visible )
+			{
+				draw_trigger( &lcd, ui.trigger.level, collapsed );
+			}
 
 			trigger_bck = trigger;
 			i += 1;
 	    }
 
-		if( pressed && x < 240-5 )
+		if( pressed && (0 <= x-240) && (x-240 < 240-5) )
 		{
 			lcd_draw_cross( &lcd, x, y, 0xFFFF );
 		}

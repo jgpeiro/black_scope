@@ -25,7 +25,7 @@ int16_t font_text_width( const tFont *pFont, char *pString )
     return width;
 }
 
-void font_draw_text( const tFont *pFont, int16_t x0, int16_t y0, uint8_t *str, uint16_t color, void (*cb)(void*, int, int, int ), const void *param )
+void font_draw_text( const tFont *pFont, int16_t x0, int16_t y0, const uint8_t *str, uint16_t color, void (*cb)(void*, int, int, int ), const void *param )
 {
 	char chr;
 	for( chr=*str; chr; chr=*(++str) )

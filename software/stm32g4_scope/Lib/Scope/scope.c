@@ -63,6 +63,10 @@ void scope_config_horizontal( tScope *scope, int sample_rate, int buffer_len )
     HAL_TIM_Base_Init( scope->horizontal.htim_stop );
 	*/
 
+    if( sample_rate == 0 )
+    {
+    	sample_rate = 1;
+    }
     // Compute required Prescaler and Period for the ADC clock.
     scope->horizontal.htim_clock->Init.Prescaler = (tim_freq / sample_rate)/2 - 1;
     scope->horizontal.htim_clock->Init.Period = 1;
@@ -132,10 +136,10 @@ void scope_config_vertical( tScope *scope, int gain1, int gain2, int gain3, int 
 	static int last_PgaGain3 = -1;
 	static int last_PgaGain4 = -1;
     // This function configures the OPAMPs and DACs for the vertical channels.
-    gain1 = gain_to_pgagain( gain1 );
+    /*gain1 = gain_to_pgagain( gain1 );
     gain2 = gain_to_pgagain( gain2 );
     gain3 = gain_to_pgagain( gain3 );
-    gain4 = gain_to_pgagain( gain4 );
+    gain4 = gain_to_pgagain( gain4 );*/
 
     scope->vertical.hopamp1->Init.PgaGain = PgaGain_from_gain[gain1];
     scope->vertical.hopamp2->Init.PgaGain = PgaGain_from_gain[gain2];
@@ -532,10 +536,12 @@ uint8_t scope_is_busy( tScope *scope )
 	//return scope->state != SCOPE_STATE_DONE;
 }
 
+extern int DMA1_Channel1_CNDTR;
 int32_t scope_get_trigger( tScope *scope )
 {
 	//return scope->len - scope->CNDTRs[SCOPE_STATE_WAIT_FOR_STOP];
-	return scope->len - scope->CNDTRs[SCOPE_STATE_DONE] - 256;
+	//return scope->len - scope->CNDTRs[SCOPE_STATE_DONE] - 256;
+	return scope->len - DMA1_Channel1_CNDTR;
 }
 
 // ********************** IRQs ********************** //
