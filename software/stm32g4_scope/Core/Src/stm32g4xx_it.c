@@ -245,7 +245,10 @@ void DMA1_Channel5_IRQHandler(void)
 /**
   * @brief This function handles ADC1 and ADC2 global interrupt.
   */
-int DMA1_Channel1_CNDTR = 0;
+int DMA1_Channel1_CNDTR = 0; // ADC1 DMA1_CH1
+int DMA1_Channel2_CNDTR = 0; // ADC3 DMA1_CH2
+int DMA1_Channel3_CNDTR = 0; // ADC4 DMA1_CH3
+int DMA1_Channel4_CNDTR = 0; // ADC5 DMA1_CH4
 void ADC1_2_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC1_2_IRQn 0 */
@@ -291,7 +294,7 @@ void TIM3_IRQHandler(void)
 void ADC3_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC3_IRQn 0 */
-
+  DMA1_Channel2_CNDTR = DMA1_Channel2->CNDTR;
   /* USER CODE END ADC3_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc3);
   /* USER CODE BEGIN ADC3_IRQn 1 */
@@ -333,7 +336,7 @@ void DMA2_Channel2_IRQHandler(void)
 void ADC4_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC4_IRQn 0 */
-
+  DMA1_Channel3_CNDTR = DMA1_Channel3->CNDTR;
   /* USER CODE END ADC4_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc4);
   /* USER CODE BEGIN ADC4_IRQn 1 */
@@ -347,7 +350,7 @@ void ADC4_IRQHandler(void)
 void ADC5_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC5_IRQn 0 */
-
+  DMA1_Channel4_CNDTR = DMA1_Channel4->CNDTR;
   /* USER CODE END ADC5_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc5);
   /* USER CODE BEGIN ADC5_IRQn 1 */

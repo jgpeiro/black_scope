@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "ui.h"
 
-uint8_t nk_keypad( struct nk_context *pCtx, int min, int *pValue, int max )
+uint8_t nk_keypad( struct nk_context *pCtx, int32_t min, int32_t *pValue, int32_t max )
 {
     int value = *pValue;
 	int retval = 0;
@@ -118,11 +118,9 @@ void ui_build_color_picker( tUi *pThis, struct nk_context *pCtx )
         nk_property_keypad( pCtx, "Alpha", 0, &alpha, 255, &show_keypad_alpha );
         
         nk_layout_row( pCtx, NK_STATIC, 30, 4, (float[]){60, 30, 60, 30});
-        struct nk_color tmp = pCtx->style.button.normal.data.color;
-        pCtx->style.button.normal.data.color = nk_rgba(red, green, blue, alpha);
-        nk_button_label( pCtx, "Test" );
-        pCtx->style.button.normal.data.color = tmp;
-
+        nk_style_push_color( pCtx, &pCtx->style.button.normal.data.color, nk_rgba(red, green, blue, alpha) );
+		nk_button_label( pCtx, "Test" );
+		nk_style_pop_color( pCtx );
         nk_tree_pop( pCtx );
     }
 }
@@ -152,29 +150,30 @@ void ui_build_acquire( tUi *pThis, struct nk_context *pCtx )
     	pThis->acquire.is_visible = 1;
         nk_layout_row( pCtx, NK_STATIC, 30, 2, (float[]){95, 95});
 
-        struct nk_color tmp1 = pCtx->style.button.normal.data.color;
-        struct nk_color tmp2 = pCtx->style.button.hover.data.color;
-        struct nk_color tmp3 = pCtx->style.button.active.data.color;
-
         if( pThis->acquire.run )
 		{
-            pCtx->style.button.normal.data.color = nk_rgba(40,200,40, 255);
-            pCtx->style.button.hover.data.color = nk_rgba(40,200,40, 255);
-            pCtx->style.button.active.data.color = nk_rgba(40,200,40, 255);
+            nk_style_push_color( pCtx, &pCtx->style.button.normal.data.color, nk_rgba(40,200,40, 255) );
+            nk_style_push_color( pCtx, &pCtx->style.button.hover.data.color, nk_rgba(40,200,40, 255) );
+            nk_style_push_color( pCtx, &pCtx->style.button.active.data.color, nk_rgba(40,200,40, 255) );
 		}
         else
         {
-            pCtx->style.button.normal.data.color = nk_rgba(200,40,40, 255);
-            pCtx->style.button.hover.data.color = nk_rgba(200,40,40, 255);
-            pCtx->style.button.active.data.color = nk_rgba(200,40,40, 255);
+            nk_style_push_color( pCtx, &pCtx->style.button.normal.data.color, nk_rgba(200,40,40, 255) );
+            nk_style_push_color( pCtx, &pCtx->style.button.hover.data.color, nk_rgba(200,40,40, 255) );
+            nk_style_push_color( pCtx, &pCtx->style.button.active.data.color, nk_rgba(200,40,40, 255) );
         }
-        if( nk_button_label( pCtx, pThis->acquire.run ? "Run" : "Stop" ) ) pThis->acquire.run = !pThis->acquire.run;
-        pCtx->style.button.normal.data.color = tmp1;
-        pCtx->style.button.hover.data.color = tmp2;
-        pCtx->style.button.active.data.color = tmp3;
+        if( nk_button_label( pCtx, pThis->acquire.run ? "Run" : "Stop" ) )
+        {
+        	pThis->acquire.run = !pThis->acquire.run;
+        }
+		nk_style_pop_color( pCtx );
+		nk_style_pop_color( pCtx );
+		nk_style_pop_color( pCtx );
 
-
-        if( nk_button_label( pCtx, "Single" ) ) pThis->acquire.single = 1;
+        if( nk_button_label( pCtx, "Single" ) )
+        {
+        	pThis->acquire.single = 1;
+        }
         nk_tree_pop( pCtx );
     }
 }
@@ -211,63 +210,55 @@ void ui_build_vertical( tUi *pThis, struct nk_context *pCtx )
     	pThis->vertical.is_visible = 1;
         nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
         {
-			struct nk_color tmp1 = pCtx->style.combo.label_normal;
-			struct nk_color tmp2 = pCtx->style.combo.label_hover;
-			struct nk_color tmp3 = pCtx->style.combo.label_active;
 			if( pThis->vertical.channel_selected == 0 )
 			{
-				pCtx->style.combo.label_normal = nk_rgba(255,0,0, 255);
-				pCtx->style.combo.label_hover = nk_rgba(255,0,0, 255);
-				pCtx->style.combo.label_active = nk_rgba(255,0,0, 255);
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, nk_rgba(255,0,0, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, nk_rgba(255,0,0, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_active, nk_rgba(255,0,0, 255) );
 			}
 			else if( pThis->vertical.channel_selected == 1 )
 			{
-				pCtx->style.combo.label_normal = nk_rgba(0, 255,0, 255);
-				pCtx->style.combo.label_hover = nk_rgba(0, 255,0, 255);
-				pCtx->style.combo.label_active = nk_rgba(0, 255,0, 255);
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, nk_rgba(0, 255,0, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, nk_rgba(0, 255,0, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_active, nk_rgba(0, 255,0, 255) );
 			}
 			else if( pThis->vertical.channel_selected == 2 )
 			{
-				pCtx->style.combo.label_normal = nk_rgba(0, 0, 255, 255);
-				pCtx->style.combo.label_hover = nk_rgba(0, 0, 255, 255);
-				pCtx->style.combo.label_active = nk_rgba(0, 0, 255 ,255);
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, nk_rgba(0, 0, 255, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, nk_rgba(0, 0, 255, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_active, nk_rgba(0, 0, 255, 255) );
 			}
 			else if( pThis->vertical.channel_selected == 3 )
 			{
-				pCtx->style.combo.label_normal = nk_rgba(255,0,255, 255);
-				pCtx->style.combo.label_hover = nk_rgba(255,0,255, 255);
-				pCtx->style.combo.label_active = nk_rgba(255,0,255, 255);
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, nk_rgba(255,0,255, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, nk_rgba(255,0,255, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_active, nk_rgba(255,0,255, 255) );
 			}
 			pThis->vertical.channel_selected = nk_combo(pCtx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, UI_CHANNEL_COUNT, pThis->vertical.channel_selected, 30, nk_vec2(94, 160));
-			pCtx->style.combo.label_normal = tmp1;
-			pCtx->style.combo.label_hover = tmp2;
-			pCtx->style.combo.label_active = tmp3;
+			nk_style_pop_color( pCtx );
+			nk_style_pop_color( pCtx );
+			nk_style_pop_color( pCtx );
         }
-
-        struct nk_color tmp1 = pCtx->style.button.normal.data.color;
-        struct nk_color tmp2 = pCtx->style.button.hover.data.color;
-        struct nk_color tmp3 = pCtx->style.button.active.data.color;
 
         if( pThis->vertical.channels[pThis->vertical.channel_selected].enabled )
 		{
-            pCtx->style.button.normal.data.color = nk_rgba(40,200,40, 255);
-            pCtx->style.button.hover.data.color = nk_rgba(40,200,40, 255);
-            pCtx->style.button.active.data.color = nk_rgba(40,200,40, 255);
+            nk_style_push_color( pCtx, &pCtx->style.button.normal.data.color, nk_rgba(40,200,40, 255) );
+            nk_style_push_color( pCtx, &pCtx->style.button.hover.data.color, nk_rgba(40,200,40, 255) );
+            nk_style_push_color( pCtx, &pCtx->style.button.active.data.color, nk_rgba(40,200,40, 255) );
 		}
         else
         {
-            pCtx->style.button.normal.data.color = nk_rgba(200,40,40, 255);
-            pCtx->style.button.hover.data.color = nk_rgba(200,40,40, 255);
-            pCtx->style.button.active.data.color = nk_rgba(200,40,40, 255);
+            nk_style_push_color( pCtx, &pCtx->style.button.normal.data.color, nk_rgba(200,40,40, 255) );
+            nk_style_push_color( pCtx, &pCtx->style.button.hover.data.color, nk_rgba(200,40,40, 255) );
+            nk_style_push_color( pCtx, &pCtx->style.button.active.data.color, nk_rgba(200,40,40, 255) );
         }
-
         if( nk_button_label( pCtx, pThis->vertical.channels[pThis->vertical.channel_selected].enabled ? "On" : "Off" ) )
         {
             pThis->vertical.channels[pThis->vertical.channel_selected].enabled = !pThis->vertical.channels[pThis->vertical.channel_selected].enabled;
         }
-        pCtx->style.button.normal.data.color = tmp1;
-        pCtx->style.button.hover.data.color = tmp2;
-        pCtx->style.button.active.data.color = tmp3;
+		nk_style_pop_color( pCtx );
+		nk_style_pop_color( pCtx );
+		nk_style_pop_color( pCtx );
 
 
         if( pThis->vertical.channels[pThis->vertical.channel_selected].enabled )
@@ -313,40 +304,35 @@ void ui_build_trigger( tUi *pThis, struct nk_context *pCtx )
         if( pThis->trigger.mode == UI_TRIGGER_MODE_NORMAL )
         {
             nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
-			{
-			struct nk_color tmp1 = pCtx->style.combo.label_normal;
-			struct nk_color tmp2 = pCtx->style.combo.label_hover;
-			struct nk_color tmp3 = pCtx->style.combo.label_active;
+
 			if( pThis->trigger.source == 0 )
 			{
-				pCtx->style.combo.label_normal = nk_rgba(255,0,0, 255);
-				pCtx->style.combo.label_hover = nk_rgba(255,0,0, 255);
-				pCtx->style.combo.label_active = nk_rgba(255,0,0, 255);
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, nk_rgba(255,0,0, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, nk_rgba(255,0,0, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_active, nk_rgba(255,0,0, 255) );
 			}
 			else if( pThis->trigger.source == 1 )
 			{
-				pCtx->style.combo.label_normal = nk_rgba(0, 255,0, 255);
-				pCtx->style.combo.label_hover = nk_rgba(0, 255,0, 255);
-				pCtx->style.combo.label_active = nk_rgba(0, 255,0, 255);
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, nk_rgba(0, 255,0, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, nk_rgba(0, 255,0, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_active, nk_rgba(0, 255,0, 255) );
 			}
 			else if( pThis->trigger.source == 2 )
 			{
-				pCtx->style.combo.label_normal = nk_rgba(0, 0, 255, 255);
-				pCtx->style.combo.label_hover = nk_rgba(0, 0, 255, 255);
-				pCtx->style.combo.label_active = nk_rgba(0, 0, 255 ,255);
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, nk_rgba(0, 0, 255, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, nk_rgba(0, 0, 255, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_active, nk_rgba(0, 0, 255, 255) );
 			}
 			else if( pThis->trigger.source == 3 )
 			{
-				pCtx->style.combo.label_normal = nk_rgba(255,0,255, 255);
-				pCtx->style.combo.label_hover = nk_rgba(255,0,255, 255);
-				pCtx->style.combo.label_active = nk_rgba(255,0,255, 255);
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, nk_rgba(255,0,255, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, nk_rgba(255,0,255, 255) );
+				nk_style_push_color( pCtx, &pCtx->style.combo.label_active, nk_rgba(255,0,255, 255) );
 			}
             pThis->trigger.source = nk_combo(pCtx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, UI_CHANNEL_COUNT, pThis->trigger.source, 30, nk_vec2(94, 160));
-
-			pCtx->style.combo.label_normal = tmp1;
-			pCtx->style.combo.label_hover = tmp2;
-			pCtx->style.combo.label_active = tmp3;
-        }
+    		nk_style_pop_color( pCtx );
+    		nk_style_pop_color( pCtx );
+    		nk_style_pop_color( pCtx );
             
             pThis->trigger.slope = nk_combo( pCtx, (const char*[]){"Rising", "Falling"}, 2, pThis->trigger.slope, 30, nk_vec2(94, 120));
             nk_property_keypad( pCtx, "Level", -9999, &pThis->trigger.level, 9999, &show_keypad_level );
@@ -444,6 +430,16 @@ void ui_wavegen_build( tUi *pThis, tWaveGen *wavegen )
     int period = 0;
     int desired_freq = wavegen->len*pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency;
     get_period_prescaler(tim_freq, desired_freq, &period, &prescaler);
+/*#include "integer_factorization.h"
+    uint32_t n = (tim_freq / desired_freq);
+      uint32_t mx = 65536;
+      uint32_t a = 0;
+      uint32_t b = 0;
+      integer_factorization( n, mx, &a, &b );
+      period = a;
+      prescaler = b;*/
+    prescaler = (tim_freq / desired_freq)/2;
+    period = 2;
 
     if( pThis->wavegen.waveform_selected == 0 )
     {
@@ -486,50 +482,43 @@ void ui_build_wavegen( tUi *pThis, struct nk_context *pCtx )
 
     	nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
 
-		struct nk_color tmp1 = pCtx->style.combo.label_normal;
-		struct nk_color tmp2 = pCtx->style.combo.label_hover;
-		struct nk_color tmp3 = pCtx->style.combo.label_active;
 		if( pThis->wavegen.waveform_selected == 0 )
 		{
-			pCtx->style.combo.label_normal = nk_rgba(255,255,0, 255);
-			pCtx->style.combo.label_hover = nk_rgba(255, 255,0, 255);
-			pCtx->style.combo.label_active = nk_rgba(255, 255,0, 255);
+			nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, nk_rgba(255,255,0, 255) );
+			nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, nk_rgba(255,255,0, 255) );
+			nk_style_push_color( pCtx, &pCtx->style.combo.label_active, nk_rgba(255,255,0, 255) );
 		}
 		else if( pThis->wavegen.waveform_selected == 1 )
 		{
-			pCtx->style.combo.label_normal = nk_rgba(0, 255,255, 255);
-			pCtx->style.combo.label_hover = nk_rgba(0, 255,255, 255);
-			pCtx->style.combo.label_active = nk_rgba(0, 255,255, 255);
+			nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, nk_rgba(0, 255,255, 255) );
+			nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, nk_rgba(0, 255,255, 255) );
+			nk_style_push_color( pCtx, &pCtx->style.combo.label_active, nk_rgba(0, 255,255, 255) );
 		}
     	pThis->wavegen.waveform_selected = nk_combo(pCtx, (const char*[]){"Wg1", "Wg2"}, UI_WAVEFORM_COUNT, pThis->wavegen.waveform_selected, 30, nk_vec2(94, 160));
-		pCtx->style.combo.label_normal = tmp1;
-		pCtx->style.combo.label_hover = tmp2;
-		pCtx->style.combo.label_active = tmp3;
-
-        tmp1 = pCtx->style.button.normal.data.color;
-        tmp2 = pCtx->style.button.hover.data.color;
-        tmp3 = pCtx->style.button.active.data.color;
+		nk_style_pop_color( pCtx );
+		nk_style_pop_color( pCtx );
+		nk_style_pop_color( pCtx );
 
         if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].enabled )
 		{
-            pCtx->style.button.normal.data.color = nk_rgba(40,200,40, 255);
-            pCtx->style.button.hover.data.color = nk_rgba(40,200,40, 255);
-            pCtx->style.button.active.data.color = nk_rgba(40,200,40, 255);
+			nk_style_push_color( pCtx, &pCtx->style.button.normal.data.color, nk_rgba(40,200,40, 255) );
+			nk_style_push_color( pCtx, &pCtx->style.button.hover.data.color, nk_rgba(40,200,40, 255) );
+			nk_style_push_color( pCtx, &pCtx->style.button.active.data.color, nk_rgba(40,200,40, 255) );
 		}
         else
         {
-            pCtx->style.button.normal.data.color = nk_rgba(200,40,40, 255);
-            pCtx->style.button.hover.data.color = nk_rgba(200,40,40, 255);
-            pCtx->style.button.active.data.color = nk_rgba(200,40,40, 255);
+			nk_style_push_color( pCtx, &pCtx->style.button.normal.data.color, nk_rgba(200,40,40, 255) );
+			nk_style_push_color( pCtx, &pCtx->style.button.hover.data.color, nk_rgba(200,40,40, 255) );
+			nk_style_push_color( pCtx, &pCtx->style.button.active.data.color, nk_rgba(200,40,40, 255) );
         }
 
     	if( nk_button_label( pCtx, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].enabled ? "On" : "Off" ) )
 		{
 			pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].enabled = !pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].enabled;
 		}
-        pCtx->style.button.normal.data.color = tmp1;
-        pCtx->style.button.hover.data.color = tmp2;
-        pCtx->style.button.active.data.color = tmp3;
+		nk_style_pop_color( pCtx );
+		nk_style_pop_color( pCtx );
+		nk_style_pop_color( pCtx );
 
 
 		if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].enabled )
@@ -556,213 +545,7 @@ void ui_build_wavegen( tUi *pThis, struct nk_context *pCtx )
 		nk_tree_pop( pCtx );
 	}
 }
-/*
-void _ui_build_waveform( tUi *pThis, struct nk_context *pCtx )
-{
-    static uint8_t show_keypad_offset = 0;
-    static uint8_t show_keypad_scale = 0;
-    static uint8_t show_keypad_freq = 0;
-    static uint8_t show_keypad_duty = 0;
-    if( nk_tree_push( pCtx, NK_TREE_TAB, "Waveform", NK_MINIMIZED) )
-    {
-        nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
-        pThis->waveform_selected = nk_combo(pCtx, (const char*[]){"Wg1", "Wg2"}, UI_WAVEGEN_COUNT, pThis->waveform_selected, 30, nk_vec2(94, 160));
-        struct nk_color tmp1 = pCtx->style.button.normal.data.color;
-        struct nk_color tmp2 = pCtx->style.button.hover.data.color;
-        struct nk_color tmp3 = pCtx->style.button.active.data.color;
 
-        if( pThis->waveforms[pThis->waveform_selected].enabled )
-		{
-        	// blue
-        	//table[NK_COLOR_BUTTON] = nk_rgba(137, 182, 224, 255);
-        	//table[NK_COLOR_BUTTON_HOVER] = nk_rgba(142, 187, 229, 255);
-        	//table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(147, 192, 234, 255);
-        	// green
-			//table[NK_COLOR_BUTTON] = nk_rgba(137, 182, 224, 255);
-			//table[NK_COLOR_BUTTON_HOVER] = nk_rgba(142, 187, 229, 255);
-			//table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(147, 192, 234, 255);
-
-
-            pCtx->style.button.normal.data.color = nk_rgba(40,200,40, 255);
-            pCtx->style.button.hover.data.color = nk_rgba(40,200,40, 255);
-            pCtx->style.button.active.data.color = nk_rgba(40,200,40, 255);
-		}
-        else
-        {
-            pCtx->style.button.normal.data.color = nk_rgba(200,40,40, 255);
-            pCtx->style.button.hover.data.color = nk_rgba(200,40,40, 255);
-            pCtx->style.button.active.data.color = nk_rgba(200,40,40, 255);
-        }
-
-        if( nk_button_label( pCtx, pThis->waveforms[pThis->waveform_selected].enabled ? "On" : "Off" ) )
-        {
-            pThis->waveforms[pThis->waveform_selected].enabled = !pThis->waveforms[pThis->waveform_selected].enabled;
-            if( pThis->waveforms[pThis->waveform_selected].enabled )
-            {
-                wavegen_start( &wavegen, 1 << pThis->waveform_selected );
-            }
-            else
-            {
-                wavegen_stop( &wavegen, 1 << pThis->waveform_selected );
-            }
-        }
-        pCtx->style.button.normal.data.color = tmp1;
-        pCtx->style.button.hover.data.color = tmp2;
-        pCtx->style.button.active.data.color = tmp3;
-
-        if( pThis->waveforms[pThis->waveform_selected].enabled )
-        {
-            nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
-            int type = nk_combo( pCtx, (const char*[]){"Dc", "Sine", "Square", "Triangle", "Sawtooth", "PWM", "Noise"}, 7, pThis->waveforms[pThis->waveform_selected].type, 30, nk_vec2(94, 120));
-            if( type != pThis->waveforms[pThis->waveform_selected].type )
-            {
-                pThis->waveforms[pThis->waveform_selected].type = type;
-                wavegen.type = type;
-                ui_wavegen_build( pThis, &wavegen );
-            }
-            if( nk_property_keypad( pCtx, "Offset", -9999, &pThis->waveforms[pThis->waveform_selected].offset, 9999, &show_keypad_offset ) )
-            {
-                ui_wavegen_build( pThis, &wavegen );
-            }
-            if( pThis->waveforms[pThis->waveform_selected].type != WAVEGEN_TYPE_DC )
-            {
-                if( nk_property_keypad( pCtx, "Scale", 0, &pThis->waveforms[pThis->waveform_selected].scale, 9999, &show_keypad_scale ) )
-                {
-                    ui_wavegen_build( pThis, &wavegen );
-                }
-                if( nk_property_keypad( pCtx, "Freq", 0, &pThis->waveforms[pThis->waveform_selected].frequency, 999999, &show_keypad_freq ) )
-                {
-                    ui_wavegen_build( pThis, &wavegen );
-                }
-            }
-            if( pThis->waveforms[pThis->waveform_selected].type == WAVEGEN_TYPE_PWM )
-            {
-                if( nk_property_keypad( pCtx, "Duty", 0, &pThis->waveforms[pThis->waveform_selected].duty_cycle, 100, &show_keypad_duty ) )
-                {
-                    ui_wavegen_build( pThis, &wavegen );
-                }
-            }
-        }
-        nk_tree_pop( pCtx );
-    }
-}
-*/
-/*
-void _ui_build_waveform( tUi *pThis, struct nk_context *pCtx )
-{
-    static uint8_t show_keypad_offset = 0;
-    static uint8_t show_keypad_scale = 0;
-    static uint8_t show_keypad_freq = 0;
-    static uint8_t show_keypad_duty = 0;
-    if( nk_tree_push( pCtx, NK_TREE_TAB, "Waveform", NK_MINIMIZED) )
-    {
-        nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
-        pThis->waveform_selected = nk_combo(pCtx, (const char*[]){"Wg1", "Wg2"}, UI_WAVEGEN_COUNT, pThis->waveform_selected, 30, nk_vec2(94, 160));
-        if( nk_button_label( pCtx, pThis->waveforms[pThis->waveform_selected].enabled ? "On" : "Off" ) )
-        {
-            pThis->waveforms[pThis->waveform_selected].enabled = !pThis->waveforms[pThis->waveform_selected].enabled;
-            if( pThis->waveforms[pThis->waveform_selected].enabled )
-            {
-                wavegen_start( &wavegen, 1 << pThis->waveform_selected );
-            }
-            else
-            {
-                wavegen_stop( &wavegen, 1 << pThis->waveform_selected );
-            }
-        }
-        if( pThis->waveforms[pThis->waveform_selected].enabled )
-        {
-        	nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
-			int type = nk_combo( pCtx, (const char*[]){"Sine", "Square", "Triangle", "Sawtooth"}, 4, pThis->waveforms[pThis->waveform_selected].type, 30, nk_vec2(94, 120));
-			if( type != pThis->waveforms[pThis->waveform_selected].type )
-            {
-                pThis->waveforms[pThis->waveform_selected].type = type;
-                if( type == WAVEGEN_TYPE_DC )
-                {
-                    wavegen_build_dc( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].offset );
-                }
-                else if( type == WAVEGEN_TYPE_SINE )
-                {
-                    wavegen_build_sine( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].frequency, pThis->waveforms[pThis->waveform_selected].offset, pThis->waveforms[pThis->waveform_selected].scale );
-                }
-                else if( type == WAVEGEN_TYPE_SQUARE )
-                {
-                    wavegen_build_square( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].frequency, pThis->waveforms[pThis->waveform_selected].offset, pThis->waveforms[pThis->waveform_selected].scale );
-                }
-                else if( type == WAVEGEN_TYPE_TRIANGLE )
-                {
-                    wavegen_build_triangle( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].frequency, pThis->waveforms[pThis->waveform_selected].offset, pThis->waveforms[pThis->waveform_selected].scale );
-                }
-            }
-            if( nk_property_keypad( pCtx, "Offset", -9999, &pThis->waveforms[pThis->waveform_selected].offset, 9999, &show_keypad_offset ) )
-            {
-                int type = pThis->waveforms[pThis->waveform_selected].type;
-                if( type == WAVEGEN_TYPE_DC )
-                {
-                    wavegen_build_dc( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].offset );
-                }
-                else if( type == WAVEGEN_TYPE_SINE )
-                {
-                    wavegen_build_sine( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].frequency, pThis->waveforms[pThis->waveform_selected].offset, pThis->waveforms[pThis->waveform_selected].scale );
-                }
-                else if( type == WAVEGEN_TYPE_SQUARE )
-                {
-                    wavegen_build_square( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].frequency, pThis->waveforms[pThis->waveform_selected].offset, pThis->waveforms[pThis->waveform_selected].scale );
-                }
-                else if( type == WAVEGEN_TYPE_TRIANGLE )
-                {
-                    wavegen_build_triangle( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].frequency, pThis->waveforms[pThis->waveform_selected].offset, pThis->waveforms[pThis->waveform_selected].scale );
-                }
-            }
-            if( nk_property_keypad( pCtx, "Scale", 0, &pThis->waveforms[pThis->waveform_selected].scale, 9999, &show_keypad_scale ) )
-            {
-                int type = pThis->waveforms[pThis->waveform_selected].type;
-                if( type == WAVEGEN_TYPE_DC )
-                {
-                    wavegen_build_dc( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].offset );
-                }
-                else if( type == WAVEGEN_TYPE_SINE )
-                {
-                    wavegen_build_sine( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].frequency, pThis->waveforms[pThis->waveform_selected].offset, pThis->waveforms[pThis->waveform_selected].scale );
-                }
-                else if( type == WAVEGEN_TYPE_SQUARE )
-                {
-                    wavegen_build_square( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].frequency, pThis->waveforms[pThis->waveform_selected].offset, pThis->waveforms[pThis->waveform_selected].scale );
-                }
-                else if( type == WAVEGEN_TYPE_TRIANGLE )
-                {
-                    wavegen_build_triangle( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].frequency, pThis->waveforms[pThis->waveform_selected].offset, pThis->waveforms[pThis->waveform_selected].scale );
-                }
-            }
-            if( nk_property_keypad( pCtx, "Freq", 0, &pThis->waveforms[pThis->waveform_selected].frequency, 9999, &show_keypad_freq ) )
-            {
-                int type = pThis->waveforms[pThis->waveform_selected].type;
-                if( type == WAVEGEN_TYPE_DC )
-                {
-                    wavegen_build_dc( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].offset );
-                }
-                else if( type == WAVEGEN_TYPE_SINE )
-                {
-                    wavegen_build_sine( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].frequency, pThis->waveforms[pThis->waveform_selected].offset, pThis->waveforms[pThis->waveform_selected].scale );
-                }
-                else if( type == WAVEGEN_TYPE_SQUARE )
-                {
-                    wavegen_build_square( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].frequency, pThis->waveforms[pThis->waveform_selected].offset, pThis->waveforms[pThis->waveform_selected].scale );
-                }
-                else if( type == WAVEGEN_TYPE_TRIANGLE )
-                {
-                    wavegen_build_triangle( &wavegen, 1 << pThis->waveform_selected, pThis->waveforms[pThis->waveform_selected].frequency, pThis->waveforms[pThis->waveform_selected].offset, pThis->waveforms[pThis->waveform_selected].scale );
-                }
-            }
-			if( pThis->waveforms[pThis->waveform_selected].type == 1 )
-			{
-				nk_property_keypad( pCtx, "Duty", 0, &pThis->waveforms[pThis->waveform_selected].duty_cycle, 100, &show_keypad_duty );
-			}
-        }
-        nk_tree_pop( pCtx );
-    }
-}
-*/
 void ui_build_cursor( tUi *pThis, struct nk_context *pCtx )
 {
     static uint8_t show_keypad_offset = 0;
@@ -774,30 +557,26 @@ void ui_build_cursor( tUi *pThis, struct nk_context *pCtx )
         nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
         pThis->cursors.cursor_selected = nk_combo(pCtx, (const char*[]){"C1", "C2"}, UI_CURSOR_COUNT, pThis->cursors.cursor_selected, 30, nk_vec2(94, 160));
 
-        struct nk_color tmp1 = pCtx->style.button.normal.data.color;
-		struct nk_color tmp2 = pCtx->style.button.hover.data.color;
-		struct nk_color tmp3 = pCtx->style.button.active.data.color;
-
 		if( pThis->cursors.cursors[pThis->cursors.cursor_selected].enabled )
 		{
-			pCtx->style.button.normal.data.color = nk_rgba(40,200,40, 255);
-			pCtx->style.button.hover.data.color = nk_rgba(40,200,40, 255);
-			pCtx->style.button.active.data.color = nk_rgba(40,200,40, 255);
+			nk_style_push_color( pCtx, &pCtx->style.button.normal.data.color, nk_rgba(40,200,40, 255) );
+			nk_style_push_color( pCtx, &pCtx->style.button.hover.data.color, nk_rgba(40,200,40, 255) );
+			nk_style_push_color( pCtx, &pCtx->style.button.active.data.color, nk_rgba(40,200,40, 255) );
 		}
-		else
-		{
-			pCtx->style.button.normal.data.color = nk_rgba(200,40,40, 255);
-			pCtx->style.button.hover.data.color = nk_rgba(200,40,40, 255);
-			pCtx->style.button.active.data.color = nk_rgba(200,40,40, 255);
-		}
+        else
+        {
+			nk_style_push_color( pCtx, &pCtx->style.button.normal.data.color, nk_rgba(200,40,40, 255) );
+			nk_style_push_color( pCtx, &pCtx->style.button.hover.data.color, nk_rgba(200,40,40, 255) );
+			nk_style_push_color( pCtx, &pCtx->style.button.active.data.color, nk_rgba(200,40,40, 255) );
+        }
 
 		if( nk_button_label( pCtx, pThis->cursors.cursors[pThis->cursors.cursor_selected].enabled ? "On" : "Off" ) )
 		{
 			pThis->cursors.cursors[pThis->cursors.cursor_selected].enabled = !pThis->cursors.cursors[pThis->cursors.cursor_selected].enabled;
 		}
-		pCtx->style.button.normal.data.color = tmp1;
-		pCtx->style.button.hover.data.color = tmp2;
-		pCtx->style.button.active.data.color = tmp3;
+		nk_style_pop_color( pCtx );
+		nk_style_pop_color( pCtx );
+		nk_style_pop_color( pCtx );
 
         if( pThis->cursors.cursors[pThis->cursors.cursor_selected].enabled )
         {

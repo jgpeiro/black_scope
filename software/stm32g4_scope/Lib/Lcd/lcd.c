@@ -69,7 +69,7 @@ void lcd_set_bl( tLcd *pThis, uint8_t on )
     HAL_GPIO_WritePin( pThis->bl_port, pThis->bl_pin, on ? GPIO_PIN_SET : GPIO_PIN_RESET );
 }
 
-void lcd_set_window( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h )
+void _lcd_set_window( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h )
 {
     uint16_t x0 = LCD_CLAMP( x, 0, pThis->width - 1 );
     uint16_t y0 = LCD_CLAMP( y, 0, pThis->height - 1 );
@@ -89,9 +89,28 @@ void lcd_set_window( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h )
     LCD_DATA_ADDR = y1;
 }
 
+void lcd_set_window( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h )
+{
+    uint16_t x0 = x;
+    uint16_t y0 = y;
+    uint16_t x1 = x + w - 1;
+    uint16_t y1 = y + h - 1;
+
+    LCD_CMD_ADDR = LCD_REG_COLUMN_ADDR;
+    LCD_DATA_ADDR =(x0>>8)&0xFF;
+    LCD_DATA_ADDR = x0;
+    LCD_DATA_ADDR =(x1>>8)&0xFF;
+    LCD_DATA_ADDR = x1;
+
+    LCD_CMD_ADDR = LCD_REG_PAGE_ADDR;
+    LCD_DATA_ADDR =(y0>>8)&0xFF;
+    LCD_DATA_ADDR = y0;
+    LCD_DATA_ADDR =(y1>>8)&0xFF;
+    LCD_DATA_ADDR = y1;
+}
+
 void lcd_set_pixel( tLcd *pThis, int16_t x, int16_t y, uint16_t color )
 {
-	//lcd_set_window( pThis, x, y, 1, 1 );
     LCD_CMD_ADDR = LCD_REG_COLUMN_ADDR;
     LCD_DATA_ADDR =(x>>8)&0xFF;
     LCD_DATA_ADDR = x;

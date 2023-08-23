@@ -99,7 +99,7 @@ struct sScope
 };
 typedef struct sScope tScope;
 
-void scope_init( tScope *scope, uint16_t trigger_level, uint16_t sample_rate, uint16_t *buffer1, uint16_t *buffer2, uint16_t *buffer3, uint16_t *buffer4, uint16_t len );
+void scope_init( tScope *scope, uint16_t trigger_level, uint32_t sample_rate, uint16_t *buffer1, uint16_t *buffer2, uint16_t *buffer3, uint16_t *buffer4, uint16_t len );
 void scope_reset( tScope *scope );
 void scope_start( tScope *scope );
 void scope_stop( tScope *scope );

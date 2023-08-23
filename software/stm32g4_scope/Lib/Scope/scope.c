@@ -42,7 +42,7 @@ void get_prescaler_and_period(int clock, int freq, int *prescaler, int *period) 
     *period = best_period;
 }
 
-
+#include "integer_factorization.h"
 void scope_config_horizontal( tScope *scope, int sample_rate, int buffer_len )
 {
     // This function configures the timers so that the ADC is triggered at the frequency and to stop the conversion when the buffer is completed.
@@ -67,19 +67,30 @@ void scope_config_horizontal( tScope *scope, int sample_rate, int buffer_len )
     {
     	sample_rate = 1;
     }
+    //uint32_t n = 2*(tim_freq / sample_rate);
+    //uint32_t mx = 65536;
+    //uint32_t a = 0;
+    //uint32_t b = 0;
+    //integer_factorization( n, mx, &a, &b );
+
     // Compute required Prescaler and Period for the ADC clock.
     scope->horizontal.htim_clock->Init.Prescaler = (tim_freq / sample_rate)/2 - 1;
     scope->horizontal.htim_clock->Init.Period = 1;
+    //scope->horizontal.htim_clock->Init.Prescaler = a - 1;
+    //scope->horizontal.htim_clock->Init.Period = 2*b - 1;
     HAL_TIM_Base_Init( scope->horizontal.htim_clock );
 
     // Compute required Prescaler and Period for the Stop timer.
     scope->horizontal.htim_stop->Init.Prescaler = (tim_freq / sample_rate)/2 - 1;
     scope->horizontal.htim_stop->Init.Period = buffer_len - 1;
+    //scope->horizontal.htim_stop->Init.Prescaler = a - 1;
+    //scope->horizontal.htim_stop->Init.Period = 2*b*buffer_len - 1;
     HAL_TIM_Base_Init( scope->horizontal.htim_stop );
 
     TIM_OC_InitTypeDef sConfigOC = {0};
     sConfigOC.OCMode = TIM_OCMODE_TIMING;
     sConfigOC.Pulse = buffer_len - 1;
+    //sConfigOC.Pulse = 2*b*buffer_len - 1;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     HAL_TIM_OC_ConfigChannel(scope->horizontal.htim_stop, &sConfigOC, TIM_CHANNEL_1);
@@ -203,31 +214,37 @@ void scope_config_trigger( tScope *scope, int channel, int mode, int level, int 
 
     AnalogWDGConfig_arm_1.WatchdogNumber = ADC_ANALOGWATCHDOG_1;
     AnalogWDGConfig_arm_1.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REG;
-    AnalogWDGConfig_arm_1.Channel = ADC_CHANNEL_VOPAMP1;
+    AnalogWDGConfig_arm_1.Channel = 0;
     AnalogWDGConfig_arm_1.ITMode = ENABLE;
     AnalogWDGConfig_arm_1.HighThreshold = 4095;
     AnalogWDGConfig_arm_1.LowThreshold = 0;
     AnalogWDGConfig_arm_1.FilteringConfig = ADC_AWD_FILTERING_NONE;
+
     AnalogWDGConfig_arm_2 = AnalogWDGConfig_arm_1;
     AnalogWDGConfig_arm_3 = AnalogWDGConfig_arm_1;
     AnalogWDGConfig_arm_4 = AnalogWDGConfig_arm_1;
 
-    AnalogWDGConfig_trig_1 = AnalogWDGConfig_arm_1;
+    AnalogWDGConfig_trig_1.WatchdogNumber = ADC_ANALOGWATCHDOG_2;
     AnalogWDGConfig_trig_1.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REGINJEC;
+    AnalogWDGConfig_trig_1.Channel = 0;
+    AnalogWDGConfig_trig_1.ITMode = ENABLE;
+    AnalogWDGConfig_trig_1.HighThreshold = 4095;
+    AnalogWDGConfig_trig_1.LowThreshold = 0;
+    AnalogWDGConfig_trig_1.FilteringConfig = ADC_AWD_FILTERING_NONE;
+
     AnalogWDGConfig_trig_2 = AnalogWDGConfig_trig_1;
     AnalogWDGConfig_trig_3 = AnalogWDGConfig_trig_1;
     AnalogWDGConfig_trig_4 = AnalogWDGConfig_trig_1;
 
-    // reset all
-    AnalogWDGConfig_arm_1.WatchdogNumber = ADC_ANALOGWATCHDOG_1;
-    AnalogWDGConfig_arm_2.WatchdogNumber = ADC_ANALOGWATCHDOG_1;
-    AnalogWDGConfig_arm_3.WatchdogNumber = ADC_ANALOGWATCHDOG_1;
-    AnalogWDGConfig_arm_4.WatchdogNumber = ADC_ANALOGWATCHDOG_1;
+    AnalogWDGConfig_arm_1.Channel = ADC_CHANNEL_VOPAMP1;
+    AnalogWDGConfig_arm_2.Channel = ADC_CHANNEL_VOPAMP3_ADC3;
+    AnalogWDGConfig_arm_3.Channel = ADC_CHANNEL_VOPAMP5;
+    AnalogWDGConfig_arm_4.Channel = ADC_CHANNEL_VOPAMP6;
 
-    AnalogWDGConfig_trig_1.WatchdogNumber = ADC_ANALOGWATCHDOG_2;
-    AnalogWDGConfig_trig_2.WatchdogNumber = ADC_ANALOGWATCHDOG_2;
-    AnalogWDGConfig_trig_3.WatchdogNumber = ADC_ANALOGWATCHDOG_2;
-    AnalogWDGConfig_trig_4.WatchdogNumber = ADC_ANALOGWATCHDOG_2;
+    AnalogWDGConfig_trig_1.Channel = ADC_CHANNEL_VOPAMP1;
+    AnalogWDGConfig_trig_2.Channel = ADC_CHANNEL_VOPAMP3_ADC3;
+    AnalogWDGConfig_trig_3.Channel = ADC_CHANNEL_VOPAMP5;
+    AnalogWDGConfig_trig_4.Channel = ADC_CHANNEL_VOPAMP6;
 
     // Configure the required for arm the oscilloscope.
     if( mode == UI_TRIGGER_MODE_AUTO )
@@ -355,7 +372,7 @@ void scope_config_trigger( tScope *scope, int channel, int mode, int level, int 
     }
 }
 
-void scope_init( tScope *scope, uint16_t trigger_level, uint16_t sample_rate, uint16_t *buffer1, uint16_t *buffer2, uint16_t *buffer3, uint16_t *buffer4, uint16_t len )
+void scope_init( tScope *scope, uint16_t trigger_level, uint32_t sample_rate, uint16_t *buffer1, uint16_t *buffer2, uint16_t *buffer3, uint16_t *buffer4, uint16_t len )
 {
 	scope->trigger_level = trigger_level;
 	scope->sample_rate = sample_rate;
@@ -540,8 +557,8 @@ extern int DMA1_Channel1_CNDTR;
 int32_t scope_get_trigger( tScope *scope )
 {
 	//return scope->len - scope->CNDTRs[SCOPE_STATE_WAIT_FOR_STOP];
-	//return scope->len - scope->CNDTRs[SCOPE_STATE_DONE] - 256;
-	return scope->len - DMA1_Channel1_CNDTR;
+	return scope->len - scope->CNDTRs[SCOPE_STATE_DONE] - 256;
+	//return scope->len - DMA1_Channel1_CNDTR;
 }
 
 // ********************** IRQs ********************** //
