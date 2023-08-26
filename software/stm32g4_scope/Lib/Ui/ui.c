@@ -321,7 +321,7 @@ void ui_build_wavegen2( tUi_Wavegen *pThis, struct nk_context *pCtx )
 		if( pThis->waveforms[pThis->waveform_selected].enabled )
 		{
 			nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
-			pThis->waveforms[pThis->waveform_selected].type = nk_combo( pCtx, (const char*[]){"Dc", "Sine", "Square", "Triangle", "Sawtooth", "PWM", "Noise"}, 7, pThis->waveforms[pThis->waveform_selected].type, 30, nk_vec2(94, 120));
+			pThis->waveforms[pThis->waveform_selected].type = nk_combo( pCtx, (const char*[]){"Dc", "Sine", "Square", "Triangle", "Saw", "PWM", "Noise"}, 7, pThis->waveforms[pThis->waveform_selected].type, 30, nk_vec2(94, 120));
 			nk_property_keypad( pCtx, "Offset", -9999, &pThis->waveforms[pThis->waveform_selected].offset, 9999, &show_keypad_offset );
 			if( pThis->waveforms[pThis->waveform_selected].type != WAVEGEN_TYPE2_DC )
 			{
@@ -770,7 +770,7 @@ void ui_wavegen_build( tUi *pThis, tWaveGen *wavegen )
     wavegen_stop( wavegen,
     	((!pThis->wavegen.waveforms[0].enabled) << 0) |
     	((!pThis->wavegen.waveforms[1].enabled) << 1) );
-
+/*
     if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].type == WAVEGEN_TYPE_DC )
     {
         wavegen_build_dc( wavegen, 1 << pThis->wavegen.waveform_selected, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].offset );
@@ -798,7 +798,7 @@ void ui_wavegen_build( tUi *pThis, tWaveGen *wavegen )
     else if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].type == WAVEGEN_TYPE_NOISE )
     {
         wavegen_build_noise( wavegen, 1 << pThis->wavegen.waveform_selected, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].scale, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].offset );
-    }
+    }*/
     int tim_freq = 170e6;
     int prescaler = 0;
     int period = 0;

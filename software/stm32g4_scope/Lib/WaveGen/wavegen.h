@@ -11,6 +11,14 @@
 #include <stdint.h>
 #include "stm32g4xx_hal.h"
 
+#include "lcd.h"
+
+enum eWaveGenChannel
+{
+	WAVEGEN_CHANNEL_1,
+	WAVEGEN_CHANNEL_2
+};
+
 enum eWaveGenType
 {
 	WAVEGEN_TYPE_DC,
@@ -23,39 +31,45 @@ enum eWaveGenType
 	WAVEGEN_TYPE_MAX
 };
 
+
 struct sWaveGen
 {
 	DAC_HandleTypeDef *hdac;
 	TIM_HandleTypeDef *htim1;
 	TIM_HandleTypeDef *htim2;
 
-	uint16_t *buffer0;
 	uint16_t *buffer1;
+	uint16_t *buffer2;
 	uint16_t len;
-	enum eWaveGenType type;
-	float sample_rate;
 };
 typedef struct sWaveGen tWaveGen;
 
-void wavegen_init( tWaveGen *pThis, 
+void wavegen_init_ll( tWaveGen *pThis,
 	DAC_HandleTypeDef *hdac,
 	TIM_HandleTypeDef *htim1,
-	TIM_HandleTypeDef *htim2,
-	uint16_t *buffer0, 
-	uint16_t *buffer1, 
-	uint16_t len,
-	float sample_rate
+	TIM_HandleTypeDef *htim2
 );
 
-void wavegen_start( tWaveGen *pThis, uint8_t channels );
-void wavegen_stop( tWaveGen *pThis, uint8_t channels );
+void wavegen_init( tWaveGen *pThis,
+	uint16_t *buffer1,
+	uint16_t *buffer2,
+	uint16_t len
+);
 
-void wavegen_build_dc( tWaveGen *pThis, uint8_t channels, float offset );
-void wavegen_build_sine( tWaveGen *pThis, uint8_t channels, float frequency, float amplitude, float offset );
-void wavegen_build_square( tWaveGen *pThis, uint8_t channels, float frequency, float amplitude, float offset );
-void wavegen_build_triangle( tWaveGen *pThis, uint8_t channels, float frequency, float amplitude, float offset );
-void wavegen_build_sawtooth( tWaveGen *pThis, uint8_t channels, float frequency, float amplitude, float offset );
-void wavegen_build_pwm( tWaveGen *pThis, uint8_t channels, float frequency, float amplitude, float offset, float duty_cycle );
-void wavegen_build_noise( tWaveGen *pThis, uint8_t channels, float frequency, float amplitude, float offset );
+void wavegen_start( tWaveGen *pThis, enum eWaveGenChannel channel );
+void wavegen_stop( tWaveGen *pThis, enum eWaveGenChannel channel );
+void wavegen_config_horizontal( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t frequency );
+void wavegen_config_vertical( tWaveGen *pThis, enum eWaveGenChannel channel, enum eWaveGenType type, uint16_t offset, uint16_t scale, uint16_t duty_cycle );
+
+void wavegen_build_dc( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset );
+void wavegen_build_sine( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale );
+void wavegen_build_square( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale );
+void wavegen_build_triangle( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale );
+void wavegen_build_sawtooth( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale );
+void wavegen_build_pwm( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale, uint16_t duty_cycle );
+void wavegen_build_noise( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale );
+
+void wavegen_draw( tWaveGen *pThis, tLcd *pLcd );
+void wavegen_erase( tWaveGen *pThis, tLcd *pLcd );
 
 #endif /* WAVEGEN_H_ */

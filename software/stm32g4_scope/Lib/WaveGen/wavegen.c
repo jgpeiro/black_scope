@@ -8,260 +8,198 @@
 #include <math.h>
 #include <stdlib.h>
 #include "wavegen.h"
-/*
-void wavegen_build_dc( uint16_t *buffer, uint16_t len, float offset )
-{
-    uint16_t i;
-    for( i = 0; i < len; i++ )
-    {
-        buffer[i] = offset;
-    }
-}
 
-void wavegen_build_sine( uint16_t *buffer, uint16_t len, float sample_rate, float amplitude, float offset, float frequency )
-{
-    uint16_t i;
-    float t;
-    float dt = 1.0f / sample_rate;
-    float omega = 2.0f * M_PI * frequency;
-    for( i = 0; i < len; i++ )
-    {
-        t = i * dt;
-        buffer[i] = amplitude * sinf( omega * t ) + offset;
-    }
-}
-*/
-
-void wavegen_init( tWaveGen *pThis, 
+void wavegen_init_ll( tWaveGen *pThis,
 	DAC_HandleTypeDef *hdac,
 	TIM_HandleTypeDef *htim1,
-	TIM_HandleTypeDef *htim2,
-	uint16_t *buffer0, 
-	uint16_t *buffer1, 
-	uint16_t len,
-	float sample_rate )
+	TIM_HandleTypeDef *htim2 )
 {
-    pThis->hdac = hdac;
-    pThis->htim1 = htim1;
-    pThis->htim2 = htim2;
-    pThis->buffer0 = buffer0;
-    pThis->buffer1 = buffer1;
-    pThis->len = len;
-    pThis->type = WAVEGEN_TYPE_DC;
-    pThis->sample_rate = sample_rate;
-
-    memset( pThis->buffer0, 0, len * sizeof( uint16_t ) );
-    memset( pThis->buffer1, 0, len * sizeof( uint16_t ) );
+	pThis->hdac = hdac;
+	pThis->htim1 = htim1;
+	pThis->htim2 = htim2;
 }
 
-void wavegen_start( tWaveGen *pThis, uint8_t channels )
+void wavegen_init( tWaveGen *pThis,
+	uint16_t *buffer1,
+	uint16_t *buffer2,
+	uint16_t len )
 {
-	if( channels & 0x01 )
-    {
-        HAL_DAC_Start_DMA( pThis->hdac, DAC_CHANNEL_1, (uint32_t*)pThis->buffer0, pThis->len, DAC_ALIGN_12B_R );
-    }
-    if( channels & 0x02 )
-    {
-        HAL_DAC_Start_DMA( pThis->hdac, DAC_CHANNEL_2, (uint32_t*)pThis->buffer1, pThis->len, DAC_ALIGN_12B_R );
-    }
-	if( channels & 0x01 )
-    {
-        HAL_TIM_Base_Start( pThis->htim1 );
-    }
-    if( channels & 0x02 )
-    {
-        HAL_TIM_Base_Start( pThis->htim2 );
-    }
+	pThis->buffer1 = buffer1;
+	pThis->buffer2 = buffer2;
+	pThis->len = len;
 }
 
-void wavegen_stop( tWaveGen *pThis, uint8_t channels )
+void wavegen_start( tWaveGen *pThis, enum eWaveGenChannel channel )
 {
-	if( channels & 0x01 )
-    {
-		wavegen_build_dc( pThis, 0x01, 0 );
-        HAL_DAC_Stop_DMA( pThis->hdac, DAC_CHANNEL_1 );
-        HAL_TIM_Base_Stop( pThis->htim1 );
-    }
-    if( channels & 0x02 )
-    {
-		wavegen_build_dc( pThis, 0x02, 0 );
-    	HAL_DAC_Stop_DMA( pThis->hdac, DAC_CHANNEL_2 );
-        HAL_TIM_Base_Stop( pThis->htim2 );
-    }
+	if( channel == WAVEGEN_CHANNEL_1 )
+	{
+		HAL_DAC_Start_DMA( pThis->hdac, DAC_CHANNEL_1, (uint32_t*)pThis->buffer1, pThis->len, DAC_ALIGN_12B_R );
+		HAL_TIM_Base_Start( pThis->htim1 );
+	}
+	else if( channel == WAVEGEN_CHANNEL_2 )
+	{
+		HAL_DAC_Start_DMA( pThis->hdac, DAC_CHANNEL_2, (uint32_t*)pThis->buffer2, pThis->len, DAC_ALIGN_12B_R );
+		HAL_TIM_Base_Start( pThis->htim2 );
+	}
 }
 
-void wavegen_build_dc( tWaveGen *pThis, uint8_t channels, float offset )
+void wavegen_stop( tWaveGen *pThis, enum eWaveGenChannel channel )
 {
-    uint16_t i;
+	if( channel == WAVEGEN_CHANNEL_1 )
+	{
+		HAL_DAC_Stop_DMA( pThis->hdac, DAC_CHANNEL_1 );
+		HAL_TIM_Base_Stop( pThis->htim1 );
+	}
+	else if( channel == WAVEGEN_CHANNEL_2 )
+	{
+		HAL_DAC_Stop_DMA( pThis->hdac, DAC_CHANNEL_2 );
+		HAL_TIM_Base_Stop( pThis->htim2 );
+	}
+}
+
+
+void wavegen_config_horizontal( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t frequency )
+{
+	if( frequency == 0 )
+	{
+		frequency = 1;
+	}
+	if( channel == WAVEGEN_CHANNEL_1 )
+	{
+		pThis->htim1->Init.Prescaler = (170e6 / (frequency*pThis->len))/2 - 1;
+		pThis->htim1->Init.Period = 2 - 1;
+		HAL_TIM_Base_Init( pThis->htim1 );
+	}
+	else if( channel == WAVEGEN_CHANNEL_2 )
+	{
+		pThis->htim2->Init.Prescaler = (170e6 / (frequency*pThis->len))/2 - 1;
+		pThis->htim2->Init.Period = 2 - 1;
+		HAL_TIM_Base_Init( pThis->htim2 );
+	}
+}
+
+void wavegen_config_vertical( tWaveGen *pThis, enum eWaveGenChannel channel, enum eWaveGenType type, uint16_t offset, uint16_t scale, uint16_t duty_cycle )
+{
+	switch( type )
+	{
+		case WAVEGEN_TYPE_DC:
+			wavegen_build_dc( pThis, channel, offset );
+			break;
+		case WAVEGEN_TYPE_SINE:
+			wavegen_build_sine( pThis, channel, offset, scale );
+			break;
+		case WAVEGEN_TYPE_SQUARE:
+			wavegen_build_square( pThis, channel, offset, scale );
+			break;
+		case WAVEGEN_TYPE_TRIANGLE:
+			wavegen_build_triangle( pThis, channel, offset, scale );
+			break;
+		case WAVEGEN_TYPE_SAWTOOTH:
+			wavegen_build_sawtooth( pThis, channel, offset, scale );
+			break;
+		case WAVEGEN_TYPE_PWM:
+			wavegen_build_pwm( pThis, channel, offset, scale, duty_cycle );
+			break;
+		case WAVEGEN_TYPE_NOISE:
+			wavegen_build_noise( pThis, channel, offset, scale );
+			break;
+	}
+}
+
+void wavegen_build_dc( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset )
+{
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->buffer1:pThis->buffer2;
     for( i = 0; i < pThis->len; i++ )
     {
-        if( channels & 0x01 )
-        {
-            pThis->buffer0[i] = offset;
-        }
-        if( channels & 0x02 )
-        {
-            pThis->buffer1[i] = offset;
-        }
+		buffer[i] = offset;
     }
 }
 
-void wavegen_build_sine( tWaveGen *pThis, uint8_t channels, float frequency, float amplitude, float offset )
+void wavegen_build_sine( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale )
 {
-    uint16_t i;
-    float t;
-    float dt = 1.0f / pThis->len;//pThis->sample_rate;
-    float omega = 2.0f * M_PI * 1;// * frequency;
-    for( i = 0; i < pThis->len; i++ )
-    {
-        t = i * dt;
-        if( channels & 0x01 )
-        {
-            pThis->buffer0[i] = amplitude * sinf( omega * t ) + offset;
-        }
-        if( channels & 0x02 )
-        {
-            pThis->buffer1[i] = amplitude * sinf( omega * t ) + offset;
-        }
-    }
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->buffer1:pThis->buffer2;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		buffer[i] = sinf(2*M_PI*i/pThis->len)*scale + offset;
+	}
 }
 
-void wavegen_build_square( tWaveGen *pThis, uint8_t channels, float frequency, float amplitude, float offset )
+void wavegen_build_square( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale )
 {
-    uint16_t i;
-    float t;
-    float dt = 1.0f / pThis->len;//pThis->sample_rate;
-    float omega = 2.0f * M_PI * 1;// * frequency;
-    for( i = 0; i < pThis->len; i++ )
-    {
-        t = i * dt;
-        if( channels & 0x01 )
-        {
-            if( sinf( omega * t ) > 0.0f )
-            {
-                pThis->buffer0[i] = amplitude + offset;
-            }
-            else
-            {
-                pThis->buffer0[i] = -amplitude + offset;
-            }
-        }
-        if( channels & 0x02 )
-        {
-            if( sinf( omega * t ) > 0.0f )
-            {
-                pThis->buffer1[i] = amplitude + offset;
-            }
-            else
-            {
-                pThis->buffer1[i] = -amplitude + offset;
-            }
-        }
-    }
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->buffer1:pThis->buffer2;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		buffer[i] = (i < pThis->len/2)?offset-scale:offset+scale;
+	}
 }
 
-void wavegen_build_triangle( tWaveGen *pThis, uint8_t channels, float frequency, float amplitude, float offset )
+void wavegen_build_triangle( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale )
 {
-    uint16_t i;
-    float t;
-    float dt = 1.0f / pThis->len;//pThis->sample_rate;
-    float omega = 2.0f * M_PI * 1;// * frequency;
-    for( i = 0; i < pThis->len; i++ )
-    {
-        t = i * dt;
-        if( channels & 0x01 )
-        {
-            pThis->buffer0[i] = 2/(float)M_PI * amplitude * asinf( sinf( omega * t ) ) + offset;
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->buffer1:pThis->buffer2;
+	for( i = 0; i < pThis->len; i++ )
+	{
+        if (i < pThis->len / 2) {
+            // Generate the rising portion of the triangle waveform
+            buffer[i] = offset - scale + (uint16_t)(((float)i / (pThis->len / 2)) * (2 * scale));
+        } else {
+            // Generate the falling portion of the triangle waveform
+            buffer[i] = offset + scale - (uint16_t)(((float)(i - pThis->len / 2) / (pThis->len / 2)) * (2 * scale));
         }
-        if( channels & 0x02 )
-        {
-            pThis->buffer1[i] = 2/(float)M_PI * amplitude * asinf( sinf( omega * t ) ) + offset;
-        }
-    }
+	}
 }
 
-void wavegen_build_sawtooth( tWaveGen *pThis, uint8_t channels, float frequency, float amplitude, float offset )
+void wavegen_build_sawtooth( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale )
 {
-    uint16_t i;
-    float t;
-    float dt = 1.0f / pThis->len;//pThis->sample_rate;
-    float omega = 2.0f * M_PI * 1;// * frequency;
-    for( i = 0; i < pThis->len; i++ )
-    {
-        t = i * dt;
-        if( channels & 0x01 )
-        {
-            pThis->buffer0[i] = amplitude * ( t - floorf( t ) ) + offset;
-        }
-        if( channels & 0x02 )
-        {
-            pThis->buffer1[i] = amplitude * ( t - floorf( t ) ) + offset;
-        }
-    }
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->buffer1:pThis->buffer2;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		buffer[i] = offset-scale+i*2*scale/pThis->len;
+	}
 }
 
-void wavegen_build_pwm( tWaveGen *pThis, uint8_t channels, float frequency, float amplitude, float offset, float duty_cycle )
+void wavegen_build_pwm( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale, uint16_t duty_cycle )
 {
-    uint16_t i;
-    float t;
-    float dt = 1.0f / pThis->len;//pThis->sample_rate;
-    float omega = 2.0f * M_PI * 1;// * frequency;
-    for( i = 0; i < pThis->len; i++ )
-    {
-        t = i * dt;
-        if( channels & 0x01 )
-        {
-            if( ( t - floorf( t ) ) < duty_cycle/100.0 )
-            {
-                pThis->buffer0[i] = amplitude + offset;
-            }
-            else
-            {
-                pThis->buffer0[i] = -amplitude + offset;
-            }
-        }
-        if( channels & 0x02 )
-        {
-            if( ( t - floorf( t ) ) < duty_cycle/100.0 )
-            {
-                pThis->buffer1[i] = amplitude + offset;
-            }
-            else
-            {
-                pThis->buffer1[i] = -amplitude + offset;
-            }
-        }
-    }
-}
-void wavegen_build_noise( tWaveGen *pThis, uint8_t channels, float frequency, float amplitude, float offset )
-{
-    uint16_t i;
-    float t;
-    float dt = 1.0f / pThis->len;//pThis->sample_rate;
-    float omega = 2.0f * M_PI * 1;// * frequency;
-    for( i = 0; i < pThis->len; i++ )
-    {
-        t = i * dt;
-        if( channels & 0x01 )
-        {
-            pThis->buffer0[i] = amplitude * ( 2.0f * ( (float)rand() / (float)RAND_MAX ) - 1.0f ) + offset;
-        }
-        if( channels & 0x02 )
-        {
-            pThis->buffer1[i] = amplitude * ( 2.0f * ( (float)rand() / (float)RAND_MAX ) - 1.0f ) + offset;
-        }
-    }
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->buffer1:pThis->buffer2;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		buffer[i] = (i < pThis->len*duty_cycle/100)?offset-scale:offset+scale;
+	}
 }
 
-/*
-int main()
+void wavegen_build_noise( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale )
 {
-    tWavegen wavegen;
-    wavegen_init( &wavegen, 1000, 1000 );
-    wavegen_build_sine( &wavegen, 0x01, 1000, 1.0f, 0.0f );
-    wavegen_build_sine( &wavegen, 0x02, 1000, 1.0f, 0.0f );
-    wavegen_start( &wavegen, 0x03 );
-    HAL_Delay( 1000 );
-    wavegen_stop( &wavegen, 0x03 );
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->buffer1:pThis->buffer2;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		buffer[i] = rand()%scale + offset;
+	}
 }
-*/
+
+void wavegen_erase( tWaveGen *pThis, tLcd *pLcd )
+{
+	uint16_t i;
+	const float scale = 320/4096.0f;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		lcd_set_pixel( pLcd, i/2, pThis->buffer1[i]*scale, 0x0000 );
+		lcd_set_pixel( pLcd, i/2, pThis->buffer2[i]*scale, 0x0000 );
+	}
+}
+
+void wavegen_draw( tWaveGen *pThis, tLcd *pLcd )
+{
+	uint16_t i;
+	const float scale = 320/4096.0f;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		lcd_set_pixel( pLcd, i/2, pThis->buffer1[i]*scale, 0x001F );
+		lcd_set_pixel( pLcd, i/2, pThis->buffer2[i]*scale, 0x07E0 );
+	}
+}

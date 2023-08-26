@@ -26,7 +26,7 @@ uint32_t nk_color_to_rgb565( struct nk_color color )
 
 	return rgb565;
 }
-
+/*
 void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd, int16_t x0 ) {
 	int16_t y0;
 	const struct nk_command *cmd = NULL;
@@ -102,7 +102,7 @@ void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd, int16_t x0 )
 		lcd_bmp(pLcd, x0, y0, pfb->width, pfb->height, pfb->buf);
 	}
 }
-
+*/
 void nk_draw_fb2(struct nk_context *ctx, tFramebuf *pfb, int16_t x0, int16_t y0 )
 {
 	const struct nk_command *cmd = NULL;
