@@ -76,6 +76,13 @@ const osThreadAttr_t taskScope_attributes = {
   .priority = (osPriority_t) osPriorityNormal4,
   .stack_size = 128
 };
+
+osThreadId_t taskWavegenHandle;
+const osThreadAttr_t taskWavegen_attributes = {
+  .name = "taskWavegen",
+  .priority = (osPriority_t) osPriorityNormal3,
+  .stack_size = 256
+};
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 struct sQueueTscUi {
@@ -117,12 +124,24 @@ const osMessageQueueAttr_t queueUiScope_attributes = {
   .name = "queueUiScope"
 };
 
+
+struct sQueueUiWavegen {
+    uint16_t type;
+    uint16_t data[8];
+};
+
+osMessageQueueId_t queueUiWavegenHandle;
+const osMessageQueueAttr_t queueUiWavegen_attributes = {
+  .name = "queueUiWavegen"
+};
+
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
 void StartTaskTsc(void *argument);
 void StartTaskUi(void *argument);
 void StartTaskScope(void *argument);
+void StartTaskWavegen(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -149,9 +168,10 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
-	queueTscUiHandle = osMessageQueueNew (4, sizeof(struct sQueueTscUi), &queueTscUi_attributes );
-	//queueUiLcdHandle = osMessageQueueNew (1, sizeof(struct sQueueUiLcd), &queueUiLcd_attributes );
-	queueUiScopeHandle = osMessageQueueNew (1, sizeof(struct sQueueUiScope), &queueUiScope_attributes );
+	queueTscUiHandle = osMessageQueueNew(4, sizeof(struct sQueueTscUi), &queueTscUi_attributes );
+	//queueUiLcdHandle = osMessageQueueNew(1, sizeof(struct sQueueUiLcd), &queueUiLcd_attributes );
+	queueUiScopeHandle = osMessageQueueNew(1, sizeof(struct sQueueUiScope), &queueUiScope_attributes );
+	queueUiWavegenHandle = osMessageQueueNew(1, sizeof(struct sQueueUiWavegen), &queueUiWavegen_attributes );
  /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -162,6 +182,7 @@ void MX_FREERTOS_Init(void) {
   taskTscHandle = osThreadNew(StartTaskTsc, NULL, &taskTsc_attributes);
   taskUiHandle = osThreadNew(StartTaskUi, NULL, &taskUi_attributes);
   taskScopeHandle = osThreadNew(StartTaskScope, NULL, &taskScope_attributes);
+  taskWavegenHandle = osThreadNew(StartTaskWavegen, NULL, &taskWavegen_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -1351,11 +1372,14 @@ void StartTaskTsc(void *argument)
 	}
 }
 
+#define LCD_COLOR_WHITE		(0xFFFF)
+#define COLOR_UI_CROSS		(LCD_COLOR_WHITE)
+
 //struct nk_context *ctx;
+tLcd lcd = {0};
 void StartTaskUi(void *argument)
 {
     tFramebuf fb = {0};
-    tLcd lcd = {0};
     static tUi ui = {0};
 
     struct sQueueTscUi msgTscUi = {0};
@@ -1418,13 +1442,23 @@ void StartTaskUi(void *argument)
 			}
         }
         nk_clear(&ctx);
+
+		if( msgTscUi.p && (0 <= msgTscUi.x) && (msgTscUi.x < lcd.width/2-5) )
+		{
+			lcd_draw_cross( &lcd, msgTscUi.x+lcd.width/2, msgTscUi.y, COLOR_UI_CROSS );
+		}
     }
 }
-#define QUEUE_UI_SCOPE_TYPE_HORIZONTAL 0
-#define QUEUE_UI_SCOPE_TYPE_VERTICAL 1
-#define QUEUE_UI_SCOPE_TYPE_TRIGGER 2
-#define QUEUE_UI_SCOPE_TYPE_START 3
-#define QUEUE_UI_SCOPE_TYPE_STOP 4
+
+enum eQueueUiScopeType
+{
+	QUEUE_UI_SCOPE_TYPE_START,
+	QUEUE_UI_SCOPE_TYPE_STOP,
+	QUEUE_UI_SCOPE_TYPE_HORIZONTAL,
+	QUEUE_UI_SCOPE_TYPE_VERTICAL,
+	QUEUE_UI_SCOPE_TYPE_TRIGGER
+};
+
 
 void StartTaskScope(void *argument)
 {
@@ -1459,6 +1493,12 @@ void StartTaskScope(void *argument)
         {
             switch( msgScope.type )
             {
+				case QUEUE_UI_SCOPE_TYPE_START:
+                    scope_start( &scope );
+                    break;
+                case QUEUE_UI_SCOPE_TYPE_STOP:
+                    scope_stop( &scope );
+                    break;
                 case QUEUE_UI_SCOPE_TYPE_HORIZONTAL:
                     scope_config_horizontal( &scope, msgScope.data[0], msgScope.data[1] );
                     break;
@@ -1477,12 +1517,6 @@ void StartTaskScope(void *argument)
                         msgScope.data[2],
                         msgScope.data[3] );
                     break;
-                case QUEUE_UI_SCOPE_TYPE_START:
-                    scope_start( &scope );
-                    break;
-                case QUEUE_UI_SCOPE_TYPE_STOP:
-                    scope_stop( &scope );
-                    break;
             }
         }
 
@@ -1500,5 +1534,311 @@ void StartTaskScope(void *argument)
     }
 }
 
+enum eQueueUiWavegenType
+{
+	QUEUE_UI_WAVEGEN_TYPE_START,
+	QUEUE_UI_WAVEGEN_TYPE_STOP,
+	QUEUE_UI_WAVEGEN_TYPE_CONFIG_HORIZONTAL,
+	QUEUE_UI_WAVEGEN_TYPE_CONFIG_VERTICAL,
+};
+
+enum eWaveGenChannel
+{
+	WAVEGEN_CHANNEL_1,
+	WAVEGEN_CHANNEL_2
+};
+
+enum eWaveGenType2
+{
+	WAVEGEN_TYPE2_DC,
+	WAVEGEN_TYPE2_SINE,
+	WAVEGEN_TYPE2_SQUARE,
+	WAVEGEN_TYPE2_TRIANGLE,
+	WAVEGEN_TYPE2_SAWTOOTH,
+	WAVEGEN_TYPE2_PWM,
+	WAVEGEN_TYPE2_NOISE
+};
+
+struct _sWaveGen
+{
+	DAC_HandleTypeDef *hdac;
+	TIM_HandleTypeDef *htim1;
+	TIM_HandleTypeDef *htim2;
+	uint16_t *dac1_buffer;
+	uint16_t *dac2_buffer;
+	uint16_t len;
+};
+typedef struct _sWaveGen _tWaveGen;
+
+void _wavegen_init_ll( _tWaveGen *pThis,
+	DAC_HandleTypeDef *hdac,
+	TIM_HandleTypeDef *htim1,
+	TIM_HandleTypeDef *htim2 )
+{
+	pThis->hdac = hdac;
+	pThis->htim1 = htim1;
+	pThis->htim2 = htim2;
+}
+
+void _wavegen_init( _tWaveGen *pThis,
+	uint16_t *dac1_buffer,
+	uint16_t *dac2_buffer,
+	uint16_t len )
+{
+	pThis->dac1_buffer = dac1_buffer;
+	pThis->dac2_buffer = dac2_buffer;
+	pThis->len = len;
+}
+
+void _wavegen_start( _tWaveGen *pThis, enum eWaveGenChannel channel )
+{
+	if( channel == WAVEGEN_CHANNEL_1 )
+	{
+		HAL_DAC_Start_DMA( pThis->hdac, DAC_CHANNEL_1, (uint32_t*)pThis->dac1_buffer, pThis->len, DAC_ALIGN_12B_R );
+		HAL_TIM_Base_Start( pThis->htim1 );
+	}
+	else if( channel == WAVEGEN_CHANNEL_2 )
+	{
+		HAL_DAC_Start_DMA( pThis->hdac, DAC_CHANNEL_2, (uint32_t*)pThis->dac2_buffer, pThis->len, DAC_ALIGN_12B_R );
+		HAL_TIM_Base_Start( pThis->htim2 );
+	}
+}
+
+void _wavegen_stop( _tWaveGen *pThis, enum eWaveGenChannel channel )
+{
+	if( channel == WAVEGEN_CHANNEL_1 )
+	{
+		HAL_DAC_Stop_DMA( pThis->hdac, DAC_CHANNEL_1 );
+		HAL_TIM_Base_Stop( pThis->htim1 );
+	}
+	else if( channel == WAVEGEN_CHANNEL_2 )
+	{
+		HAL_DAC_Stop_DMA( pThis->hdac, DAC_CHANNEL_2 );
+		HAL_TIM_Base_Stop( pThis->htim2 );
+	}
+}
+
+void _wavegen_config_horizontal( _tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t frequency )
+{
+	if( frequency == 0 )
+	{
+		frequency = 1;
+	}
+	if( channel == WAVEGEN_CHANNEL_1 )
+	{
+		//HAL_TIM_Base_Stop( pThis->htim1 );
+		pThis->htim1->Init.Prescaler = (170e6 / (frequency*pThis->len))/2 - 1;
+		pThis->htim1->Init.Period = 2 - 1;
+		HAL_TIM_Base_Init( pThis->htim1 );
+	}
+	else if( channel == WAVEGEN_CHANNEL_2 )
+	{
+		//HAL_TIM_Base_Stop( pThis->htim2 );
+		pThis->htim2->Init.Prescaler = (170e6 / (frequency*pThis->len))/2 - 1;
+		pThis->htim2->Init.Period = 2 - 1;
+		HAL_TIM_Base_Init( pThis->htim2 );
+	}
+}
+
+void _wavegen_build_dc( _tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset )
+{
+    uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->dac1_buffer:pThis->dac2_buffer;
+    for( i = 0; i < pThis->len; i++ )
+    {
+		buffer[i] = offset;
+    }
+}
+
+void _wavegen_build_sine( _tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale )
+{
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->dac1_buffer:pThis->dac2_buffer;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		buffer[i] = sinf(2*M_PI*i/pThis->len)*scale + offset;
+	}
+}
+
+void _wavegen_build_square( _tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale )
+{
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->dac1_buffer:pThis->dac2_buffer;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		buffer[i] = (i < pThis->len/2)?offset-scale:offset+scale;
+	}
+}
+
+void _wavegen_build_triangle( _tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale )
+{
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->dac1_buffer:pThis->dac2_buffer;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		buffer[i] = (i < pThis->len/2)?offset-scale+i*2*scale/pThis->len:offset+scale-(i-pThis->len/2)*2*scale/pThis->len;
+	}
+}
+
+void _wavegen_build_sawtooth( _tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale )
+{
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->dac1_buffer:pThis->dac2_buffer;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		buffer[i] = offset-scale+i*2*scale/pThis->len;
+	}
+}
+
+void _wavegen_build_pwm( _tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale, uint16_t duty_cycle )
+{
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->dac1_buffer:pThis->dac2_buffer;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		buffer[i] = (i < pThis->len*duty_cycle/100)?offset-scale:offset+scale;
+	}
+}
+
+void _wavegen_build_noise( _tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale )
+{
+	uint16_t i;
+	uint16_t *buffer = (channel == WAVEGEN_CHANNEL_1)?pThis->dac1_buffer:pThis->dac2_buffer;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		buffer[i] = rand()%scale + offset;
+	}
+}
+
+void _wavegen_config_vertical( _tWaveGen *pThis, enum eWaveGenChannel channel, enum eWaveGenType type, uint16_t offset, uint16_t scale, uint16_t duty_cycle )
+{
+	switch( type )
+	{
+		case WAVEGEN_TYPE2_DC:
+			_wavegen_build_dc( pThis, channel, offset );
+			break;
+		case WAVEGEN_TYPE2_SINE:
+			_wavegen_build_sine( pThis, channel, offset, scale );
+			break;
+		case WAVEGEN_TYPE2_SQUARE:
+			_wavegen_build_square( pThis, channel, offset, scale );
+			break;
+		case WAVEGEN_TYPE2_TRIANGLE:
+			_wavegen_build_triangle( pThis, channel, offset, scale );
+			break;
+		case WAVEGEN_TYPE2_SAWTOOTH:
+			_wavegen_build_sawtooth( pThis, channel, offset, scale );
+			break;
+		case WAVEGEN_TYPE2_PWM:
+			_wavegen_build_pwm( pThis, channel, offset, scale, duty_cycle );
+			break;
+		case WAVEGEN_TYPE2_NOISE:
+			_wavegen_build_noise( pThis, channel, offset, scale );
+			break;
+	}
+}
+
+// _wavegen_draw( &wavegen, &lcd, msgUiWavegen.type );
+void _wavegen_draw( _tWaveGen *pThis, tLcd *pLcd, enum eQueueUiWavegenType type )
+{
+	uint16_t i;
+	uint16_t x0 = 0;
+	uint16_t y0 = 0;
+	uint16_t x1 = 0;
+	uint16_t y1 = 0;
+	uint16_t *buffer = NULL;
+	uint16_t color = 0;
+	uint16_t offset = 0;
+	uint16_t scale = 0;
+	uint16_t duty_cycle = 0;
+
+	switch( type )
+	{
+		case QUEUE_UI_WAVEGEN_TYPE_START:
+			break;
+		case QUEUE_UI_WAVEGEN_TYPE_STOP:
+			break;
+		case QUEUE_UI_WAVEGEN_TYPE_CONFIG_HORIZONTAL:
+			break;
+		case QUEUE_UI_WAVEGEN_TYPE_CONFIG_VERTICAL:
+			break;
+	}
+
+	// draw the wave
+	for( i = 0; i < pThis->len; i++ )
+	{
+		x1 = x0 + 1;
+		y1 = pThis->dac1_buffer[i];
+		if( i > 0 )
+		{
+			//lcd_draw_line( pLcd, x0, y0, x1, y1, 0xFFFF );
+			lcd_rect( pLcd, x0, y0, x1-x0+1, y1-y0+1, 0x00FF );
+		}
+		x0 = x1;
+		y0 = y1;
+	}
+}
+
+void StartTaskWavegen(void *argument)
+{
+	static _tWaveGen wavegen = {0};
+
+	struct sQueueUiWavegen msgUiWavegen = {0};
+
+	_wavegen_init_ll( &wavegen,
+		&hdac1, // hdac
+		&htim4, // htim1
+		&htim6  // htim2
+	);
+
+	_wavegen_init( &wavegen,
+		dac1_buffer,
+		dac2_buffer,
+		DAC_BUFFER_LEN
+	);
+
+	TickType_t xLastWakeTime;
+	const TickType_t xFrequency = 1;
+	xLastWakeTime = xTaskGetTickCount();
+	for(;;)
+	{
+		vTaskDelayUntil( &xLastWakeTime, xFrequency );
+
+		if( osMessageQueueGet(queueUiWavegenHandle, &msgUiWavegen, NULL, 0U) == osOK )
+		{
+			switch( msgUiWavegen.type )
+			{
+				case QUEUE_UI_WAVEGEN_TYPE_START:
+					_wavegen_start( &wavegen, msgUiWavegen.data[0] );
+					break;
+				case QUEUE_UI_WAVEGEN_TYPE_STOP:
+					_wavegen_stop( &wavegen, msgUiWavegen.data[0] );
+					break;
+				case QUEUE_UI_WAVEGEN_TYPE_CONFIG_HORIZONTAL:
+					_wavegen_config_horizontal( &wavegen,
+						msgUiWavegen.data[0], // channel
+						msgUiWavegen.data[1]  // frequency
+					);
+					break;
+				case QUEUE_UI_WAVEGEN_TYPE_CONFIG_VERTICAL:
+					_wavegen_config_vertical( &wavegen,
+						msgUiWavegen.data[0], // channel
+						msgUiWavegen.data[1], // type
+						msgUiWavegen.data[2], // offset
+						msgUiWavegen.data[3], // scale
+						msgUiWavegen.data[4]  // duty_cycle
+					);
+					break;
+			}
+
+			// Take the LCD semaphore to draw the wave.
+			if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
+			{
+				_wavegen_draw( &wavegen, &lcd, msgUiWavegen.type );
+				osSemaphoreRelease( semaphoreLcdHandle );
+			}
+		}
+	}
+}
 /* USER CODE END Application */
 

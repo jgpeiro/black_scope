@@ -18,12 +18,20 @@
 #include "task.h"
 //#include "main.h"
 #include "cmsis_os.h"
-extern osMessageQueueId_t queueUiScopeHandle;
 
 struct sQueueUiScope {
     uint16_t type;
     uint16_t data[8];
 };
+
+struct sQueueUiWavegen {
+    uint16_t type;
+    uint16_t data[8];
+};
+
+extern osMessageQueueId_t queueUiScopeHandle;
+extern osMessageQueueId_t queueUiWavegenHandle;
+
 
 #define COLOR_BUTTON_ENABLED (struct nk_color){40,200,40, 255}
 #define COLOR_BUTTON_DISABLED (struct nk_color){200,40,40, 255}
@@ -228,7 +236,7 @@ void ui_build_trigger2( tUi_Trigger *pThis, struct nk_context *pCtx )
             nk_property_keypad( pCtx, "Level", -9999, &pThis->level, 9999, &show_keypad_level );
         }
 
-        if( memcmp( &tmp, &pThis, sizeof(tUi_Trigger) ) )
+        if( memcmp( &tmp, pThis, sizeof(tUi_Trigger) ) )
         {
             msgUiScope.type = QUEUE_UI_SCOPE_TYPE_TRIGGER;
             msgUiScope.data[0] = pThis->source;
@@ -239,6 +247,106 @@ void ui_build_trigger2( tUi_Trigger *pThis, struct nk_context *pCtx )
         }
         nk_tree_pop( pCtx );
     }
+}
+enum eWaveGenType2
+{
+	WAVEGEN_TYPE2_DC,
+	WAVEGEN_TYPE2_SINE,
+	WAVEGEN_TYPE2_SQUARE,
+	WAVEGEN_TYPE2_TRIANGLE,
+	WAVEGEN_TYPE2_SAWTOOTH,
+	WAVEGEN_TYPE2_PWM,
+	WAVEGEN_TYPE2_NOISE
+};
+
+enum eQueueUiWavegenType
+{
+	QUEUE_UI_WAVEGEN_TYPE_START,
+	QUEUE_UI_WAVEGEN_TYPE_STOP,
+	QUEUE_UI_WAVEGEN_TYPE_CONFIG_HORIZONTAL,
+	QUEUE_UI_WAVEGEN_TYPE_CONFIG_VERTICAL,
+};
+void ui_build_wavegen2( tUi_Wavegen *pThis, struct nk_context *pCtx )
+{
+    struct sQueueUiWavegen msgUiWavegen = {0};
+
+    static uint8_t show_keypad_offset = 0;
+    static uint8_t show_keypad_scale = 0;
+    static uint8_t show_keypad_freq = 0;
+    static uint8_t show_keypad_duty = 0;
+	pThis->is_visible = 0;
+
+    if( nk_tree_push( pCtx, NK_TREE_TAB, "Waveform", NK_MINIMIZED) )
+    {
+    	pThis->is_visible = 1;
+    	tUi_Wavegen tmp = *pThis;
+
+    	nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
+
+		nk_style_push_color_channel( pCtx, pThis->waveform_selected );
+    	pThis->waveform_selected = nk_combo(pCtx, (const char*[]){"Wg1", "Wg2"}, UI_WAVEFORM_COUNT, pThis->waveform_selected, 30, nk_vec2(94, 160));
+		nk_style_pop_color_channel( pCtx );
+
+        nk_style_push_color_button( pCtx, pThis->waveforms[pThis->waveform_selected].enabled );
+    	if( nk_button_label( pCtx, pThis->waveforms[pThis->waveform_selected].enabled ? "On" : "Off" ) )
+		{
+			pThis->waveforms[pThis->waveform_selected].enabled = !pThis->waveforms[pThis->waveform_selected].enabled;
+		}
+        nk_style_pop_color_button( pCtx );
+
+		if( pThis->waveforms[pThis->waveform_selected].enabled )
+		{
+			nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
+			pThis->waveforms[pThis->waveform_selected].type = nk_combo( pCtx, (const char*[]){"Dc", "Sine", "Square", "Triangle", "Sawtooth", "PWM", "Noise"}, 7, pThis->waveforms[pThis->waveform_selected].type, 30, nk_vec2(94, 120));
+			nk_property_keypad( pCtx, "Offset", -9999, &pThis->waveforms[pThis->waveform_selected].offset, 9999, &show_keypad_offset );
+			if( pThis->waveforms[pThis->waveform_selected].type != WAVEGEN_TYPE2_DC )
+			{
+				nk_property_keypad( pCtx, "Scale", 0, &pThis->waveforms[pThis->waveform_selected].scale, 9999, &show_keypad_scale );
+				nk_property_keypad( pCtx, "Freq", 0, &pThis->waveforms[pThis->waveform_selected].frequency, 999999, &show_keypad_freq );
+			}
+			if( pThis->waveforms[pThis->waveform_selected].type == WAVEGEN_TYPE2_PWM )
+			{
+				nk_property_keypad( pCtx, "Duty", 0, &pThis->waveforms[pThis->waveform_selected].duty_cycle, 100, &show_keypad_duty );
+			}
+		}
+
+		if( memcmp( &tmp, pThis, sizeof(tUi_Wavegen) ) )
+		{
+            if( pThis->waveforms[pThis->waveform_selected].enabled != tmp.waveforms[tmp.waveform_selected].enabled )
+            {
+                if( pThis->waveforms[pThis->waveform_selected].enabled )
+                {
+                    msgUiWavegen.type = QUEUE_UI_WAVEGEN_TYPE_START;
+                }
+                else
+                {
+                    msgUiWavegen.type = QUEUE_UI_WAVEGEN_TYPE_STOP;
+                }
+                msgUiWavegen.data[0] = pThis->waveform_selected;
+                osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, 0U);
+            }
+            else
+            {
+                msgUiWavegen.type = QUEUE_UI_WAVEGEN_TYPE_CONFIG_HORIZONTAL;
+                msgUiWavegen.data[0] = pThis->waveforms[0].scale*1000;
+                msgUiWavegen.data[1] = pThis->waveforms[1].scale*1000;
+                msgUiWavegen.data[2] = pThis->waveforms[0].offset;
+                msgUiWavegen.data[3] = pThis->waveforms[1].offset;
+                osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, 0U);
+
+                msgUiWavegen.type = QUEUE_UI_WAVEGEN_TYPE_CONFIG_VERTICAL;
+                msgUiWavegen.data[0] = pThis->waveforms[0].type;
+                msgUiWavegen.data[1] = pThis->waveforms[1].type;
+                msgUiWavegen.data[2] = pThis->waveforms[0].frequency;
+                msgUiWavegen.data[3] = pThis->waveforms[1].frequency;
+                msgUiWavegen.data[4] = pThis->waveforms[0].duty_cycle;
+                msgUiWavegen.data[5] = pThis->waveforms[1].duty_cycle;
+                osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, 0U);
+            }
+            
+        }
+		nk_tree_pop( pCtx );
+	}
 }
 
 uint8_t nk_keypad( struct nk_context *pCtx, int32_t min, int32_t *pValue, int32_t max )
@@ -366,7 +474,7 @@ void ui_build( tUi *pThis, struct nk_context *pCtx )
         ui_build_horizontal2( pThis, pCtx );
         ui_build_vertical2( pThis, pCtx );
         ui_build_trigger2( pThis, pCtx );
-        ui_build_wavegen( pThis, pCtx );
+        ui_build_wavegen2( pThis, pCtx );
         ui_build_cursor( pThis, pCtx );
         ui_build_measurements( pThis, pCtx );
         ui_build_info( pThis, pCtx );
