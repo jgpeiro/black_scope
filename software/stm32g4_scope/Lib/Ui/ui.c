@@ -8,11 +8,14 @@
 #include <stdio.h>
 #include "ui.h"
 
-#define QUEUE_UI_SCOPE_TYPE_HORIZONTAL 0
-#define QUEUE_UI_SCOPE_TYPE_VERTICAL 1
-#define QUEUE_UI_SCOPE_TYPE_TRIGGER 2
-#define QUEUE_UI_SCOPE_TYPE_START 3
-#define QUEUE_UI_SCOPE_TYPE_STOP 4
+enum eQueueUiScopeType
+{
+	QUEUE_UI_SCOPE_TYPE_START,
+	QUEUE_UI_SCOPE_TYPE_STOP,
+	QUEUE_UI_SCOPE_TYPE_HORIZONTAL,
+	QUEUE_UI_SCOPE_TYPE_VERTICAL,
+	QUEUE_UI_SCOPE_TYPE_TRIGGER
+};
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -101,11 +104,16 @@ void nk_style_pop_color_channel( struct nk_context *pCtx )
 
 void ui_build_acquire2( tUi_Acquire *pThis, struct nk_context *pCtx )
 {
+    struct sQueueUiScope msgUiScope = {0};
+    tUi_Acquire tmp;
+
 	pThis->is_visible = 0;
     if( nk_tree_push( pCtx, NK_TREE_TAB, "Acquire", NK_MAXIMIZED) )
     {
     	pThis->is_visible = 1;
-        nk_layout_row( pCtx, NK_STATIC, 30, 2, (float[]){95, 95});
+    	tmp = *pThis;
+
+    	nk_layout_row( pCtx, NK_STATIC, 30, 2, (float[]){95, 95});
 
         nk_style_push_color_button( pCtx, pThis->run );
         if( nk_button_label( pCtx, pThis->run ? "Run" : "Stop" ) )
@@ -118,6 +126,22 @@ void ui_build_acquire2( tUi_Acquire *pThis, struct nk_context *pCtx )
         {
         	pThis->single = 1;
         }
+
+        if( memcmp( &tmp, pThis, sizeof(tUi_Acquire) ) )
+        {
+            if( pThis->run )
+            {
+                msgUiScope.type = QUEUE_UI_SCOPE_TYPE_START;
+                msgUiScope.data[0] = pThis->single;
+                osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+            }
+            else
+            {
+                msgUiScope.type = QUEUE_UI_SCOPE_TYPE_STOP;
+                osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+            }
+        }
+
         nk_tree_pop( pCtx );
     }
 }
@@ -136,15 +160,15 @@ void ui_build_horizontal2( tUi_Horizontal *pThis, struct nk_context *pCtx )
     	if( nk_property_keypad( pCtx, "Offset", -9999, &pThis->offset, 9999, &show_keypad_offset ) )
     	{
     		msgUiScope.type = QUEUE_UI_SCOPE_TYPE_HORIZONTAL;
-    		msgUiScope.data[0] = pThis->scale*1000;
-            msgUiScope.data[1] =-pThis->offset+512;
+            msgUiScope.data[0] =-pThis->offset+512;
+    		msgUiScope.data[1] = pThis->scale*1000;
             osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
         }
     	if( nk_property_keypad( pCtx, "Scale", 0, &pThis->scale, 9999, &show_keypad_scale ) )
     	{
     		msgUiScope.type = QUEUE_UI_SCOPE_TYPE_HORIZONTAL;
-    		msgUiScope.data[0] = pThis->scale*1000;
-            msgUiScope.data[1] =-pThis->offset+512;
+            msgUiScope.data[0] =-pThis->offset+512;
+    		msgUiScope.data[1] = pThis->scale*1000;
             osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
     	}
         nk_tree_pop( pCtx );
@@ -185,23 +209,22 @@ void ui_build_vertical2( tUi_Vertical *pThis, struct nk_context *pCtx )
             if( nk_property_keypad( pCtx, "Offset", 0, &pThis->offset, 4095, &show_keypad_offset ) )
 			{
                 msgUiScope.type = QUEUE_UI_SCOPE_TYPE_VERTICAL;
-                msgUiScope.data[0] = pThis->channels[0].scale;
-                msgUiScope.data[1] = pThis->channels[1].scale;
-                msgUiScope.data[2] = pThis->channels[2].scale;
-                msgUiScope.data[3] = pThis->channels[3].scale;
-                msgUiScope.data[4] = pThis->offset;
+                msgUiScope.data[0] = pThis->offset;
+                msgUiScope.data[1] = pThis->channels[0].scale;
+                msgUiScope.data[2] = pThis->channels[1].scale;
+                msgUiScope.data[3] = pThis->channels[2].scale;
+                msgUiScope.data[4] = pThis->channels[3].scale;
                 osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
-
 			}
             if( nk_property_keypad( pCtx, "Scale", 0, &pThis->channels[pThis->channel_selected].scale, 5, &show_keypad_scale ) )
 			{
-                    msgUiScope.type = QUEUE_UI_SCOPE_TYPE_VERTICAL;
-                    msgUiScope.data[0] = pThis->channels[0].scale;
-                    msgUiScope.data[1] = pThis->channels[1].scale;
-                    msgUiScope.data[2] = pThis->channels[2].scale;
-                    msgUiScope.data[3] = pThis->channels[3].scale;
-                    msgUiScope.data[4] = pThis->offset;
-                    osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+                msgUiScope.type = QUEUE_UI_SCOPE_TYPE_VERTICAL;
+                msgUiScope.data[0] = pThis->offset;
+                msgUiScope.data[1] = pThis->channels[0].scale;
+                msgUiScope.data[2] = pThis->channels[1].scale;
+                msgUiScope.data[3] = pThis->channels[2].scale;
+                msgUiScope.data[4] = pThis->channels[3].scale;
+                osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
 			}
         }
         nk_tree_pop( pCtx );

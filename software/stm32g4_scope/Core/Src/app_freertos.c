@@ -1344,7 +1344,7 @@ void _StartTaskTsc(void *argument)
 /* USER CODE BEGIN Application */
 void StartTaskTsc(void *argument)
 {
-	const TickType_t xFrequency = 1;
+	const TickType_t xFrequency = 10;
 	TickType_t xLastWakeTime;
 
 	struct sQueueTscUi msgTscUi = {0};
@@ -1459,17 +1459,403 @@ enum eQueueUiScopeType
 	QUEUE_UI_SCOPE_TYPE_TRIGGER
 };
 
+struct _sScope_Horizontal
+{
+	TIM_HandleTypeDef *htim_clock;
+	TIM_HandleTypeDef *htim_stop;
+};
+typedef struct _sScope_Horizontal _tScope_Horizontal;
+
+struct _sScope_Vertical
+{
+	DAC_HandleTypeDef *hdac;
+	OPAMP_HandleTypeDef *hopamp1;
+	OPAMP_HandleTypeDef *hopamp2;
+	OPAMP_HandleTypeDef *hopamp3;
+	OPAMP_HandleTypeDef *hopamp4;
+};
+typedef struct _sScope_Vertical _tScope_Vertical;
+
+struct _sScope_Trigger
+{
+	ADC_HandleTypeDef *hadc1;
+	ADC_HandleTypeDef *hadc2;
+	ADC_HandleTypeDef *hadc3;
+	ADC_HandleTypeDef *hadc4;
+};
+typedef struct _sScope_Trigger _tScope_Trigger;
+
+struct _sScope
+{
+	_tScope_Horizontal horizontal;
+	_tScope_Vertical vertical;
+	_tScope_Trigger trigger;
+
+	uint16_t *buffer1;
+	uint16_t *buffer2;
+	uint16_t *buffer3;
+	uint16_t *buffer4;
+
+	uint16_t *buffer5;
+	uint16_t *buffer6;
+	uint16_t *buffer7;
+	uint16_t *buffer8;
+
+	uint16_t len;
+	uint16_t cnt;
+	uint8_t state;
+};
+typedef struct _sScope _tScope;
+
+
+void _scope_init_ll( _tScope *pThis,
+	TIM_HandleTypeDef *htim_clock,
+	TIM_HandleTypeDef *htim_stop,
+	DAC_HandleTypeDef *hdac,
+	OPAMP_HandleTypeDef *hopamp1,
+	OPAMP_HandleTypeDef *hopamp2,
+	OPAMP_HandleTypeDef *hopamp3,
+	OPAMP_HandleTypeDef *hopamp4,
+	ADC_HandleTypeDef *hadc1,
+	ADC_HandleTypeDef *hadc2,
+	ADC_HandleTypeDef *hadc3,
+	ADC_HandleTypeDef *hadc4
+)
+{
+	pThis->horizontal.htim_clock = htim_clock;
+	pThis->horizontal.htim_stop = htim_stop;
+	pThis->vertical.hdac = hdac;
+	pThis->vertical.hopamp1 = hopamp1;
+	pThis->vertical.hopamp2 = hopamp2;
+	pThis->vertical.hopamp3 = hopamp3;
+	pThis->vertical.hopamp4 = hopamp4;
+	pThis->trigger.hadc1 = hadc1;
+	pThis->trigger.hadc2 = hadc2;
+	pThis->trigger.hadc3 = hadc3;
+	pThis->trigger.hadc4 = hadc4;
+}
+
+/*
+enum eScopeState
+{
+	SCOPE_STATE_IDLE = 0,
+	SCOPE_STATE_WAIT_FOR_CONVERSION_COMPLETE = 1,
+	SCOPE_STATE_WAIT_FOR_ARM = 2,
+	SCOPE_STATE_WAIT_FOR_TRIGGER = 3,
+	SCOPE_STATE_WAIT_FOR_STOP = 4,
+	SCOPE_STATE_DONE = 5,
+	SCOPE_STATE_MAX,
+};
+typedef enum eScopeState tScopeState;
+*/
+#define SCOPE_STATE_IDLE 0
+
+//void HAL_ADC_ConvHalfCpltCallback( ADC_HandleTypeDef* hadc )
+//{
+//}
+_tScope *pScope = NULL;
+void HAL_ADC_ConvCpltCallback( ADC_HandleTypeDef* hadc )
+{	
+	if( pScope->state == SCOPE_STATE_WAIT_FOR_CONVERSION_COMPLETE )
+	{
+		LL_ADC_EnableIT_AWD1( pScope->trigger.hadc1->Instance );
+		pScope->state = SCOPE_STATE_WAIT_FOR_ARM;
+	}
+}
+
+void HAL_ADC_LevelOutOfWindowCallback( ADC_HandleTypeDef* hadc )
+{
+	if( pScope->state == SCOPE_STATE_WAIT_FOR_ARM )
+	{
+		LL_ADC_EnableIT_AWD2( pScope->trigger.hadc1->Instance );
+		pScope->state = SCOPE_STATE_WAIT_FOR_TRIGGER;
+	}
+}
+
+void HAL_ADCEx_LevelOutOfWindow2Callback( ADC_HandleTypeDef* hadc )
+{
+	if( pScope->state == SCOPE_STATE_WAIT_FOR_TRIGGER )
+	{
+		HAL_TIM_Base_Start( pScope->horizontal.htim_stop );
+		HAL_TIM_OnePulse_Start_IT( pScope->horizontal.htim_stop, TIM_CHANNEL_1 );
+		pScope->state = SCOPE_STATE_WAIT_FOR_STOP;
+	}
+}
+
+void HAL_TIM_OC_DelayElapsedCallback( TIM_HandleTypeDef *htim )
+{
+	if( pScope->state == SCOPE_STATE_WAIT_FOR_STOP )
+	{
+		HAL_TIM_Base_Stop( pScope->horizontal.htim_clock );
+		HAL_TIM_Base_Stop( pScope->horizontal.htim_stop );
+		HAL_TIM_OnePulse_Stop_IT( pScope->horizontal.htim_stop, TIM_CHANNEL_1 );
+		HAL_ADC_Stop_DMA( pScope->trigger.hadc1 );
+		HAL_ADC_Stop_DMA( pScope->trigger.hadc2 );
+		HAL_ADC_Stop_DMA( pScope->trigger.hadc3 );
+		HAL_ADC_Stop_DMA( pScope->trigger.hadc4 );
+		pScope->state = SCOPE_STATE_DONE;
+	}
+}
+
+
+void _scope_init( _tScope *pThis,
+	uint16_t *buffer1,
+	uint16_t *buffer2,
+	uint16_t *buffer3,
+	uint16_t *buffer4,
+	uint16_t *buffer5,
+	uint16_t *buffer6,
+	uint16_t *buffer7,
+	uint16_t *buffer8,
+	uint16_t len
+)
+{
+	pThis->buffer1 = buffer1;
+	pThis->buffer2 = buffer2;
+	pThis->buffer3 = buffer3;
+	pThis->buffer4 = buffer4;
+	pThis->buffer5 = buffer5;
+	pThis->buffer6 = buffer6;
+	pThis->buffer7 = buffer7;
+	pThis->buffer8 = buffer8;
+	pThis->len = len;
+	pThis->cnt = 0;
+	pThis->state = SCOPE_STATE_IDLE;
+}
+
+void _scope_start( _tScope *pThis, int single )
+{
+	pThis->cnt = 0;
+	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp1 );
+	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp2 );
+	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp3 );
+	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp4 );
+
+	HAL_OPAMP_Start( pThis->vertical.hopamp1 );
+	HAL_OPAMP_Start( pThis->vertical.hopamp2 );
+	HAL_OPAMP_Start( pThis->vertical.hopamp3 );
+	HAL_OPAMP_Start( pThis->vertical.hopamp4 );
+
+	HAL_ADCEx_Calibration_Start( pThis->trigger.hadc1, ADC_SINGLE_ENDED );
+	HAL_ADCEx_Calibration_Start( pThis->trigger.hadc2, ADC_SINGLE_ENDED );
+	HAL_ADCEx_Calibration_Start( pThis->trigger.hadc3, ADC_SINGLE_ENDED );
+	HAL_ADCEx_Calibration_Start( pThis->trigger.hadc4, ADC_SINGLE_ENDED );
+
+	if( pThis->cnt & 0x01 )
+	{
+		HAL_ADC_Start_DMA( pThis->trigger.hadc1, (uint32_t*)pThis->buffer1, pThis->len );
+		HAL_ADC_Start_DMA( pThis->trigger.hadc2, (uint32_t*)pThis->buffer2, pThis->len );
+		HAL_ADC_Start_DMA( pThis->trigger.hadc3, (uint32_t*)pThis->buffer3, pThis->len );
+		HAL_ADC_Start_DMA( pThis->trigger.hadc3, (uint32_t*)pThis->buffer3, pThis->len );
+	}
+	else
+	{
+		HAL_ADC_Start_DMA( pThis->trigger.hadc1, (uint32_t*)pThis->buffer4, pThis->len );
+		HAL_ADC_Start_DMA( pThis->trigger.hadc2, (uint32_t*)pThis->buffer5, pThis->len );
+		HAL_ADC_Start_DMA( pThis->trigger.hadc3, (uint32_t*)pThis->buffer6, pThis->len );
+		HAL_ADC_Start_DMA( pThis->trigger.hadc3, (uint32_t*)pThis->buffer7, pThis->len );
+	}
+	pThis->cnt += 1;
+
+	HAL_TIM_Base_Start( pThis->horizontal.htim_clock );
+	
+	pThis->state = SCOPE_STATE_WAIT_FOR_CONVERSION_COMPLETE;
+}
+
+void _scope_stop( _tScope *pThis )
+{
+	HAL_TIM_Base_Stop( pThis->horizontal.htim_clock );
+	HAL_TIM_Base_Stop( pThis->horizontal.htim_stop );
+	HAL_TIM_OnePulse_Stop_IT( pThis->horizontal.htim_stop, TIM_CHANNEL_1 );
+	
+	HAL_ADC_Stop_DMA( pThis->trigger.hadc1 );
+	HAL_ADC_Stop_DMA( pThis->trigger.hadc2 );
+	HAL_ADC_Stop_DMA( pThis->trigger.hadc3 );
+	HAL_ADC_Stop_DMA( pThis->trigger.hadc4 );
+
+	//HAL_DAC_Stop( pThis->vertical.hdac, DAC_CHANNEL_1 );
+	//HAL_DAC_Stop( pThis->vertical.hdac, DAC_CHANNEL_2 );
+
+	//HAL_OPAMP_Stop( pThis->vertical.hopamp1 );
+	//HAL_OPAMP_Stop( pThis->vertical.hopamp2 );
+	//HAL_OPAMP_Stop( pThis->vertical.hopamp3 );
+	//HAL_OPAMP_Stop( pThis->vertical.hopamp4 );
+
+	pThis->state = SCOPE_STATE_IDLE;
+
+}
+
+void _scope_config_horizontal( _tScope *pThis, int offset, int scale )
+{
+	pThis->horizontal.htim_clock->Init.Prescaler = (170e6 / (scale*1000))/2 - 1;
+	pThis->horizontal.htim_clock->Init.Period = 2-1;
+    HAL_TIM_Base_Init( pThis->horizontal.htim_clock );
+	pThis->horizontal.htim_stop->Init.Prescaler = (170e6 / (scale*1000))/2 - 1;
+	pThis->horizontal.htim_stop->Init.Period = pThis->len - 1;
+    HAL_TIM_Base_Init( pThis->horizontal.htim_stop );
+
+    TIM_OC_InitTypeDef sConfigOC = {0};
+    sConfigOC.OCMode = TIM_OCMODE_TIMING;
+    sConfigOC.Pulse = pThis->len - 1;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    HAL_TIM_OC_ConfigChannel(pThis->horizontal.htim_stop, &sConfigOC, TIM_CHANNEL_1);
+}
+
+const uint32_t gain_to_opamp_follower_gain[4] = {
+	1,//OPAMP_FOLLOWER_GAIN_2,
+	1,//OPAMP_FOLLOWER_GAIN_4,
+	1,//OPAMP_FOLLOWER_GAIN_8,
+	1,//OPAMP_FOLLOWER_GAIN_16
+};
+void _scope_config_vertical( _tScope *pThis, int gain1, int gain2, int gain3, int gain4, int offset )
+{
+	//pThis->vertical_gain1 = gain1;
+	//pThis->vertical_gain2 = gain2;
+	//pThis->vertical_gain3 = gain3;
+	//pThis->vertical_gain4 = gain4;
+	//pThis->vertical_offset = offset;
+	HAL_DAC_SetValue( pThis->vertical.hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, offset );
+	HAL_DAC_Start( pThis->vertical.hdac, DAC_CHANNEL_1 );
+	//HAL_DAC_SetValue( pThis->vertical.hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, offset );
+	//HAL_DAC_SetValue( pThis->vertical.hdac, DAC_CHANNEL_3, DAC_ALIGN_12B_R, offset );
+	//HAL_DAC_SetValue( pThis->vertical.hdac, DAC_CHANNEL_4, DAC_ALIGN_12B_R, offset );
+	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp1 );
+	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp2 );
+	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp3 );
+	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp4 );
+	HAL_OPAMP_Start( pThis->vertical.hopamp1 );
+	HAL_OPAMP_Start( pThis->vertical.hopamp2 );
+	HAL_OPAMP_Start( pThis->vertical.hopamp3 );
+	HAL_OPAMP_Start( pThis->vertical.hopamp4 );
+	//HAL_OPAMP_SetGain( pThis->vertical.hopamp1, gain_to_opamp_follower_gain[gain1] );
+	//HAL_OPAMP_SetGain( pThis->vertical.hopamp2, gain_to_opamp_follower_gain[gain2] );
+	//HAL_OPAMP_SetGain( pThis->vertical.hopamp3, gain_to_opamp_follower_gain[gain3] );
+	//HAL_OPAMP_SetGain( pThis->vertical.hopamp4, gain_to_opamp_follower_gain[gain4] );
+}
+
+void _scope_config_trigger( _tScope *pThis, int channel, int mode, int level, int slope )
+{
+	ADC_AnalogWDGConfTypeDef AnalogWDGConfig_arm = {0};
+    ADC_AnalogWDGConfTypeDef AnalogWDGConfig_trig = {0};
+
+	if( channel == 0 )
+	{
+		// set the values for AnalogWDGConfig_arm and AnalogWDGConfig_trig of channel 0 in case of mode == UI_TRIGGER_MODE_NORMAL
+		// Use the appropiate level and slope for AnalogWDGConfig_arm and AnalogWDGConfig_trig lower and upper thresholds
+	
+		AnalogWDGConfig_arm.WatchdogNumber = ADC_ANALOGWATCHDOG_1;
+		AnalogWDGConfig_arm.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REG;
+		AnalogWDGConfig_arm.Channel = 0;
+		AnalogWDGConfig_arm.ITMode = ENABLE;
+		AnalogWDGConfig_arm.HighThreshold = 4095;
+		AnalogWDGConfig_arm.LowThreshold = 0;
+		AnalogWDGConfig_arm.FilteringConfig = ADC_AWD_FILTERING_NONE;
+
+		AnalogWDGConfig_trig.WatchdogNumber = ADC_ANALOGWATCHDOG_2;
+		AnalogWDGConfig_trig.WatchdogMode = ADC_ANALOGWATCHDOG_SINGLE_REGINJEC;
+		AnalogWDGConfig_trig.Channel = 0;
+		AnalogWDGConfig_trig.ITMode = ENABLE;
+		AnalogWDGConfig_trig.HighThreshold = 4095;
+		AnalogWDGConfig_trig.LowThreshold = 0;
+		AnalogWDGConfig_trig.FilteringConfig = ADC_AWD_FILTERING_NONE;
+		
+		if( slope == UI_TRIGGER_SLOPE_RISING )
+		{
+			AnalogWDGConfig_arm.HighThreshold = 4095;
+			AnalogWDGConfig_arm.LowThreshold = level;
+			AnalogWDGConfig_trig.HighThreshold = level;
+			AnalogWDGConfig_trig.LowThreshold = 0;
+		}
+		else
+		{
+			AnalogWDGConfig_arm.HighThreshold = level;
+			AnalogWDGConfig_arm.LowThreshold = 0;
+			AnalogWDGConfig_trig.HighThreshold = 4095;
+			AnalogWDGConfig_trig.LowThreshold = level;
+		}
+	}
+
+	AnalogWDGConfig_arm.Channel = ADC_CHANNEL_VOPAMP1;
+    //AnalogWDGConfig_arm_2.Channel = ADC_CHANNEL_VOPAMP3_ADC3;
+    //AnalogWDGConfig_arm_3.Channel = ADC_CHANNEL_VOPAMP5;
+    //AnalogWDGConfig_arm_4.Channel = ADC_CHANNEL_VOPAMP6;
+
+    AnalogWDGConfig_trig.Channel = ADC_CHANNEL_VOPAMP1;
+    //AnalogWDGConfig_trig_2.Channel = ADC_CHANNEL_VOPAMP3_ADC3;
+    //AnalogWDGConfig_trig_3.Channel = ADC_CHANNEL_VOPAMP5;
+    //AnalogWDGConfig_trig_4.Channel = ADC_CHANNEL_VOPAMP6;
+	HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc1, &AnalogWDGConfig_arm );
+    HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc1, &AnalogWDGConfig_trig );
+
+	// ...	
+	HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc2, &AnalogWDGConfig_arm );
+    HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc2, &AnalogWDGConfig_trig );
+
+	// ...
+	HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc3, &AnalogWDGConfig_arm );
+	HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc3, &AnalogWDGConfig_trig );
+
+	// ...
+	HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc4, &AnalogWDGConfig_arm );
+	HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc4, &AnalogWDGConfig_trig );
+}
+
+
+void _scope_draw( _tScope *pThis, tLcd *pLcd )
+{
+	uint16_t i;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		lcd_set_pixel( pLcd, i/2, pThis->buffer4[i], 0x0000 );
+		lcd_set_pixel( pLcd, i/2, pThis->buffer1[i], 0x001F );
+	}
+}
+
+void _scope_clear( _tScope *pThis, tLcd *pLcd )
+{
+	uint16_t i;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		lcd_set_pixel( pLcd, i/2, pThis->buffer1[i], 0x0000 );
+	}
+}
+
+uint8_t _scope_is_running( _tScope *pThis )
+{
+	return pThis->state != SCOPE_STATE_DONE && pThis->state != SCOPE_STATE_IDLE;
+}
+
+uint8_t _scope_is_busy( _tScope *pThis )
+{
+	return pThis->state != SCOPE_STATE_IDLE;
+}
+
+uint8_t _scope_wait( _tScope *pThis, uint32_t timeout_ms )
+{
+	uint32_t start = HAL_GetTick();
+	while( _scope_is_busy( pThis ) )
+	{
+		vTaskDelay(1);
+		if( HAL_GetTick() - start > timeout_ms )
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
 
 void StartTaskScope(void *argument)
 {
-    static tScope scope = {0};
+    static _tScope scope = {0};
+    pScope = &scope;
 
     struct sQueueUiScope msgScope = {0};
     //struct sQueueUiLcd msgLcd = {0};
     TickType_t xLastWakeTime;
     const TickType_t xFrequency = 1;
 	
-    scope_init_ll( &scope,
+    _scope_init_ll( &scope,
         &htim2, // horizontal.htim_clock
         &htim3, // horizontal.htim_stop
         &hdac2, // vertical.hdac
@@ -1483,6 +1869,19 @@ void StartTaskScope(void *argument)
         &hadc4 // trigger.hadc4
     );
 
+	_scope_init( &scope,
+		buffer1,
+		buffer2,
+		buffer3,
+		buffer4,
+
+		buffer5,
+		buffer6,
+		buffer7,
+		buffer8,
+
+		ADC_BUFFER_LEN 
+	);
 
     xLastWakeTime = xTaskGetTickCount();
     for(;;)
@@ -1491,43 +1890,57 @@ void StartTaskScope(void *argument)
 
         if( osMessageQueueGet(queueUiScopeHandle, &msgScope, NULL, 0U) == osOK )
         {
+			if( !_scope_is_running( &scope ) )
+			{
+				if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
+				{
+					_scope_clear( &scope, &lcd );
+					osSemaphoreRelease( semaphoreLcdHandle );
+				}
+			}
+
             switch( msgScope.type )
             {
 				case QUEUE_UI_SCOPE_TYPE_START:
-                    scope_start( &scope );
+                    _scope_start( &scope,
+						msgScope.data[0] // single
+					);
                     break;
                 case QUEUE_UI_SCOPE_TYPE_STOP:
-                    scope_stop( &scope );
+                    _scope_stop( &scope );
                     break;
                 case QUEUE_UI_SCOPE_TYPE_HORIZONTAL:
-                    scope_config_horizontal( &scope, msgScope.data[0], msgScope.data[1] );
+                    _scope_config_horizontal( &scope, 
+						msgScope.data[0], // offset 
+						msgScope.data[1]  // scale
+					);
                     break;
                 case QUEUE_UI_SCOPE_TYPE_VERTICAL:
-                    scope_config_vertical( &scope,
-                        msgScope.data[0],
-                        msgScope.data[1],
-                        msgScope.data[2],
-                        msgScope.data[3],
-                        msgScope.data[4] );
+                    _scope_config_vertical( &scope,
+                        msgScope.data[0], // offset
+                        msgScope.data[1], // scale1
+                        msgScope.data[2], // scale2
+                        msgScope.data[3], // scale3
+                        msgScope.data[4]  // scale4
+					);
                     break;
                 case QUEUE_UI_SCOPE_TYPE_TRIGGER:
-                    scope_config_trigger( &scope,
-                        msgScope.data[0],
-                        msgScope.data[1],
-                        msgScope.data[2],
-                        msgScope.data[3] );
+                    _scope_config_trigger( &scope,
+                        msgScope.data[0], // source
+                        msgScope.data[1], // mode
+                        msgScope.data[2], // level
+                        msgScope.data[3]  // slope
+					);
                     break;
             }
         }
 
-        if( 0 && scope_is_running( &scope ) )
+        if( _scope_is_running( &scope ) )
         {
-            scope_wait( &scope, xFrequency );
-            //osMessageQueuePut(queueScopeLcdHandle, &msgLcd, 0U, 0U);
-			// take the lcd semaphore and draw.
+            _scope_wait( &scope, xFrequency );
 			if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
 			{
-				//scope_draw( &scope, &lcd );
+				_scope_draw( &scope, &lcd );
 				osSemaphoreRelease( semaphoreLcdHandle );
 			}
         }
@@ -1738,7 +2151,45 @@ void _wavegen_config_vertical( _tWaveGen *pThis, enum eWaveGenChannel channel, e
 	}
 }
 
-// _wavegen_draw( &wavegen, &lcd, msgUiWavegen.type );
+void _wavegen_erase( _tWaveGen *pThis, tLcd *pLcd, enum eQueueUiWavegenType type )
+{
+	uint16_t i;
+	uint16_t x0 = 0;
+	uint16_t y0 = 0;
+	uint16_t x1 = 0;
+	uint16_t y1 = 0;
+	uint16_t *buffer = NULL;
+	uint16_t color = 0;
+	uint16_t offset = 0;
+	uint16_t scale = 0;
+	uint16_t duty_cycle = 0;
+
+	for( i = 0; i < pThis->len; i++ )
+	{
+		x1 = x0 + 1;
+		y1 = pThis->dac1_buffer[i];
+		if( i > 0 )
+		{
+			lcd_rect( pLcd, x0/2, y0, x1-x0+1, y1-y0+1, 0x0000 );
+		}
+		x0 = x1;
+		y0 = y1;
+	}
+	x0 = 0;
+	y0 = 0;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		x1 = x0 + 1;
+		y1 = pThis->dac2_buffer[i];
+		if( i > 0 )
+		{
+			lcd_rect( pLcd, x0/2, y0, x1-x0+1, y1-y0+1, 0x0000 );
+		}
+		x0 = x1;
+		y0 = y1;
+	}
+}
+
 void _wavegen_draw( _tWaveGen *pThis, tLcd *pLcd, enum eQueueUiWavegenType type )
 {
 	uint16_t i;
@@ -1764,15 +2215,26 @@ void _wavegen_draw( _tWaveGen *pThis, tLcd *pLcd, enum eQueueUiWavegenType type 
 			break;
 	}
 
-	// draw the wave
 	for( i = 0; i < pThis->len; i++ )
 	{
 		x1 = x0 + 1;
 		y1 = pThis->dac1_buffer[i];
 		if( i > 0 )
 		{
-			//lcd_draw_line( pLcd, x0, y0, x1, y1, 0xFFFF );
-			lcd_rect( pLcd, x0, y0, x1-x0+1, y1-y0+1, 0x00FF );
+			lcd_rect( pLcd, x0/2, y0, x1-x0+1, y1-y0+1, 0x001F );
+		}
+		x0 = x1;
+		y0 = y1;
+	}
+	x0 = 0;
+	y0 = 0;
+	for( i = 0; i < pThis->len; i++ )
+	{
+		x1 = x0 + 1;
+		y1 = pThis->dac2_buffer[i];
+		if( i > 0 )
+		{
+			lcd_rect( pLcd, x0/2, y0, x1-x0+1, y1-y0+1, 0x07E0 );
 		}
 		x0 = x1;
 		y0 = y1;
@@ -1806,6 +2268,12 @@ void StartTaskWavegen(void *argument)
 
 		if( osMessageQueueGet(queueUiWavegenHandle, &msgUiWavegen, NULL, 0U) == osOK )
 		{
+			if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
+			{
+				_wavegen_erase( &wavegen, &lcd, msgUiWavegen.type );
+				osSemaphoreRelease( semaphoreLcdHandle );
+			}
+
 			switch( msgUiWavegen.type )
 			{
 				case QUEUE_UI_WAVEGEN_TYPE_START:
@@ -1835,7 +2303,6 @@ void StartTaskWavegen(void *argument)
 					break;
 			}
 
-			// Take the LCD semaphore to draw the wave.
 			if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
 			{
 				_wavegen_draw( &wavegen, &lcd, msgUiWavegen.type );

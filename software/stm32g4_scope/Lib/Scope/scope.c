@@ -606,7 +606,7 @@ int32_t scope_get_trigger( tScope *scope )
 }
 
 // ********************** IRQs ********************** //
-void HAL_ADC_ConvHalfCpltCallback( ADC_HandleTypeDef* hadc )
+void _HAL_ADC_ConvHalfCpltCallback( ADC_HandleTypeDef* hadc )
 {
 	if( _scope && hadc == _scope->hadc1 && _channel == 0 )
 	{
@@ -622,7 +622,7 @@ void HAL_ADC_ConvHalfCpltCallback( ADC_HandleTypeDef* hadc )
 	}
 }
 
-void HAL_ADC_ConvCpltCallback( ADC_HandleTypeDef* hadc )
+void _HAL_ADC_ConvCpltCallback( ADC_HandleTypeDef* hadc )
 {
 	if( _scope && hadc == _scope->hadc1 && _channel == 0 )
 	{
@@ -670,7 +670,7 @@ void HAL_ADC_ConvCpltCallback( ADC_HandleTypeDef* hadc )
 	}
 }
 
-void HAL_ADC_LevelOutOfWindowCallback( ADC_HandleTypeDef* hadc )
+void _HAL_ADC_LevelOutOfWindowCallback( ADC_HandleTypeDef* hadc )
 {
 	if( _scope && hadc == _scope->hadc1 && _channel == 0 )
 	{
@@ -724,7 +724,7 @@ void HAL_ADC_LevelOutOfWindowCallback( ADC_HandleTypeDef* hadc )
 uint32_t start_cpu;
 uint32_t stop_cpu;
 
-void HAL_ADCEx_LevelOutOfWindow2Callback( ADC_HandleTypeDef* hadc )
+void _HAL_ADCEx_LevelOutOfWindow2Callback( ADC_HandleTypeDef* hadc )
 {
 	if( _scope && hadc == _scope->hadc1 && _channel == 0 )
 	{
@@ -820,7 +820,7 @@ void HAL_ADCEx_LevelOutOfWindow2Callback( ADC_HandleTypeDef* hadc )
 	}
 }
 
-void HAL_TIM_OC_DelayElapsedCallback( TIM_HandleTypeDef *htim )
+void _HAL_TIM_OC_DelayElapsedCallback( TIM_HandleTypeDef *htim )
 {
 	if( _scope && htim == _scope->htim2 ) // htim2
 	{
