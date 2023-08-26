@@ -99,12 +99,28 @@ struct sScope
 };
 typedef struct sScope tScope;
 
+void scope_init_ll( tScope *scope,
+		TIM_HandleTypeDef *htim_clock,
+		TIM_HandleTypeDef *htim_stop,
+		DAC_HandleTypeDef *hdac,
+		OPAMP_HandleTypeDef *hopamp1,
+		OPAMP_HandleTypeDef *hopamp2,
+		OPAMP_HandleTypeDef *hopamp3,
+		OPAMP_HandleTypeDef *hopamp4,
+		ADC_HandleTypeDef *hadc1,
+		ADC_HandleTypeDef *hadc2,
+		ADC_HandleTypeDef *hadc3,
+		ADC_HandleTypeDef *hadc4
+	);
 void scope_init( tScope *scope, uint16_t trigger_level, uint32_t sample_rate, uint16_t *buffer1, uint16_t *buffer2, uint16_t *buffer3, uint16_t *buffer4, uint16_t len );
 void scope_reset( tScope *scope );
 void scope_start( tScope *scope );
 void scope_stop( tScope *scope );
 uint8_t scope_is_busy( tScope *scope );
 int32_t scope_get_trigger( tScope *scope );
+
+uint8_t scope_is_running( tScope *scope );
+uint8_t scope_wait( tScope *scope, uint32_t timeout_ms );
 
 void test_scope( tLcd *pLcd, int collapsed );
 

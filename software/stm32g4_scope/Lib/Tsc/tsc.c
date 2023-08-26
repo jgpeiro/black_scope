@@ -102,3 +102,35 @@ void _tsc_read( tTsc* tsc, uint16_t* x, uint16_t* y) {
     }
 }
 
+
+void tsc_read(tTsc* tsc, uint16_t* p, uint16_t* x, uint16_t* y) {
+    int32_t x_acc = 0;
+    int32_t y_acc = 0;
+
+    for (int i = 0; i < tsc->avg; i++) {
+        tsc_read_ll(tsc, x, y);
+        if (*x && *y) {
+            x_acc += *x;
+            y_acc += *y;
+            tsc->cnt += 1;
+        } else {
+            *x = 0;
+            *y = 0;
+            *p = 0; // Additional code to set pressure to 0
+            tsc->cnt = 0;
+            return;
+        }
+    }
+
+    if (tsc->cnt >= tsc->avg) {
+        *x = x_acc / tsc->avg;
+        *y = y_acc / tsc->avg;
+        *x = tsc->ax * *x + tsc->bx;
+        *y = tsc->ay * *y + tsc->by;
+        *p = 1; // Additional code to set pressure to 1
+    } else {
+        *x = 0;
+        *y = 0;
+        *p = 0; // Additional code to set pressure to 0
+    }
+}

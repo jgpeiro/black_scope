@@ -8,6 +8,239 @@
 #include <stdio.h>
 #include "ui.h"
 
+#define QUEUE_UI_SCOPE_TYPE_HORIZONTAL 0
+#define QUEUE_UI_SCOPE_TYPE_VERTICAL 1
+#define QUEUE_UI_SCOPE_TYPE_TRIGGER 2
+#define QUEUE_UI_SCOPE_TYPE_START 3
+#define QUEUE_UI_SCOPE_TYPE_STOP 4
+
+#include "FreeRTOS.h"
+#include "task.h"
+//#include "main.h"
+#include "cmsis_os.h"
+extern osMessageQueueId_t queueUiScopeHandle;
+
+struct sQueueUiScope {
+    uint16_t type;
+    uint16_t data[8];
+};
+
+#define COLOR_BUTTON_ENABLED (struct nk_color){40,200,40, 255}
+#define COLOR_BUTTON_DISABLED (struct nk_color){200,40,40, 255}
+
+#define COLOR_CHANNEL1 (struct nk_color){255,0,0, 255}
+#define COLOR_CHANNEL2 (struct nk_color){0,255,0, 255}
+#define COLOR_CHANNEL3 (struct nk_color){0,0,255, 255}
+#define COLOR_CHANNEL4 (struct nk_color){255,0,255, 255}
+
+void nk_style_push_color_button( struct nk_context *pCtx, uint8_t enabled )
+{
+    if( enabled )
+    {
+        nk_style_push_color( pCtx, &pCtx->style.button.normal.data.color, COLOR_BUTTON_ENABLED );
+        nk_style_push_color( pCtx, &pCtx->style.button.hover.data.color, COLOR_BUTTON_ENABLED );
+        nk_style_push_color( pCtx, &pCtx->style.button.active.data.color, COLOR_BUTTON_ENABLED );
+    }
+    else
+    {
+        nk_style_push_color( pCtx, &pCtx->style.button.normal.data.color, COLOR_BUTTON_DISABLED );
+        nk_style_push_color( pCtx, &pCtx->style.button.hover.data.color, COLOR_BUTTON_DISABLED );
+        nk_style_push_color( pCtx, &pCtx->style.button.active.data.color, COLOR_BUTTON_DISABLED );
+    }
+}
+
+void nk_style_pop_color_button( struct nk_context *pCtx )
+{
+    nk_style_pop_color( pCtx );
+    nk_style_pop_color( pCtx );
+    nk_style_pop_color( pCtx );
+}
+
+void nk_style_push_color_channel( struct nk_context *pCtx, uint8_t channel_selected )
+{
+    if( channel_selected == 0 )
+    {
+        nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, COLOR_CHANNEL1 );
+        nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, COLOR_CHANNEL1 );
+        nk_style_push_color( pCtx, &pCtx->style.combo.label_active, COLOR_CHANNEL1 );
+    }
+    else if( channel_selected == 1 )
+    {
+        nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, COLOR_CHANNEL2 );
+        nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, COLOR_CHANNEL2 );
+        nk_style_push_color( pCtx, &pCtx->style.combo.label_active, COLOR_CHANNEL2 );
+    }
+    else if( channel_selected == 2 )
+    {
+        nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, COLOR_CHANNEL3 );
+        nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, COLOR_CHANNEL3 );
+        nk_style_push_color( pCtx, &pCtx->style.combo.label_active, COLOR_CHANNEL3 );
+    }
+    else if( channel_selected == 3 )
+    {
+        nk_style_push_color( pCtx, &pCtx->style.combo.label_normal, COLOR_CHANNEL4 );
+        nk_style_push_color( pCtx, &pCtx->style.combo.label_hover, COLOR_CHANNEL4 );
+        nk_style_push_color( pCtx, &pCtx->style.combo.label_active, COLOR_CHANNEL4 );
+    }
+}
+
+void nk_style_pop_color_channel( struct nk_context *pCtx )
+{
+    nk_style_pop_color( pCtx );
+    nk_style_pop_color( pCtx );
+    nk_style_pop_color( pCtx );
+}
+
+void ui_build_acquire2( tUi_Acquire *pThis, struct nk_context *pCtx )
+{
+	pThis->is_visible = 0;
+    if( nk_tree_push( pCtx, NK_TREE_TAB, "Acquire", NK_MAXIMIZED) )
+    {
+    	pThis->is_visible = 1;
+        nk_layout_row( pCtx, NK_STATIC, 30, 2, (float[]){95, 95});
+
+        nk_style_push_color_button( pCtx, pThis->run );
+        if( nk_button_label( pCtx, pThis->run ? "Run" : "Stop" ) )
+        {
+        	pThis->run = !pThis->run;
+        }
+        nk_style_pop_color_button( pCtx );
+
+        if( nk_button_label( pCtx, "Single" ) )
+        {
+        	pThis->single = 1;
+        }
+        nk_tree_pop( pCtx );
+    }
+}
+
+void ui_build_horizontal2( tUi_Horizontal *pThis, struct nk_context *pCtx )
+{
+    static uint8_t show_keypad_offset = 0;
+    static uint8_t show_keypad_scale = 0;
+
+    struct sQueueUiScope msgUiScope = {0};
+
+    pThis->is_visible = 0;
+    if( nk_tree_push( pCtx, NK_TREE_TAB, "Horizontal", NK_MINIMIZED) )
+    {
+    	pThis->is_visible = 1;
+    	if( nk_property_keypad( pCtx, "Offset", -9999, &pThis->offset, 9999, &show_keypad_offset ) )
+    	{
+    		msgUiScope.type = QUEUE_UI_SCOPE_TYPE_HORIZONTAL;
+    		msgUiScope.data[0] = pThis->scale*1000;
+            msgUiScope.data[1] =-pThis->offset+512;
+            osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+        }
+    	if( nk_property_keypad( pCtx, "Scale", 0, &pThis->scale, 9999, &show_keypad_scale ) )
+    	{
+    		msgUiScope.type = QUEUE_UI_SCOPE_TYPE_HORIZONTAL;
+    		msgUiScope.data[0] = pThis->scale*1000;
+            msgUiScope.data[1] =-pThis->offset+512;
+            osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+    	}
+        nk_tree_pop( pCtx );
+    }
+}
+
+void ui_build_vertical2( tUi_Vertical *pThis, struct nk_context *pCtx )
+{
+    static uint8_t show_keypad_offset = 0;
+    static uint8_t show_keypad_scale = 0;
+
+    struct sQueueUiScope msgUiScope = {0};
+
+	pThis->is_visible = 0;
+    if( nk_tree_push( pCtx, NK_TREE_TAB, "Vertical", NK_MINIMIZED) )
+    {
+    	pThis->is_visible = 1;
+        nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
+        {
+			nk_style_push_color_channel( pCtx, pThis->channel_selected );
+			pThis->channel_selected = nk_combo(pCtx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, UI_CHANNEL_COUNT, pThis->channel_selected, 30, nk_vec2(94, 160));
+			nk_style_pop_color_channel( pCtx );
+        }
+
+        nk_style_push_color_button( pCtx, pThis->channels[pThis->channel_selected].enabled );
+        if( nk_button_label( pCtx, pThis->channels[pThis->channel_selected].enabled ? "On" : "Off" ) )
+        {
+            pThis->channels[pThis->channel_selected].enabled = !pThis->channels[pThis->channel_selected].enabled;
+        }
+        nk_style_pop_color_button( pCtx );
+
+
+        if( pThis->channels[pThis->channel_selected].enabled )
+        {
+        	nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
+            nk_label( pCtx, "Coupling", NK_TEXT_LEFT );
+            pThis->channels[pThis->channel_selected].coupling = nk_combo( pCtx, (const char*[]){"DC", "Gnd"}, 2, pThis->channels[pThis->channel_selected].coupling, 30, nk_vec2(94, 120));
+            if( nk_property_keypad( pCtx, "Offset", 0, &pThis->offset, 4095, &show_keypad_offset ) )
+			{
+                msgUiScope.type = QUEUE_UI_SCOPE_TYPE_VERTICAL;
+                msgUiScope.data[0] = pThis->channels[0].scale;
+                msgUiScope.data[1] = pThis->channels[1].scale;
+                msgUiScope.data[2] = pThis->channels[2].scale;
+                msgUiScope.data[3] = pThis->channels[3].scale;
+                msgUiScope.data[4] = pThis->offset;
+                osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+
+			}
+            if( nk_property_keypad( pCtx, "Scale", 0, &pThis->channels[pThis->channel_selected].scale, 5, &show_keypad_scale ) )
+			{
+                    msgUiScope.type = QUEUE_UI_SCOPE_TYPE_VERTICAL;
+                    msgUiScope.data[0] = pThis->channels[0].scale;
+                    msgUiScope.data[1] = pThis->channels[1].scale;
+                    msgUiScope.data[2] = pThis->channels[2].scale;
+                    msgUiScope.data[3] = pThis->channels[3].scale;
+                    msgUiScope.data[4] = pThis->offset;
+                    osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+			}
+        }
+        nk_tree_pop( pCtx );
+    }
+}
+
+
+void ui_build_trigger2( tUi_Trigger *pThis, struct nk_context *pCtx )
+{
+    struct sQueueUiScope msgUiScope = {0};
+
+    static uint8_t show_keypad_level = 0;
+
+    pThis->is_visible = 0;
+    if( nk_tree_push( pCtx, NK_TREE_TAB, "Trigger", NK_MINIMIZED) )
+    {
+    	pThis->is_visible = 1;
+    	tUi_Trigger tmp = *pThis;
+        nk_layout_row(pCtx, NK_STATIC, 30, 1, (float[]){94});
+
+        pThis->mode = nk_combo( pCtx, (const char*[]){"Auto", "Normal"}, 2, pThis->mode, 30, nk_vec2(94, 120));
+
+        if( pThis->mode == UI_TRIGGER_MODE_NORMAL )
+        {
+            nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
+
+            nk_style_push_color_channel( pCtx, pThis->source );
+            pThis->source = nk_combo(pCtx, (const char*[]){"Ch1", "Ch2", "Ch3", "Ch4"}, UI_CHANNEL_COUNT, pThis->source, 30, nk_vec2(94, 160));
+    		nk_style_pop_color_channel( pCtx );
+
+            pThis->slope = nk_combo( pCtx, (const char*[]){"Rising", "Falling"}, 2, pThis->slope, 30, nk_vec2(94, 120));
+            nk_property_keypad( pCtx, "Level", -9999, &pThis->level, 9999, &show_keypad_level );
+        }
+
+        if( memcmp( &tmp, &pThis, sizeof(tUi_Trigger) ) )
+        {
+            msgUiScope.type = QUEUE_UI_SCOPE_TYPE_TRIGGER;
+            msgUiScope.data[0] = pThis->source;
+            msgUiScope.data[1] = pThis->mode;
+            msgUiScope.data[2] = pThis->level;
+            msgUiScope.data[3] = pThis->slope;
+            osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+        }
+        nk_tree_pop( pCtx );
+    }
+}
+
 uint8_t nk_keypad( struct nk_context *pCtx, int32_t min, int32_t *pValue, int32_t max )
 {
     int value = *pValue;
@@ -129,10 +362,10 @@ void ui_build( tUi *pThis, struct nk_context *pCtx )
 {
     if( nk_begin( pCtx, "STM32G4 Scope", nk_rect(0, 0, 240, 320), NK_WINDOW_MINIMIZABLE ) )
 	{
-        ui_build_acquire( pThis, pCtx );
-        ui_build_horizontal( pThis, pCtx );
-        ui_build_vertical( pThis, pCtx );
-        ui_build_trigger( pThis, pCtx );
+        ui_build_acquire2( pThis, pCtx );
+        ui_build_horizontal2( pThis, pCtx );
+        ui_build_vertical2( pThis, pCtx );
+        ui_build_trigger2( pThis, pCtx );
         ui_build_wavegen( pThis, pCtx );
         ui_build_cursor( pThis, pCtx );
         ui_build_measurements( pThis, pCtx );

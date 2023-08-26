@@ -154,6 +154,13 @@ struct sUi
 };
 typedef struct sUi tUi;
 
+uint8_t nk_property_keypad( struct nk_context *pCtx, uint8_t *pLabel, int32_t min, int32_t *pValue, int32_t max, uint8_t *pShow_keypad );
+
+void ui_build_acquire2( tUi_Acquire *pThis, struct nk_context *pCtx );
+void ui_build_horizontal2( tUi_Horizontal *pThis, struct nk_context *pCtx );
+void ui_build_vertical2( tUi_Vertical *pThis, struct nk_context *pCtx );
+void ui_build_trigger2( tUi_Trigger *pThis, struct nk_context *pCtx );
+
 void ui_build( tUi *pThis, struct nk_context *pCtx );
 void ui_build_acquire( tUi *pThis, struct nk_context *pCtx );
 void ui_build_horizontal( tUi *pThis, struct nk_context *pCtx );

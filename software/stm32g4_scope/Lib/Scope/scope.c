@@ -13,6 +13,50 @@ static tScope *_scope = NULL;
 #include <stdio.h>
 #include <stdlib.h>
 
+void scope_init_ll( tScope *scope,
+		TIM_HandleTypeDef *htim_clock,
+		TIM_HandleTypeDef *htim_stop,
+		DAC_HandleTypeDef *hdac,
+		OPAMP_HandleTypeDef *hopamp1,
+		OPAMP_HandleTypeDef *hopamp2,
+		OPAMP_HandleTypeDef *hopamp3,
+		OPAMP_HandleTypeDef *hopamp4,
+		ADC_HandleTypeDef *hadc1,
+		ADC_HandleTypeDef *hadc2,
+		ADC_HandleTypeDef *hadc3,
+		ADC_HandleTypeDef *hadc4
+	)
+{
+	scope->horizontal.htim_clock = htim_clock;
+	scope->horizontal.htim_stop = htim_stop;
+	scope->vertical.hdac = hdac;
+	scope->vertical.hopamp1 = hopamp1;
+	scope->vertical.hopamp2 = hopamp2;
+	scope->vertical.hopamp3 = hopamp3;
+	scope->vertical.hopamp4 = hopamp4;
+	scope->trigger.hadc1 = hadc1;
+	scope->trigger.hadc2 = hadc2;
+	scope->trigger.hadc3 = hadc3;
+	scope->trigger.hadc4 = hadc4;
+}
+uint8_t scope_is_running( tScope *scope )
+{
+	return scope->state != SCOPE_STATE_DONE;
+}
+
+uint8_t scope_wait( tScope *scope, uint32_t timeout_ms )
+{
+	uint32_t start = HAL_GetTick();
+	while( scope_is_busy( scope ) )
+	{
+		if( HAL_GetTick() - start > timeout_ms )
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
+
 void get_prescaler_and_period(int clock, int freq, int *prescaler, int *period) {
     int best_prescaler = 0;
     int best_period = 0;

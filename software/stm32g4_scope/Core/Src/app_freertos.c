@@ -62,13 +62,67 @@ const osThreadAttr_t taskTsc_attributes = {
   .stack_size = 256 * 4
 };
 
+/* Definitions for taskUI */
+osThreadId_t taskUiHandle;
+const osThreadAttr_t taskUi_attributes = {
+  .name = "taskUI",
+  .priority = (osPriority_t) osPriorityNormal1,
+  .stack_size = 1024 * 4
+};
+
+osThreadId_t taskScopeHandle;
+const osThreadAttr_t taskScope_attributes = {
+  .name = "taskScope",
+  .priority = (osPriority_t) osPriorityNormal4,
+  .stack_size = 128
+};
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
+struct sQueueTscUi {
+    uint16_t p;
+    uint16_t x;
+    uint16_t y;
+};
+osMessageQueueId_t queueTscUiHandle;
+const osMessageQueueAttr_t queueTscUi_attributes = {
+  .name = "queueTscUi"
+};
+
+struct sQueueUiLcd {
+    uint16_t x;
+    uint16_t y;
+    uint16_t w;
+    uint16_t h;
+    uint16_t *buf;
+};
+
+osMessageQueueId_t queueUiLcdHandle;
+const osMessageQueueAttr_t queueUiLcd_attributes = {
+  .name = "queueUiLcd"
+};
+
+// declare and initialize the semaphoreLcdHandle
+osSemaphoreId_t semaphoreLcdHandle;
+const osSemaphoreAttr_t semaphoreLcd_attributes = {
+  .name = "semaphoreLcd"
+};
+
+struct sQueueUiScope {
+    uint16_t type;
+    uint16_t data[8];
+};
+
+osMessageQueueId_t queueUiScopeHandle;
+const osMessageQueueAttr_t queueUiScope_attributes = {
+  .name = "queueUiScope"
+};
 
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
 void StartTaskTsc(void *argument);
+void StartTaskUi(void *argument);
+void StartTaskScope(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -87,7 +141,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
+	semaphoreLcdHandle = osSemaphoreNew(1, 1, &semaphoreLcd_attributes);
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -95,15 +149,19 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
+	queueTscUiHandle = osMessageQueueNew (4, sizeof(struct sQueueTscUi), &queueTscUi_attributes );
+	//queueUiLcdHandle = osMessageQueueNew (1, sizeof(struct sQueueUiLcd), &queueUiLcd_attributes );
+	queueUiScopeHandle = osMessageQueueNew (1, sizeof(struct sQueueUiScope), &queueUiScope_attributes );
+ /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  //defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* creation of taskTsc */
   taskTscHandle = osThreadNew(StartTaskTsc, NULL, &taskTsc_attributes);
+  taskUiHandle = osThreadNew(StartTaskUi, NULL, &taskUi_attributes);
+  taskScopeHandle = osThreadNew(StartTaskScope, NULL, &taskScope_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -192,11 +250,13 @@ float text_width_f( nk_handle handle, float h, const char* text, int len )
 }
 
 extern void nk_draw_fb(struct nk_context *ctx, tFramebuf *pfb, tLcd *pLcd, int16_t x0 );
+extern void nk_draw_fb2(struct nk_context *ctx, tFramebuf *pfb, int16_t x0, int16_t y0 );
 extern void nk_set_theme(struct nk_context *ctx, int theme);
 
 #define MIN(a,b) ((a)<(b))?(a):(b)
 #define MAX(a,b) ((a)>(b))?(a):(b)
 #define ABS(a) ((a)>(0))?(a):-(a)
+
 
 void draw_buffers(
 		tLcd *pLcd,
@@ -321,6 +381,351 @@ void draw_buffers(
 		buffer_tmp[j] = a_b?buffer5[n]:buffer1[n];
 	}
 }
+
+
+uint16_t magnitude_to_rgb565( uint16_t value );
+uint16_t rgb_to_rgb565( uint16_t r, uint16_t g, uint16_t b );
+void hsv_to_rgb( uint16_t h, uint16_t s, uint16_t v, uint16_t *r, uint16_t *g, uint16_t *b );
+
+void draw_buffers_fft(
+		tLcd *pLcd,
+		int32_t trigger,
+		int32_t trigger_bck,
+		uint16_t *buffer1,
+		uint16_t *buffer2,
+		uint16_t *buffer3,
+		uint16_t *buffer4,
+		uint16_t *buffer5,
+		uint16_t *buffer6,
+		uint16_t *buffer7,
+		uint16_t *buffer8,
+		uint16_t len,
+		uint32_t collapsed,
+		uint8_t a_b );
+void fft( uint16_t *buffer, uint16_t *tmp, uint16_t len );
+
+static const float cos_table[256] = {
+	1.0, 0.999698, 0.998795, 0.99729, 0.995185, 0.99248, 0.989177, 0.985278,
+	0.980785, 0.975702, 0.970031, 0.963776, 0.95694, 0.949528, 0.941544, 0.932993,
+	0.92388, 0.91421, 0.903989, 0.893224, 0.881921, 0.870087, 0.857729, 0.844854,
+	0.83147, 0.817585, 0.803208, 0.788346, 0.77301, 0.757209, 0.740951, 0.724247,
+	0.707107, 0.689541, 0.671559, 0.653173, 0.634393, 0.615232, 0.595699, 0.575808,
+	0.55557, 0.534998, 0.514103, 0.492898, 0.471397, 0.449611, 0.427555, 0.405241,
+	0.382683, 0.359895, 0.33689, 0.313682, 0.290285, 0.266713, 0.24298, 0.219101,
+	0.19509, 0.170962, 0.14673, 0.122411, 0.0980171, 0.0735646, 0.0490677, 0.0245412,
+	6.12323e-17, -0.0245412, -0.0490677, -0.0735646, -0.0980171, -0.122411, -0.14673, -0.170962,
+	-0.19509, -0.219101, -0.24298, -0.266713, -0.290285, -0.313682, -0.33689, -0.359895,
+	-0.382683, -0.405241, -0.427555, -0.449611, -0.471397, -0.492898, -0.514103, -0.534998,
+	-0.55557, -0.575808, -0.595699, -0.615232, -0.634393, -0.653173, -0.671559, -0.689541,
+	-0.707107, -0.724247, -0.740951, -0.757209, -0.77301, -0.788346, -0.803208, -0.817585,
+	-0.83147, -0.844854, -0.857729, -0.870087, -0.881921, -0.893224, -0.903989, -0.91421,
+	-0.92388, -0.932993, -0.941544, -0.949528, -0.95694, -0.963776, -0.970031, -0.975702,
+	-0.980785, -0.985278, -0.989177, -0.99248, -0.995185, -0.99729, -0.998795, -0.999698,
+	-1.0, -0.999698, -0.998795, -0.99729, -0.995185, -0.99248, -0.989177, -0.985278,
+	-0.980785, -0.975702, -0.970031, -0.963776, -0.95694, -0.949528, -0.941544, -0.932993,
+	-0.92388, -0.91421, -0.903989, -0.893224, -0.881921, -0.870087, -0.857729, -0.844854,
+	-0.83147, -0.817585, -0.803208, -0.788346, -0.77301, -0.757209, -0.740951, -0.724247,
+	-0.707107, -0.689541, -0.671559, -0.653173, -0.634393, -0.615232, -0.595699, -0.575808,
+	-0.55557, -0.534998, -0.514103, -0.492898, -0.471397, -0.449611, -0.427555, -0.405241,
+	-0.382683, -0.359895, -0.33689, -0.313682, -0.290285, -0.266713, -0.24298, -0.219101,
+	-0.19509, -0.170962, -0.14673, -0.122411, -0.0980171, -0.0735646, -0.0490677, -0.0245412,
+	-1.83697e-16, 0.0245412, 0.0490677, 0.0735646, 0.0980171, 0.122411, 0.14673, 0.170962,
+	0.19509, 0.219101, 0.24298, 0.266713, 0.290285, 0.313682, 0.33689, 0.359895,
+	0.382683, 0.405241, 0.427555, 0.449611, 0.471397, 0.492898, 0.514103, 0.534998,
+	0.55557, 0.575808, 0.595699, 0.615232, 0.634393, 0.653173, 0.671559, 0.689541,
+	0.707107, 0.724247, 0.740951, 0.757209, 0.77301, 0.788346, 0.803208, 0.817585,
+	0.83147, 0.844854, 0.857729, 0.870087, 0.881921, 0.893224, 0.903989, 0.91421,
+	0.92388, 0.932993, 0.941544, 0.949528, 0.95694, 0.963776, 0.970031, 0.975702,
+	0.980785, 0.985278, 0.989177, 0.99248, 0.995185, 0.99729, 0.998795, 0.999698
+};
+
+#define MAX_N_LOG2 8
+#define SWAP(a,b) tempr=(a);(a)=(b);(b)=tempr
+void fft( uint16_t *buffer, uint16_t *tmp, uint16_t len )
+{
+	// Compute the FFT of the input signal.
+	int i;
+	for( i = 0 ; i < len ; i++ )
+	{
+		tmp[i] = buffer[i];
+	}
+#ifdef USE_CMSIS_DSP
+	arm_cfft_radix4_instance_q15 S;
+	arm_cfft_radix4_init_q15( &S, len, 0, 1 );
+	arm_cfft_radix4_q15( &S, tmp );
+	arm_cmplx_mag_q15( tmp, buffer, len );
+#else
+	// ANSI C implementation
+	int n, k, j, N, N2;
+	float theta, wr, wi, wpr, wpi, wtemp, tempr, tempi;
+
+	// Reverse-binary reindexing
+	N = len<<1;
+	N2 = N>>1;
+	j = 1;
+
+	for( i = 1 ; i < N ; i += 2 )
+	{
+		if( j > i )
+		{
+			SWAP( tmp[j-1], tmp[i-1] );
+			SWAP( tmp[j], tmp[i] );
+		}
+		k = N2;
+		while( k < j )
+		{
+			j -= k;
+			k >>= 1;
+		}
+		j += k;
+	}
+
+	// Compute the FFT
+	float c1 = -1.0;
+	float c2 = 0.0;
+	int l2, l1, l, i1, i2;
+	float t1, t2, u1, u2, z;
+	
+	l2 = 1;
+	l1 = 0;
+	l = 0;
+	i1 = 0;
+	i2 = 0;
+	t1 = 0.0;
+	t2 = 0.0;
+	u1 = 0.0;
+	u2 = 0.0;
+	z = 0.0;
+	for( l = 0 ; l < MAX_N_LOG2 ; l++ )
+	{
+		l1 = l2;
+		l2 <<= 1;
+		u1 = 1.0;
+		u2 = 0.0;
+		for( j = 0 ; j < l1 ; j++ )
+		{
+			for( i = j ; i < N ; i += l2 )
+			{
+				i1 = i + l1;
+				t1 = u1 * tmp[i1-1] - u2 * tmp[i1];
+				t2 = u1 * tmp[i1] + u2 * tmp[i1-1];
+				tmp[i1-1] = tmp[i-1] - t1;
+				tmp[i1] = tmp[i] - t2;
+				tmp[i-1] += t1;
+				tmp[i] += t2;
+			}
+			z = u1 * c1 - u2 * c2;
+			u2 = u1 * c2 + u2 * c1;
+			u1 = z;
+		}
+		c2 = sqrtf((1.0 - c1) / 2.0);
+		if( l2 != 1 )
+		{
+			c1 = sqrtf((1.0 + c1) / 2.0);
+		}
+	}
+
+	// Compute the magnitude
+	for( i = 0 ; i < len ; i++ )
+	{
+		buffer[i] = sqrtf( tmp[i*2]*tmp[i*2] + tmp[i*2+1]*tmp[i*2+1] );
+	}
+#endif
+}
+void draw_buffers_fft(
+		tLcd *pLcd,
+		int32_t trigger,
+		int32_t trigger_bck,
+		uint16_t *buffer1,
+		uint16_t *buffer2,
+		uint16_t *buffer3,
+		uint16_t *buffer4,
+		uint16_t *buffer5,
+		uint16_t *buffer6,
+		uint16_t *buffer7,
+		uint16_t *buffer8,
+		uint16_t len,
+		uint32_t collapsed,
+		uint8_t a_b )
+{
+	int j, j2, n, n2;
+	int x0, ya, yb, yc, yd;
+
+	uint16_t width = pLcd->width;
+	uint16_t height = pLcd->height;
+
+	int _ya = 0;
+	int _yb = 0;
+	int _yc = 0;
+	int _yd = 0;
+
+	static int y = 0;
+	int h = pLcd->height/4;
+	for( j = 0; j < width; j++ )
+	{
+		j2 = (j*len)/width;
+		n = trigger + j2;
+		if( n < 0 )
+		{
+			n += len;
+		}
+		else if( n >= len )
+		{
+			n -= len;
+		}
+
+		n2 = trigger_bck + j2;
+		if( n2 < 0 )
+		{
+			n2 += len;
+		}
+		else if( n2 >= len )
+		{
+			n2 -= len;
+		}
+
+		x0 = collapsed? j : j/2;
+
+		ya = height-((a_b?buffer5[n2]:buffer1[n2])*height)/4096;
+		yb = height-((a_b?buffer6[n2]:buffer2[n2])*height)/4096;
+		yc = height-((a_b?buffer7[n2]:buffer3[n2])*height)/4096;
+		yd = height-((a_b?buffer8[n2]:buffer4[n2])*height)/4096;
+
+		lcd_set_pixel( pLcd, x0, y+h*0, magnitude_to_rgb565( ya ) );
+		lcd_set_pixel( pLcd, x0, y+h*1, magnitude_to_rgb565( yb ) );
+		lcd_set_pixel( pLcd, x0, y+h*2, magnitude_to_rgb565( yc ) );
+		lcd_set_pixel( pLcd, x0, y+h*3, magnitude_to_rgb565( yd ) );
+	}
+	y = (y+1)%h;
+}
+
+void _draw_buffers_fft(
+		tLcd *pLcd,
+		int32_t trigger,
+		int32_t trigger_bck,
+		uint16_t *buffer1,
+		uint16_t *buffer2,
+		uint16_t *buffer3,
+		uint16_t *buffer4,
+		uint16_t *buffer5,
+		uint16_t *buffer6,
+		uint16_t *buffer7,
+		uint16_t *buffer8,
+		uint16_t len,
+		uint32_t collapsed,
+		uint8_t a_b )
+{
+	int j, j2, n, n2;
+	int x0, ya, yb, yc, yd;
+
+	uint16_t width = pLcd->width;
+	uint16_t height = pLcd->height;
+
+	int _ya = 0;
+	int _yb = 0;
+	int _yc = 0;
+	int _yd = 0;
+	int _ya2 = 0;
+	int _yb2 = 0;
+	int _yc2 = 0;
+	int _yd2 = 0;
+
+	static uint16_t buffer_fft_temp[ADC_BUFFER_LEN];
+
+	uint16_t line_width = 1;
+	uint16_t line_height = 1;
+	fft( buffer1, buffer_fft_temp, len );
+	fft( buffer2, buffer_fft_temp, len );
+	fft( buffer3, buffer_fft_temp, len );
+	fft( buffer4, buffer_fft_temp, len );
+
+	// Draw 4 waretfalls in the screen.
+	static int y = 0; // This counts the last drawn line.
+	int h = pLcd->height/4; // This is the height of each waterfall.
+	int x;
+	for( x = 0 ; x < len ; x++ ){
+		lcd_set_pixel( pLcd, buffer1[x], y+h*0, magnitude_to_rgb565( buffer1[x] ) );
+		lcd_set_pixel( pLcd,  buffer2[x], y+h*1, magnitude_to_rgb565( buffer2[x] ) );
+		lcd_set_pixel( pLcd,  buffer3[x], y+h*2, magnitude_to_rgb565( buffer3[x] ) );
+		lcd_set_pixel( pLcd,  buffer4[x], y+h*3, magnitude_to_rgb565( buffer4[x] ) );
+	}
+	y = (y+1)%h;
+}
+
+void hsv_to_rgb( uint16_t h, uint16_t s, uint16_t v, uint16_t *r, uint16_t *g, uint16_t *b )
+{
+	uint16_t i;
+	uint16_t f, p, q, t;
+	if( s == 0 )
+	{
+		*r = *g = *b = v;
+		return;
+	}
+	h = (h*6)/60;
+	i = h;
+	f = h - i;
+	p = (v*(100-s))/100;
+	q = (v*(100-(s*f)/100))/100;
+	t = (v*(100-(s*(100-f))/100))/100;
+	switch( i )
+	{
+		case 0:
+			*r = v;
+			*g = t;
+			*b = p;
+			break;
+		case 1:
+			*r = q;
+			*g = v;
+			*b = p;
+			break;
+		case 2:
+			*r = p;
+			*g = v;
+			*b = t;
+			break;
+		case 3:
+			*r = p;
+			*g = q;
+			*b = v;
+			break;
+		case 4:
+			*r = t;
+			*g = p;
+			*b = v;
+			break;
+		default:
+			*r = v;
+			*g = p;
+			*b = q;
+			break;
+	}
+}
+uint16_t rgb_to_rgb565( uint16_t r, uint16_t g, uint16_t b )
+{
+	uint16_t rgb565;
+	rgb565 = (r&0xF8)<<8;
+	rgb565 |= (g&0xFC)<<3;
+	rgb565 |= (b&0xF8)>>3;
+	return rgb565;
+}
+
+uint16_t magnitude_to_rgb565( uint16_t value )
+{
+	// Convert magnitude to HSV color, then to RGB then to RGB565.
+	uint16_t h, s, v;
+	uint16_t r, g, b;
+	uint16_t rgb565;
+
+	h = value*360/4096;
+	s = 100;
+	v = 100;
+
+	hsv_to_rgb( h, s, v, &r, &g, &b );
+	rgb565 = rgb_to_rgb565( r, g, b );
+	return rgb565;
+}
+
 
 void draw_horizontal_offset( tLcd *pLcd, int32_t offset, uint32_t collapsed )
 {
@@ -701,8 +1106,8 @@ void StartDefaultTask(void *argument)
 	/* Infinite loop */
 	for(;;)
 	{
-		//vTaskDelayUntil( &xLastWakeTime, xFrequency );
-		vTaskDelay(1);
+		vTaskDelayUntil( &xLastWakeTime, xFrequency );
+		//vTaskDelay(1);
 
 		x_bck = x;
 		y_bck = y;
@@ -822,7 +1227,7 @@ void StartDefaultTask(void *argument)
 * @retval None
 */
 /* USER CODE END Header_StartTaskTsc */
-void StartTaskTsc(void *argument)
+void _StartTaskTsc(void *argument)
 {
   /* USER CODE BEGIN StartTaskTsc */
 	uint16_t x = 0;
@@ -916,6 +1321,184 @@ void StartTaskTsc(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+void StartTaskTsc(void *argument)
+{
+	const TickType_t xFrequency = 1;
+	TickType_t xLastWakeTime;
+
+	struct sQueueTscUi msgTscUi = {0};
+
+    float AX = 38.0/151.0;
+	float BX = -1950.0/151.0;
+	float AY = 11.0/62.0;
+	float BY = -1157.0/62.0;
+
+	tTsc tsc = {0};
+
+	tsc_init( &tsc,
+		&hspi3,
+		TSC_nSS_GPIO_Port, TSC_nSS_Pin,
+		AX, BX, AY, BY,
+		32
+	);
+
+	xLastWakeTime = xTaskGetTickCount();
+	for(;;)
+  	{
+		vTaskDelayUntil( &xLastWakeTime, xFrequency );
+		tsc_read( &tsc, &msgTscUi.p, &msgTscUi.x, &msgTscUi.y );
+        osMessageQueuePut( queueTscUiHandle, &msgTscUi, 0U, 0U );
+	}
+}
+
+//struct nk_context *ctx;
+void StartTaskUi(void *argument)
+{
+    tFramebuf fb = {0};
+    tLcd lcd = {0};
+    static tUi ui = {0};
+
+    struct sQueueTscUi msgTscUi = {0};
+    //struct sQueueUiLcd msgUiLcd = {0};
+
+	struct nk_buffer cmds = {0};
+	struct nk_buffer pool = {0};
+	struct nk_user_font font = {0};
+
+	uint16_t x0, y0;
+
+    lcd_init( &lcd,
+    	LCD_nRST_GPIO_Port, LCD_nRST_Pin,
+		LCD_BL_GPIO_Port, LCD_BL_Pin,
+		480, 320
+	);
+
+    framebuf_init( &fb, FB_WIDTH, FB_HEIGHT, fb_buf );
+
+	nk_buffer_init_fixed( &cmds, nk_buf_cmds, NK_BUFFER_CMDS_LEN );
+	nk_buffer_init_fixed( &pool, nk_buf_pool, NK_BUFFER_POOL_LEN);
+
+	font.height = fontUbuntuBookRNormal16.bbxh;
+	font.width = text_width_f;
+	nk_init_custom( &ctx, &cmds, &pool, &font );
+
+    TickType_t xLastWakeTime;
+	const TickType_t xFrequency = 10;
+	xLastWakeTime = xTaskGetTickCount();
+	for(;;)
+	{
+		vTaskDelayUntil( &xLastWakeTime, xFrequency );
+
+        if( osMessageQueueGet(queueTscUiHandle, &msgTscUi, NULL, 0U) == osOK )
+        {
+        	msgTscUi.x -= lcd.width/2;
+            nk_input_begin( &ctx );
+            nk_input_motion( &ctx, msgTscUi.x, msgTscUi.y );
+            nk_input_button( &ctx, NK_BUTTON_LEFT, msgTscUi.x, msgTscUi.y, msgTscUi.p );
+            nk_input_end( &ctx );
+        }
+
+        ui_build( &ui, &ctx );
+
+        x0 = 0;
+        for( y0 = 0; y0 < lcd.height; y0 += fb.height)
+        {
+	    	framebuf_fill( &fb, 0x0000 );
+            nk_draw_fb2( &ctx, &fb, x0, y0 );
+            //msgUiLcd.x = lcd.width/2;
+            //msgUiLcd.y = y0;
+            //msgUiLcd.w = fb.width;
+            //msgUiLcd.h = fb.height;
+            //msgUiLcd.buf = fb.buf;*/
+            //osMessageQueuePut(queueUiLcdHandle, &msgUiLcd, 0U, 0U);
+			if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
+			{
+				lcd_bmp( &lcd, lcd.width/2, y0, fb.width, fb.height, fb.buf);
+				osSemaphoreRelease( semaphoreLcdHandle );
+			}
+        }
+        nk_clear(&ctx);
+    }
+}
+#define QUEUE_UI_SCOPE_TYPE_HORIZONTAL 0
+#define QUEUE_UI_SCOPE_TYPE_VERTICAL 1
+#define QUEUE_UI_SCOPE_TYPE_TRIGGER 2
+#define QUEUE_UI_SCOPE_TYPE_START 3
+#define QUEUE_UI_SCOPE_TYPE_STOP 4
+
+void StartTaskScope(void *argument)
+{
+    static tScope scope = {0};
+
+    struct sQueueUiScope msgScope = {0};
+    //struct sQueueUiLcd msgLcd = {0};
+    TickType_t xLastWakeTime;
+    const TickType_t xFrequency = 1;
+	
+    scope_init_ll( &scope,
+        &htim2, // horizontal.htim_clock
+        &htim3, // horizontal.htim_stop
+        &hdac2, // vertical.hdac
+        &hopamp1, // vertical.hopamp1
+        &hopamp3, // vertical.hopamp2
+        &hopamp5, // vertical.hopamp3
+        &hopamp6, // vertical.hopamp4
+        &hadc1, // trigger.hadc1
+        &hadc3, // trigger.hadc2
+        &hadc5, // trigger.hadc3
+        &hadc4 // trigger.hadc4
+    );
+
+
+    xLastWakeTime = xTaskGetTickCount();
+    for(;;)
+    {
+        vTaskDelayUntil( &xLastWakeTime, xFrequency );
+
+        if( osMessageQueueGet(queueUiScopeHandle, &msgScope, NULL, 0U) == osOK )
+        {
+            switch( msgScope.type )
+            {
+                case QUEUE_UI_SCOPE_TYPE_HORIZONTAL:
+                    scope_config_horizontal( &scope, msgScope.data[0], msgScope.data[1] );
+                    break;
+                case QUEUE_UI_SCOPE_TYPE_VERTICAL:
+                    scope_config_vertical( &scope,
+                        msgScope.data[0],
+                        msgScope.data[1],
+                        msgScope.data[2],
+                        msgScope.data[3],
+                        msgScope.data[4] );
+                    break;
+                case QUEUE_UI_SCOPE_TYPE_TRIGGER:
+                    scope_config_trigger( &scope,
+                        msgScope.data[0],
+                        msgScope.data[1],
+                        msgScope.data[2],
+                        msgScope.data[3] );
+                    break;
+                case QUEUE_UI_SCOPE_TYPE_START:
+                    scope_start( &scope );
+                    break;
+                case QUEUE_UI_SCOPE_TYPE_STOP:
+                    scope_stop( &scope );
+                    break;
+            }
+        }
+
+        if( 0 && scope_is_running( &scope ) )
+        {
+            scope_wait( &scope, xFrequency );
+            //osMessageQueuePut(queueScopeLcdHandle, &msgLcd, 0U, 0U);
+			// take the lcd semaphore and draw.
+			if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
+			{
+				//scope_draw( &scope, &lcd );
+				osSemaphoreRelease( semaphoreLcdHandle );
+			}
+        }
+    }
+}
 
 /* USER CODE END Application */
 
