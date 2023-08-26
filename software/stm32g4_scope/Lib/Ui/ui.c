@@ -266,6 +266,7 @@ enum eQueueUiWavegenType
 	QUEUE_UI_WAVEGEN_TYPE_CONFIG_HORIZONTAL,
 	QUEUE_UI_WAVEGEN_TYPE_CONFIG_VERTICAL,
 };
+
 void ui_build_wavegen2( tUi_Wavegen *pThis, struct nk_context *pCtx )
 {
     struct sQueueUiWavegen msgUiWavegen = {0};
@@ -312,6 +313,10 @@ void ui_build_wavegen2( tUi_Wavegen *pThis, struct nk_context *pCtx )
 
 		if( memcmp( &tmp, pThis, sizeof(tUi_Wavegen) ) )
 		{
+            // Send the new waveform configuration to the wavegen task.
+            // if the channel changed from enabled to disabled, the wavegen task will stop the wave.
+            
+            // compare pThis with tmp to check enabled.
             if( pThis->waveforms[pThis->waveform_selected].enabled != tmp.waveforms[tmp.waveform_selected].enabled )
             {
                 if( pThis->waveforms[pThis->waveform_selected].enabled )
@@ -325,22 +330,27 @@ void ui_build_wavegen2( tUi_Wavegen *pThis, struct nk_context *pCtx )
                 msgUiWavegen.data[0] = pThis->waveform_selected;
                 osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, 0U);
             }
-            else
+
+            if( tmp.waveforms[tmp.waveform_selected].frequency != pThis->waveforms[pThis->waveform_selected].frequency )
             {
                 msgUiWavegen.type = QUEUE_UI_WAVEGEN_TYPE_CONFIG_HORIZONTAL;
-                msgUiWavegen.data[0] = pThis->waveforms[0].scale*1000;
-                msgUiWavegen.data[1] = pThis->waveforms[1].scale*1000;
-                msgUiWavegen.data[2] = pThis->waveforms[0].offset;
-                msgUiWavegen.data[3] = pThis->waveforms[1].offset;
+                msgUiWavegen.data[0] = pThis->waveform_selected;
+                msgUiWavegen.data[1] = pThis->waveforms[pThis->waveform_selected].frequency;
                 osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, 0U);
+            }
 
+            if( tmp.waveforms[tmp.waveform_selected].type != pThis->waveforms[pThis->waveform_selected].type ||
+                tmp.waveforms[tmp.waveform_selected].offset != pThis->waveforms[pThis->waveform_selected].offset ||
+                tmp.waveforms[tmp.waveform_selected].scale != pThis->waveforms[pThis->waveform_selected].scale ||
+                tmp.waveforms[tmp.waveform_selected].duty_cycle != pThis->waveforms[pThis->waveform_selected].duty_cycle
+            )
+            {
                 msgUiWavegen.type = QUEUE_UI_WAVEGEN_TYPE_CONFIG_VERTICAL;
-                msgUiWavegen.data[0] = pThis->waveforms[0].type;
-                msgUiWavegen.data[1] = pThis->waveforms[1].type;
-                msgUiWavegen.data[2] = pThis->waveforms[0].frequency;
-                msgUiWavegen.data[3] = pThis->waveforms[1].frequency;
-                msgUiWavegen.data[4] = pThis->waveforms[0].duty_cycle;
-                msgUiWavegen.data[5] = pThis->waveforms[1].duty_cycle;
+                msgUiWavegen.data[0] = pThis->waveform_selected;
+                msgUiWavegen.data[1] = pThis->waveforms[pThis->waveform_selected].type;
+                msgUiWavegen.data[2] = pThis->waveforms[pThis->waveform_selected].offset;
+                msgUiWavegen.data[3] = pThis->waveforms[pThis->waveform_selected].scale;
+                msgUiWavegen.data[4] = pThis->waveforms[pThis->waveform_selected].duty_cycle;
                 osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, 0U);
             }
             
@@ -470,11 +480,11 @@ void ui_build( tUi *pThis, struct nk_context *pCtx )
 {
     if( nk_begin( pCtx, "STM32G4 Scope", nk_rect(0, 0, 240, 320), NK_WINDOW_MINIMIZABLE ) )
 	{
-        ui_build_acquire2( pThis, pCtx );
-        ui_build_horizontal2( pThis, pCtx );
-        ui_build_vertical2( pThis, pCtx );
-        ui_build_trigger2( pThis, pCtx );
-        ui_build_wavegen2( pThis, pCtx );
+        ui_build_acquire2( &pThis->acquire, pCtx );
+        ui_build_horizontal2( &pThis->horizontal, pCtx );
+        ui_build_vertical2( &pThis->vertical, pCtx );
+        ui_build_trigger2( &pThis->trigger, pCtx );
+        ui_build_wavegen2( &pThis->wavegen, pCtx );
         ui_build_cursor( pThis, pCtx );
         ui_build_measurements( pThis, pCtx );
         ui_build_info( pThis, pCtx );

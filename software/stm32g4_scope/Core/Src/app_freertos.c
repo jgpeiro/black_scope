@@ -81,7 +81,7 @@ osThreadId_t taskWavegenHandle;
 const osThreadAttr_t taskWavegen_attributes = {
   .name = "taskWavegen",
   .priority = (osPriority_t) osPriorityNormal3,
-  .stack_size = 256
+  .stack_size = 512
 };
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -168,7 +168,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
-	queueTscUiHandle = osMessageQueueNew(4, sizeof(struct sQueueTscUi), &queueTscUi_attributes );
+	queueTscUiHandle = osMessageQueueNew(1, sizeof(struct sQueueTscUi), &queueTscUi_attributes );
 	//queueUiLcdHandle = osMessageQueueNew(1, sizeof(struct sQueueUiLcd), &queueUiLcd_attributes );
 	queueUiScopeHandle = osMessageQueueNew(1, sizeof(struct sQueueUiScope), &queueUiScope_attributes );
 	queueUiWavegenHandle = osMessageQueueNew(1, sizeof(struct sQueueUiWavegen), &queueUiWavegen_attributes );
@@ -1809,10 +1809,14 @@ void StartTaskWavegen(void *argument)
 			switch( msgUiWavegen.type )
 			{
 				case QUEUE_UI_WAVEGEN_TYPE_START:
-					_wavegen_start( &wavegen, msgUiWavegen.data[0] );
+					_wavegen_start( &wavegen,
+						msgUiWavegen.data[0] // channel
+					);
 					break;
 				case QUEUE_UI_WAVEGEN_TYPE_STOP:
-					_wavegen_stop( &wavegen, msgUiWavegen.data[0] );
+					_wavegen_stop( &wavegen,
+						msgUiWavegen.data[0] // channel
+					);
 					break;
 				case QUEUE_UI_WAVEGEN_TYPE_CONFIG_HORIZONTAL:
 					_wavegen_config_horizontal( &wavegen,
