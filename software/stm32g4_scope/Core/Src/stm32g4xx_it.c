@@ -249,10 +249,76 @@ int DMA1_Channel1_CNDTR = 0; // ADC1 DMA1_CH1
 int DMA1_Channel2_CNDTR = 0; // ADC3 DMA1_CH2
 int DMA1_Channel3_CNDTR = 0; // ADC4 DMA1_CH3
 int DMA1_Channel4_CNDTR = 0; // ADC5 DMA1_CH4
+
+enum eScopeState
+{
+	SCOPE_STATE_RESET = 0,
+	SCOPE_STATE_WAIT_FOR_CONVERSION_COMPLETE = 1,
+	SCOPE_STATE_WAIT_FOR_ARM = 2,
+	SCOPE_STATE_WAIT_FOR_TRIGGER = 3,
+	SCOPE_STATE_WAIT_FOR_STOP = 4,
+	SCOPE_STATE_DONE = 5,
+	SCOPE_STATE_MAX,
+};
+typedef enum eScopeState tScopeState;
+
+struct _sScope_Horizontal
+{
+	TIM_HandleTypeDef *htim_clock;
+	TIM_HandleTypeDef *htim_stop;
+};
+typedef struct _sScope_Horizontal _tScope_Horizontal;
+
+struct _sScope_Vertical
+{
+	DAC_HandleTypeDef *hdac;
+	OPAMP_HandleTypeDef *hopamp1;
+	OPAMP_HandleTypeDef *hopamp2;
+	OPAMP_HandleTypeDef *hopamp3;
+	OPAMP_HandleTypeDef *hopamp4;
+};
+typedef struct _sScope_Vertical _tScope_Vertical;
+
+struct _sScope_Trigger
+{
+	ADC_HandleTypeDef *hadc1;
+	ADC_HandleTypeDef *hadc2;
+	ADC_HandleTypeDef *hadc3;
+	ADC_HandleTypeDef *hadc4;
+};
+typedef struct _sScope_Trigger _tScope_Trigger;
+struct _sScope
+{
+	_tScope_Horizontal horizontal;
+	_tScope_Vertical vertical;
+	_tScope_Trigger trigger;
+
+	uint16_t *buffer1;
+	uint16_t *buffer2;
+	uint16_t *buffer3;
+	uint16_t *buffer4;
+
+	uint16_t *buffer5;
+	uint16_t *buffer6;
+	uint16_t *buffer7;
+	uint16_t *buffer8;
+
+	uint16_t len;
+	uint16_t cnt;
+	uint8_t state;
+
+	uint8_t continuous;
+};
+typedef struct _sScope _tScope;
+
+extern _tScope *pScope;
 void ADC1_2_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC1_2_IRQn 0 */
+if( pScope->state == SCOPE_STATE_WAIT_FOR_TRIGGER )
+{
   DMA1_Channel1_CNDTR = DMA1_Channel1->CNDTR;
+}
   /* USER CODE END ADC1_2_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc1);
   /* USER CODE BEGIN ADC1_2_IRQn 1 */

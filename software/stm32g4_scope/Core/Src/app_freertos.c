@@ -67,21 +67,21 @@ osThreadId_t taskUiHandle;
 const osThreadAttr_t taskUi_attributes = {
   .name = "taskUI",
   .priority = (osPriority_t) osPriorityNormal1,
-  .stack_size = 1024 * 4
+  .stack_size = 2048 * 4
 };
 
 osThreadId_t taskScopeHandle;
 const osThreadAttr_t taskScope_attributes = {
   .name = "taskScope",
   .priority = (osPriority_t) osPriorityNormal4,
-  .stack_size = 128
+  .stack_size = 256 * 4
 };
 
 osThreadId_t taskWavegenHandle;
 const osThreadAttr_t taskWavegen_attributes = {
   .name = "taskWavegen",
   .priority = (osPriority_t) osPriorityNormal3,
-  .stack_size = 512
+  .stack_size = 256 * 4
 };
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -160,7 +160,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
-	semaphoreLcdHandle = osSemaphoreNew(1, 1, &semaphoreLcd_attributes);
+	semaphoreLcdHandle = osSemaphoreNew(1, 0, &semaphoreLcd_attributes);
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -1375,6 +1375,48 @@ void StartTaskTsc(void *argument)
 #define LCD_COLOR_WHITE		(0xFFFF)
 #define COLOR_UI_CROSS		(LCD_COLOR_WHITE)
 
+void ui_init( tUi *pThis )
+{
+	pThis->acquire.run = 0;
+	pThis->acquire.single = 0;
+
+	pThis->horizontal.offset = 0;
+	pThis->horizontal.scale = 1000;
+
+	pThis->vertical.offset = 2048;
+	pThis->vertical.channels[0].enabled = 1;
+	pThis->vertical.channels[0].coupling = 0;
+	pThis->vertical.channels[0].scale = 0;
+	pThis->vertical.channels[1].enabled = 1;
+	pThis->vertical.channels[1].coupling = 0;
+	pThis->vertical.channels[1].scale = 0;
+	pThis->vertical.channels[2].enabled = 1;
+	pThis->vertical.channels[2].coupling = 0;
+	pThis->vertical.channels[2].scale = 0;
+	pThis->vertical.channels[3].enabled = 1;
+	pThis->vertical.channels[3].coupling = 0;
+	pThis->vertical.channels[3].scale = 0;
+
+	pThis->trigger.level = 2048;
+	pThis->trigger.mode = UI_TRIGGER_MODE_NORMAL;
+	pThis->trigger.slope = UI_TRIGGER_SLOPE_RISING;
+	pThis->trigger.source = 0;
+
+	pThis->wavegen.waveforms[0].enabled = 1;
+	pThis->wavegen.waveforms[0].type = 1;
+	pThis->wavegen.waveforms[0].offset = 2048;
+	pThis->wavegen.waveforms[0].scale = 2000;
+	pThis->wavegen.waveforms[0].frequency = 1000;
+	pThis->wavegen.waveforms[0].duty_cycle = 0;
+
+	pThis->wavegen.waveforms[1].enabled = 1;
+	pThis->wavegen.waveforms[1].type = 1;
+	pThis->wavegen.waveforms[1].offset = 2048;
+	pThis->wavegen.waveforms[1].scale = 2000;
+	pThis->wavegen.waveforms[1].frequency = 1000;
+	pThis->wavegen.waveforms[1].duty_cycle = 0;
+}
+
 //struct nk_context *ctx;
 tLcd lcd = {0};
 void StartTaskUi(void *argument)
@@ -1391,11 +1433,15 @@ void StartTaskUi(void *argument)
 
 	uint16_t x0 = 0, y0 = 0;
 
-    lcd_init( &lcd,
-    	LCD_nRST_GPIO_Port, LCD_nRST_Pin,
-		LCD_BL_GPIO_Port, LCD_BL_Pin,
-		480, 320
-	);
+	//if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+	{
+		lcd_init( &lcd,
+			LCD_nRST_GPIO_Port, LCD_nRST_Pin,
+			LCD_BL_GPIO_Port, LCD_BL_Pin,
+			480, 320
+		);
+		osSemaphoreRelease( semaphoreLcdHandle );
+	}
 
     framebuf_init( &fb, FB_WIDTH, FB_HEIGHT, fb_buf );
 
@@ -1406,6 +1452,8 @@ void StartTaskUi(void *argument)
 	font.width = text_width_f;
 	nk_init_custom( &ctx, &cmds, &pool, &font );
 	
+	ui_init( &ui );
+
     TickType_t xLastWakeTime;
 	const TickType_t xFrequency = 10;
 	xLastWakeTime = xTaskGetTickCount();
@@ -1554,6 +1602,7 @@ void HAL_ADC_ConvCpltCallback( ADC_HandleTypeDef* hadc )
 {	
 	if( pScope->state == SCOPE_STATE_WAIT_FOR_CONVERSION_COMPLETE )
 	{
+		__HAL_ADC_CLEAR_FLAG( pScope->trigger.hadc1, ADC_FLAG_AWD1 );
 		LL_ADC_EnableIT_AWD1( pScope->trigger.hadc1->Instance );
 		pScope->state = SCOPE_STATE_WAIT_FOR_ARM;
 	}
@@ -1563,6 +1612,8 @@ void HAL_ADC_LevelOutOfWindowCallback( ADC_HandleTypeDef* hadc )
 {
 	if( pScope->state == SCOPE_STATE_WAIT_FOR_ARM )
 	{
+		LL_ADC_DisableIT_AWD1( pScope->trigger.hadc1->Instance );
+		__HAL_ADC_CLEAR_FLAG( pScope->trigger.hadc1, ADC_FLAG_AWD2 );
 		LL_ADC_EnableIT_AWD2( pScope->trigger.hadc1->Instance );
 		pScope->state = SCOPE_STATE_WAIT_FOR_TRIGGER;
 	}
@@ -1572,8 +1623,15 @@ void HAL_ADCEx_LevelOutOfWindow2Callback( ADC_HandleTypeDef* hadc )
 {
 	if( pScope->state == SCOPE_STATE_WAIT_FOR_TRIGGER )
 	{
+		__HAL_TIM_CLEAR_IT( pScope->horizontal.htim_stop, TIM_IT_CC1 );
+		__HAL_TIM_CLEAR_IT( pScope->horizontal.htim_stop, TIM_IT_CC2 );
+		__HAL_TIM_CLEAR_IT( pScope->horizontal.htim_stop, TIM_IT_UPDATE );
+		__HAL_TIM_CLEAR_FLAG( pScope->horizontal.htim_stop, TIM_FLAG_CC1 );
+		__HAL_TIM_CLEAR_FLAG( pScope->horizontal.htim_stop, TIM_FLAG_CC2 );
+		__HAL_TIM_CLEAR_FLAG( pScope->horizontal.htim_stop, TIM_FLAG_UPDATE );
 		HAL_TIM_Base_Start( pScope->horizontal.htim_stop );
 		HAL_TIM_OnePulse_Start_IT( pScope->horizontal.htim_stop, TIM_CHANNEL_1 );
+		LL_ADC_DisableIT_AWD2( pScope->trigger.hadc1->Instance );
 		pScope->state = SCOPE_STATE_WAIT_FOR_STOP;
 	}
 }
@@ -1582,14 +1640,22 @@ void HAL_TIM_OC_DelayElapsedCallback( TIM_HandleTypeDef *htim )
 {
 	if( pScope->state == SCOPE_STATE_WAIT_FOR_STOP )
 	{
-		HAL_TIM_Base_Stop( pScope->horizontal.htim_clock );
+		/*HAL_TIM_Base_Stop( pScope->horizontal.htim_clock );
 		HAL_TIM_Base_Stop( pScope->horizontal.htim_stop );
 		HAL_TIM_OnePulse_Stop_IT( pScope->horizontal.htim_stop, TIM_CHANNEL_1 );
 		HAL_ADC_Stop_DMA( pScope->trigger.hadc1 );
 		HAL_ADC_Stop_DMA( pScope->trigger.hadc2 );
 		HAL_ADC_Stop_DMA( pScope->trigger.hadc3 );
+		HAL_ADC_Stop_DMA( pScope->trigger.hadc4 );*/
+
+		HAL_TIM_Base_Stop( pScope->horizontal.htim_clock );
+		HAL_ADC_Stop_DMA( pScope->trigger.hadc1 );
+		HAL_ADC_Stop_DMA( pScope->trigger.hadc2 );
+		HAL_ADC_Stop_DMA( pScope->trigger.hadc3 );
 		HAL_ADC_Stop_DMA( pScope->trigger.hadc4 );
-		pScope->state = SCOPE_STATE_DONE;
+		HAL_TIM_OnePulse_Stop_IT( pScope->horizontal.htim_stop, TIM_CHANNEL_1);
+		HAL_TIM_Base_Stop( pScope->horizontal.htim_stop );
+		pScope->state = SCOPE_STATE_IDLE;
 	}
 }
 
@@ -1628,7 +1694,7 @@ uint8_t _scope_is_continuous( _tScope *pThis )
 void _scope_start( _tScope *pThis, uint8_t continuous )
 {
 	pThis->continuous = continuous;
-	pThis->cnt = 0;
+
 	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp1 );
 	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp2 );
 	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp3 );
@@ -1644,21 +1710,27 @@ void _scope_start( _tScope *pThis, uint8_t continuous )
 	HAL_ADCEx_Calibration_Start( pThis->trigger.hadc3, ADC_SINGLE_ENDED );
 	HAL_ADCEx_Calibration_Start( pThis->trigger.hadc4, ADC_SINGLE_ENDED );
 
+	LL_ADC_DisableIT_AWD1( pThis->trigger.hadc1->Instance );
+	LL_ADC_DisableIT_AWD2( pScope->trigger.hadc1->Instance );
+
+	__HAL_ADC_CLEAR_FLAG( pThis->trigger.hadc1, ADC_FLAG_AWD1 );
+	__HAL_ADC_CLEAR_FLAG( pThis->trigger.hadc1, ADC_FLAG_AWD2 );
+
+	pThis->cnt += 1;
 	if( pThis->cnt & 0x01 )
 	{
 		HAL_ADC_Start_DMA( pThis->trigger.hadc1, (uint32_t*)pThis->buffer1, pThis->len );
 		HAL_ADC_Start_DMA( pThis->trigger.hadc2, (uint32_t*)pThis->buffer2, pThis->len );
 		HAL_ADC_Start_DMA( pThis->trigger.hadc3, (uint32_t*)pThis->buffer3, pThis->len );
-		HAL_ADC_Start_DMA( pThis->trigger.hadc3, (uint32_t*)pThis->buffer3, pThis->len );
+		HAL_ADC_Start_DMA( pThis->trigger.hadc4, (uint32_t*)pThis->buffer4, pThis->len );
 	}
 	else
 	{
-		HAL_ADC_Start_DMA( pThis->trigger.hadc1, (uint32_t*)pThis->buffer4, pThis->len );
-		HAL_ADC_Start_DMA( pThis->trigger.hadc2, (uint32_t*)pThis->buffer5, pThis->len );
-		HAL_ADC_Start_DMA( pThis->trigger.hadc3, (uint32_t*)pThis->buffer6, pThis->len );
+		HAL_ADC_Start_DMA( pThis->trigger.hadc1, (uint32_t*)pThis->buffer5, pThis->len );
+		HAL_ADC_Start_DMA( pThis->trigger.hadc2, (uint32_t*)pThis->buffer6, pThis->len );
 		HAL_ADC_Start_DMA( pThis->trigger.hadc3, (uint32_t*)pThis->buffer7, pThis->len );
+		HAL_ADC_Start_DMA( pThis->trigger.hadc4, (uint32_t*)pThis->buffer8, pThis->len );
 	}
-	pThis->cnt += 1;
 
 	HAL_TIM_Base_Start( pThis->horizontal.htim_clock );
 	
@@ -1723,10 +1795,14 @@ void _scope_config_vertical( _tScope *pThis, int gain1, int gain2, int gain3, in
 	//HAL_DAC_SetValue( pThis->vertical.hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, offset );
 	//HAL_DAC_SetValue( pThis->vertical.hdac, DAC_CHANNEL_3, DAC_ALIGN_12B_R, offset );
 	//HAL_DAC_SetValue( pThis->vertical.hdac, DAC_CHANNEL_4, DAC_ALIGN_12B_R, offset );
-	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp1 );
-	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp2 );
-	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp3 );
-	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp4 );
+	HAL_OPAMP_Stop( pThis->vertical.hopamp1 );
+	HAL_OPAMP_Stop( pThis->vertical.hopamp2 );
+	HAL_OPAMP_Stop( pThis->vertical.hopamp3 );
+	HAL_OPAMP_Stop( pThis->vertical.hopamp4 );
+	//HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp1 );
+	//HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp2 );
+	//HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp3 );
+	//HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp4 );
 	HAL_OPAMP_Start( pThis->vertical.hopamp1 );
 	HAL_OPAMP_Start( pThis->vertical.hopamp2 );
 	HAL_OPAMP_Start( pThis->vertical.hopamp3 );
@@ -1780,47 +1856,137 @@ void _scope_config_trigger( _tScope *pThis, int channel, int mode, int level, in
 	}
 
 	AnalogWDGConfig_arm.Channel = ADC_CHANNEL_VOPAMP1;
-    //AnalogWDGConfig_arm_2.Channel = ADC_CHANNEL_VOPAMP3_ADC3;
-    //AnalogWDGConfig_arm_3.Channel = ADC_CHANNEL_VOPAMP5;
-    //AnalogWDGConfig_arm_4.Channel = ADC_CHANNEL_VOPAMP6;
+    //AnalogWDGConfig_arm.Channel = ADC_CHANNEL_VOPAMP3_ADC3;
+    //AnalogWDGConfig_arm.Channel = ADC_CHANNEL_VOPAMP5;
+    //AnalogWDGConfig_arm.Channel = ADC_CHANNEL_VOPAMP6;
 
     AnalogWDGConfig_trig.Channel = ADC_CHANNEL_VOPAMP1;
-    //AnalogWDGConfig_trig_2.Channel = ADC_CHANNEL_VOPAMP3_ADC3;
-    //AnalogWDGConfig_trig_3.Channel = ADC_CHANNEL_VOPAMP5;
-    //AnalogWDGConfig_trig_4.Channel = ADC_CHANNEL_VOPAMP6;
+    //AnalogWDGConfig_trig.Channel = ADC_CHANNEL_VOPAMP3_ADC3;
+    //AnalogWDGConfig_trig.Channel = ADC_CHANNEL_VOPAMP5;
+    //AnalogWDGConfig_trig.Channel = ADC_CHANNEL_VOPAMP6;
 	HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc1, &AnalogWDGConfig_arm );
     HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc1, &AnalogWDGConfig_trig );
 
-	// ...	
+    AnalogWDGConfig_arm.HighThreshold = 4095;
+	AnalogWDGConfig_arm.LowThreshold = 0;
+	AnalogWDGConfig_trig.HighThreshold = 4095;
+	AnalogWDGConfig_trig.LowThreshold = 0;
+
+	AnalogWDGConfig_arm.ITMode = DISABLE;
+    AnalogWDGConfig_trig.ITMode = DISABLE;
+
+    AnalogWDGConfig_arm.Channel = ADC_CHANNEL_VOPAMP3_ADC3;
+    AnalogWDGConfig_trig.Channel = ADC_CHANNEL_VOPAMP3_ADC3;
 	HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc2, &AnalogWDGConfig_arm );
     HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc2, &AnalogWDGConfig_trig );
 
-	// ...
-	HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc3, &AnalogWDGConfig_arm );
+    AnalogWDGConfig_arm.Channel = ADC_CHANNEL_VOPAMP5;
+    AnalogWDGConfig_trig.Channel = ADC_CHANNEL_VOPAMP5;
+    HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc3, &AnalogWDGConfig_arm );
 	HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc3, &AnalogWDGConfig_trig );
 
-	// ...
-	HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc4, &AnalogWDGConfig_arm );
+    AnalogWDGConfig_arm.Channel = ADC_CHANNEL_VOPAMP6;
+    AnalogWDGConfig_trig.Channel = ADC_CHANNEL_VOPAMP6;
+    HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc4, &AnalogWDGConfig_arm );
 	HAL_ADC_AnalogWDGConfig( pThis->trigger.hadc4, &AnalogWDGConfig_trig );
 }
 
-
+extern int DMA1_Channel1_CNDTR;
 void _scope_draw( _tScope *pThis, tLcd *pLcd )
 {
 	uint16_t i;
-	for( i = 0; i < pThis->len; i++ )
+	float scale = 320/4096.0f;
+	int16_t trigger;
+	static int16_t trigger_bck = 0;
+	int16_t n, n_bck;
+
+	//lcd_rect( pLcd, 0, 0, 240, 320, 0 );
+	trigger = pThis->len - DMA1_Channel1_CNDTR - pThis->len/2;
+	if( pThis->cnt & 0x01 )
 	{
-		lcd_set_pixel( pLcd, i/2, pThis->buffer5[i], 0x0000 );
-		lcd_set_pixel( pLcd, i/2, pThis->buffer4[i], 0x001F );
+		for( i = 0; i < pThis->len; i++ )
+		{
+			n_bck = trigger_bck + i;
+			if( n_bck < 0 )
+			{
+				n_bck += pThis->len;
+			}
+			else if( n_bck >= pThis->len )
+			{
+				n_bck -= pThis->len;
+			}
+			lcd_set_pixel( pLcd, i/2, pThis->buffer5[n_bck]*scale, 0x0000 );
+			lcd_set_pixel( pLcd, i/2, pThis->buffer6[n_bck]*scale, 0x0000 );
+			lcd_set_pixel( pLcd, i/2, pThis->buffer7[n_bck]*scale, 0x0000 );
+			lcd_set_pixel( pLcd, i/2, pThis->buffer8[n_bck]*scale, 0x0000 );
+
+			n = trigger + i;
+			if( n < 0 )
+			{
+				n += pThis->len;
+			}
+			else if( n >= pThis->len )
+			{
+				n -= pThis->len;
+			}
+			lcd_set_pixel( pLcd, i/2, pThis->buffer1[n]*scale, 0x001F );
+			lcd_set_pixel( pLcd, i/2, pThis->buffer2[n]*scale, 0x07E0 );
+			lcd_set_pixel( pLcd, i/2, pThis->buffer3[n]*scale, 0xF800 );
+			lcd_set_pixel( pLcd, i/2, pThis->buffer4[n]*scale, 0xF81F );
+		}
 	}
+	else
+	{
+		for( i = 0; i < pThis->len; i++ )
+		{
+			n_bck = trigger_bck + i;
+			if( n_bck < 0 )
+			{
+				n_bck += pThis->len;
+			}
+			else if( n_bck >= pThis->len )
+			{
+				n_bck -= pThis->len;
+			}
+			lcd_set_pixel( pLcd, i/2, pThis->buffer1[n_bck]*scale, 0x0000 );
+			lcd_set_pixel( pLcd, i/2, pThis->buffer2[n_bck]*scale, 0x0000 );
+			lcd_set_pixel( pLcd, i/2, pThis->buffer3[n_bck]*scale, 0x0000 );
+			lcd_set_pixel( pLcd, i/2, pThis->buffer4[n_bck]*scale, 0x0000 );
+
+			n = trigger + i;
+			if( n < 0 )
+			{
+				n += pThis->len;
+			}
+			else if( n >= pThis->len )
+			{
+				n -= pThis->len;
+			}
+			lcd_set_pixel( pLcd, i/2, pThis->buffer5[n]*scale, 0x001F );
+			lcd_set_pixel( pLcd, i/2, pThis->buffer6[n]*scale, 0x07E0 );
+			lcd_set_pixel( pLcd, i/2, pThis->buffer7[n]*scale, 0xF800 );
+			lcd_set_pixel( pLcd, i/2, pThis->buffer8[n]*scale, 0xF81F );
+		}
+	}
+	trigger_bck = trigger;
 }
 
 void _scope_clear( _tScope *pThis, tLcd *pLcd )
 {
 	uint16_t i;
-	for( i = 0; i < pThis->len; i++ )
+	if( pThis->cnt & 0x01 )
 	{
-		lcd_set_pixel( pLcd, i/2, pThis->buffer4[i], 0x0000 );
+		for( i = 0; i < pThis->len; i++ )
+		{
+			lcd_set_pixel( pLcd, i/2, pThis->buffer4[i], 0x0000 );
+		}
+	}
+	else
+	{
+		for( i = 0; i < pThis->len; i++ )
+		{
+			lcd_set_pixel( pLcd, i/2, pThis->buffer5[i], 0x0000 );
+		}
 	}
 }
 
@@ -1886,31 +2052,47 @@ void StartTaskScope(void *argument)
 		ADC_BUFFER_LEN 
 	);
 
+
+	_scope_config_horizontal( &scope, 0, 1000 );
+	_scope_config_vertical( &scope, 0, 0, 0, 0, 2048 );
+	_scope_config_trigger( &scope, 0, 0, 3096, 0 );
+	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+	{
+		_scope_draw( &scope, &lcd );
+		osSemaphoreRelease( semaphoreLcdHandle );
+	}
+
     xLastWakeTime = xTaskGetTickCount();
+    int running = 0;
+    int single = 0;
     for(;;)
     {
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
 
+        /*if( _scope_is_running( &scope ) )
+		{
+			if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
+			{
+				_scope_clear( &scope, &lcd );
+				osSemaphoreRelease( semaphoreLcdHandle );
+			}
+		}*/
+
         if( osMessageQueueGet(queueUiScopeHandle, &msgScope, NULL, 0U) == osOK )
         {
-			if( !_scope_is_running( &scope ) )
-			{
-				if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
-				{
-					_scope_clear( &scope, &lcd );
-					osSemaphoreRelease( semaphoreLcdHandle );
-				}
-			}
-
             switch( msgScope.type )
             {
 				case QUEUE_UI_SCOPE_TYPE_START:
-                    _scope_start( &scope,
-						1 // single
-					);
+                    //_scope_start( &scope,
+                    //	msgScope.data[0] // continuous
+					//);
+                    running = 1;
+                    single = !msgScope.data[0];
                     break;
                 case QUEUE_UI_SCOPE_TYPE_STOP:
-                    _scope_stop( &scope );
+                    //_scope_stop( &scope );
+                    running = 0;
+                    single = 0;
                     break;
                 case QUEUE_UI_SCOPE_TYPE_HORIZONTAL:
                     _scope_config_horizontal( &scope, 
@@ -1938,17 +2120,27 @@ void StartTaskScope(void *argument)
             }
         }
 
-        if( _scope_is_running( &scope ) )
+        if( running )
         {
-            _scope_wait( &scope, xFrequency );
-			if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
+        	_scope_start( &scope, 0 );
+            int result = _scope_wait( &scope, xFrequency );
+        	_scope_stop( &scope );
+			if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
 			{
+				if( result )
+				{
+					lcd_rect( &lcd, 10, 10, 4, 4, 0xFFFF );
+				}
+				else
+				{
+					lcd_rect( &lcd, 10, 10, 4, 4, 0x0000 );
+				}
 				_scope_draw( &scope, &lcd );
 				osSemaphoreRelease( semaphoreLcdHandle );
 			}
-			if( _scope_is_continuous( &scope ) )
+			if( single )
 			{
-				_scope_start( &scope, 1 );
+				running = 0;
 			}
         }
     }
@@ -1979,6 +2171,21 @@ void StartTaskWavegen(void *argument)
 		dac2_buffer,
 		DAC_BUFFER_LEN
 	);
+
+	wavegen_config_horizontal( &wavegen, WAVEGEN_CHANNEL_1, 1000 );
+	wavegen_config_vertical( &wavegen, WAVEGEN_CHANNEL_1, WAVEGEN_TYPE_SINE, 1000, 1000, 0 );
+
+	wavegen_config_horizontal( &wavegen, WAVEGEN_CHANNEL_2, 1000 );
+	wavegen_config_vertical( &wavegen, WAVEGEN_CHANNEL_2, WAVEGEN_TYPE_SINE, 2000, 2000, 0 );
+
+	wavegen_start( &wavegen, WAVEGEN_CHANNEL_1 );
+	wavegen_start( &wavegen, WAVEGEN_CHANNEL_2 );
+
+	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+	{
+		wavegen_draw( &wavegen, &lcd );
+		osSemaphoreRelease( semaphoreLcdHandle );
+	}
 
 	TickType_t xLastWakeTime;
 	const TickType_t xFrequency = 1;

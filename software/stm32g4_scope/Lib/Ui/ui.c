@@ -126,20 +126,39 @@ void ui_build_acquire2( tUi_Acquire *pThis, struct nk_context *pCtx )
         {
         	pThis->single = 1;
         }
+        else
+        {
+        	pThis->single = 0;
+        }
 
         if( memcmp( &tmp, pThis, sizeof(tUi_Acquire) ) )
         {
-            if( pThis->run )
-            {
-                msgUiScope.type = QUEUE_UI_SCOPE_TYPE_START;
-                msgUiScope.data[0] = pThis->single;
-                osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
-            }
-            else
-            {
-                msgUiScope.type = QUEUE_UI_SCOPE_TYPE_STOP;
-                osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
-            }
+        	if( pThis->run != tmp.run )
+        	{
+        		if( pThis->run )
+                {
+                    msgUiScope.type = QUEUE_UI_SCOPE_TYPE_START;
+                    msgUiScope.data[0] = 1;
+                    osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+                }
+                else
+                {
+                    msgUiScope.type = QUEUE_UI_SCOPE_TYPE_STOP;
+                    osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+                }
+        	}
+
+        	if( pThis->single != tmp.single )
+        	{
+        		if( pThis->single )
+                {
+                    msgUiScope.type = QUEUE_UI_SCOPE_TYPE_START;
+                    msgUiScope.data[0] = 0; // continuous
+                    osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+
+                	pThis->run = 0;
+                }
+        	}
         }
 
         nk_tree_pop( pCtx );
