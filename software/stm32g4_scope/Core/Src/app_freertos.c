@@ -1051,8 +1051,8 @@ void StartDefaultTask(void *argument)
 	scope.trigger.hadc2 = &hadc3;
 	scope.trigger.hadc3 = &hadc5;
 	scope.trigger.hadc4 = &hadc4;
-	scope.wavegen.htim1 = &htim4;
-	scope.wavegen.htim2 = &htim6;
+//	scope.wavegen.htim1 = &htim4;
+//	scope.wavegen.htim2 = &htim6;
 
     ui.acquire.run = 1;
     ui.acquire.single = 0;
@@ -1173,13 +1173,13 @@ void StartDefaultTask(void *argument)
 		    	ui.acquire.run = 0;
 		    	ui.acquire.single = 0;
 	    	}
-	    	scope_init( &scope, 2048, 1000000,
-					(i&0x01)?buffer1:buffer5,
-					(i&0x01)?buffer2:buffer6,
-					(i&0x01)?buffer3:buffer7,
-					(i&0x01)?buffer4:buffer8,
-					ADC_BUFFER_LEN );
-			scope_start( &scope );
+	    	//scope_init( &scope, 2048, 1000000,
+	    	//		(i&0x01)?buffer1:buffer5,
+	    	//		(i&0x01)?buffer2:buffer6,
+	    	//		(i&0x01)?buffer3:buffer7,
+	    	//		(i&0x01)?buffer4:buffer8,
+	    	//		ADC_BUFFER_LEN );
+	    	//scope_start( &scope );
 			int t0 = HAL_GetTick();
 			while( scope_is_busy( &scope ) && HAL_GetTick()-t0 < (1000/xFrequency) );
 			scope_stop( &scope );
@@ -1555,7 +1555,7 @@ enum eQueueUiScopeType
 	QUEUE_UI_SCOPE_TYPE_VERTICAL,
 	QUEUE_UI_SCOPE_TYPE_TRIGGER
 };
-
+/*
 struct _sScope_Horizontal
 {
 	TIM_HandleTypeDef *htim_clock;
@@ -1605,8 +1605,8 @@ struct _sScope
 	uint8_t continuous;
 };
 typedef struct _sScope _tScope;
-
-
+*/
+/*
 void _scope_init_ll( _tScope *pThis,
 	TIM_HandleTypeDef *htim_clock,
 	TIM_HandleTypeDef *htim_stop,
@@ -1632,7 +1632,7 @@ void _scope_init_ll( _tScope *pThis,
 	pThis->trigger.hadc2 = hadc2;
 	pThis->trigger.hadc3 = hadc3;
 	pThis->trigger.hadc4 = hadc4;
-}
+}*/
 
 /*
 enum eScopeState
@@ -1652,6 +1652,7 @@ typedef enum eScopeState tScopeState;
 //void HAL_ADC_ConvHalfCpltCallback( ADC_HandleTypeDef* hadc )
 //{
 //}
+/*
 _tScope *pScope = NULL;
 void HAL_ADC_ConvCpltCallback( ADC_HandleTypeDef* hadc )
 {	
@@ -1695,14 +1696,6 @@ void HAL_TIM_OC_DelayElapsedCallback( TIM_HandleTypeDef *htim )
 {
 	if( pScope->state == SCOPE_STATE_WAIT_FOR_STOP )
 	{
-		/*HAL_TIM_Base_Stop( pScope->horizontal.htim_clock );
-		HAL_TIM_Base_Stop( pScope->horizontal.htim_stop );
-		HAL_TIM_OnePulse_Stop_IT( pScope->horizontal.htim_stop, TIM_CHANNEL_1 );
-		HAL_ADC_Stop_DMA( pScope->trigger.hadc1 );
-		HAL_ADC_Stop_DMA( pScope->trigger.hadc2 );
-		HAL_ADC_Stop_DMA( pScope->trigger.hadc3 );
-		HAL_ADC_Stop_DMA( pScope->trigger.hadc4 );*/
-
 		HAL_TIM_Base_Stop( pScope->horizontal.htim_clock );
 		HAL_ADC_Stop_DMA( pScope->trigger.hadc1 );
 		HAL_ADC_Stop_DMA( pScope->trigger.hadc2 );
@@ -1713,8 +1706,8 @@ void HAL_TIM_OC_DelayElapsedCallback( TIM_HandleTypeDef *htim )
 		pScope->state = SCOPE_STATE_IDLE;
 	}
 }
-
-
+*/
+/*
 void _scope_init( _tScope *pThis,
 	uint16_t *buffer1,
 	uint16_t *buffer2,
@@ -1740,7 +1733,8 @@ void _scope_init( _tScope *pThis,
 	pThis->state = SCOPE_STATE_IDLE;
 	pThis->continuous = 0;
 }
-
+*/
+/*
 uint8_t _scope_is_continuous( _tScope *pThis )
 {
 	return pThis->continuous;
@@ -2068,10 +2062,10 @@ uint8_t _scope_wait( _tScope *pThis, uint32_t timeout_ms )
 	}
 	return 1;
 }
-
+*/
 void StartTaskScope(void *argument)
 {
-    static _tScope scope = {0};
+    static tScope scope = {0};
     pScope = &scope;
 
     struct sQueueUiScope msgScope = {0};
@@ -2079,7 +2073,7 @@ void StartTaskScope(void *argument)
     TickType_t xLastWakeTime;
     const TickType_t xFrequency = 1;
 	
-    _scope_init_ll( &scope,
+    scope_init_ll( &scope,
         &htim2, // horizontal.htim_clock
         &htim3, // horizontal.htim_stop
         &hdac2, // vertical.hdac
@@ -2093,7 +2087,7 @@ void StartTaskScope(void *argument)
         &hadc4 // trigger.hadc4
     );
 
-	_scope_init( &scope,
+	scope_init( &scope,
 		buffer1,
 		buffer2,
 		buffer3,
@@ -2108,12 +2102,12 @@ void StartTaskScope(void *argument)
 	);
 
 
-	_scope_config_horizontal( &scope, 0, 1000 );
-	_scope_config_vertical( &scope, 0, 0, 0, 0, 2048 );
-	_scope_config_trigger( &scope, 0, 0, 3096, 0 );
+	scope_config_horizontal( &scope, 0, 1000 );
+	scope_config_vertical( &scope, 0, 0, 0, 0, 2048 );
+	scope_config_trigger( &scope, 0, 0, 3096, 0 );
 	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
 	{
-		_scope_draw( &scope, &lcd );
+		scope_draw( &scope, &lcd );
 		osSemaphoreRelease( semaphoreLcdHandle );
 	}
 
@@ -2150,13 +2144,13 @@ void StartTaskScope(void *argument)
                     single = 0;
                     break;
                 case QUEUE_UI_SCOPE_TYPE_HORIZONTAL:
-                    _scope_config_horizontal( &scope, 
+                    scope_config_horizontal( &scope,
 						msgScope.data[0], // offset 
 						msgScope.data[1]  // scale
 					);
                     break;
                 case QUEUE_UI_SCOPE_TYPE_VERTICAL:
-                    _scope_config_vertical( &scope,
+                    scope_config_vertical( &scope,
                         msgScope.data[0], // offset
                         msgScope.data[1], // scale1
                         msgScope.data[2], // scale2
@@ -2165,7 +2159,7 @@ void StartTaskScope(void *argument)
 					);
                     break;
                 case QUEUE_UI_SCOPE_TYPE_TRIGGER:
-                    _scope_config_trigger( &scope,
+                    scope_config_trigger( &scope,
                         msgScope.data[0], // source
                         msgScope.data[1], // mode
                         msgScope.data[2], // level
@@ -2181,8 +2175,8 @@ void StartTaskScope(void *argument)
         	int a;
         	static int b = 0;
         	a = DMA1_Channel1_CNDTR;
-        	_scope_start( &scope, 0 );
-            int result = _scope_wait( &scope, xFrequency );
+        	scope_start( &scope, 0 );
+            int result = scope_wait( &scope, single?portMAX_DELAY:xFrequency );
         	if( a != b )
         	{
         		result = 1;
@@ -2192,7 +2186,7 @@ void StartTaskScope(void *argument)
         		result = 0;
         	}
         	b = a;
-            _scope_stop( &scope );
+            scope_stop( &scope );
 			if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
 			{
 				if( result )
@@ -2203,7 +2197,7 @@ void StartTaskScope(void *argument)
 				{
 					lcd_rect( &lcd, 10, 10, 4, 4, 0x0000 );
 				}
-				_scope_draw( &scope, &lcd );
+				scope_draw( &scope, &lcd );
 				osSemaphoreRelease( semaphoreLcdHandle );
 			}
 			if( single )

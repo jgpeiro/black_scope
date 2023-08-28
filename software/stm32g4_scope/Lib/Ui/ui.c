@@ -838,18 +838,18 @@ void ui_wavegen_build( tUi *pThis, tWaveGen *wavegen )
     {
 		//scope.wavegen.htim1->Init.Prescaler = (tim_freq / pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency)/2 - 1;
 		//scope.wavegen.htim1->Init.Period = 1;
-    	scope.wavegen.htim1->Init.Prescaler = prescaler - 1;
-    	scope.wavegen.htim1->Init.Period = period - 1;
-    	HAL_TIM_Base_Init( scope.wavegen.htim1 );
+//    	scope.wavegen.htim1->Init.Prescaler = prescaler - 1;
+    	//    	scope.wavegen.htim1->Init.Period = period - 1;
+    	//    	HAL_TIM_Base_Init( scope.wavegen.htim1 );
 		//HAL_TIM_Base_Start( scope.wavegen.htim1 );
 	}
     if( pThis->wavegen.waveform_selected == 1 )
     {
 		//scope.wavegen.htim2->Init.Prescaler = (tim_freq / pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency)/2 - 1;
 		//scope.wavegen.htim2->Init.Period = 1;
-    	scope.wavegen.htim2->Init.Prescaler = prescaler - 1;
-    	scope.wavegen.htim2->Init.Period = period - 1;
-		HAL_TIM_Base_Init( scope.wavegen.htim2 );
+    	// 	scope.wavegen.htim2->Init.Prescaler = prescaler - 1;
+    	//  	scope.wavegen.htim2->Init.Period = period - 1;
+    	//	HAL_TIM_Base_Init( scope.wavegen.htim2 );
 		//HAL_TIM_Base_Start( scope.wavegen.htim2 );
 	}
 
