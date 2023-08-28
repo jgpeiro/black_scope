@@ -534,7 +534,7 @@ void ui_build( tUi *pThis, struct nk_context *pCtx )
     }
 	nk_end( pCtx );
 }
-
+/*
 void ui_build_acquire( tUi *pThis, struct nk_context *pCtx )
 {
 	pThis->acquire.is_visible = 0;
@@ -739,20 +739,7 @@ void ui_build_trigger( tUi *pThis, struct nk_context *pCtx )
 }
 #include "wavegen.h"
 extern tWaveGen wavegen;
-/*
-	wavegen_init( &wavegen,
-		&hdac1,
-		&htim4,
-		dac1_buffer,
-		dac2_buffer,
-		100,
-		1e6 );
-    wavegen_build_sine( &wavegen, 0x01, 10e3, 2047, 1500 );
-    wavegen_build_sine( &wavegen, 0x02, 20e3, 2047, 1500 );
-    wavegen_start( &wavegen, 0x03 );
-    //HAL_Delay( 1000 );
-    //wavegen_stop( &wavegen, 0x03 );
-*/
+
 
 #include <stdio.h>
 
@@ -777,60 +764,25 @@ void get_period_prescaler(int clock, int desired_freq, int *period, int *prescal
 
 void ui_wavegen_build( tUi *pThis, tWaveGen *wavegen )
 {
-    /*if( pThis->wavegen.waveform_selected == 0 )
-    {
-    	HAL_TIM_Base_Stop( scope.wavegen.htim1 );
-	}
-    if( pThis->wavegen.waveform_selected == 1 )
-    {
-		HAL_TIM_Base_Stop( scope.wavegen.htim2 );
-	}*/
+
 
     wavegen_stop( wavegen,
     	((!pThis->wavegen.waveforms[0].enabled) << 0) |
     	((!pThis->wavegen.waveforms[1].enabled) << 1) );
-/*
-    if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].type == WAVEGEN_TYPE_DC )
-    {
-        wavegen_build_dc( wavegen, 1 << pThis->wavegen.waveform_selected, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].offset );
-    }
-    else if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].type == WAVEGEN_TYPE_SINE )
-    {
-        wavegen_build_sine( wavegen, 1 << pThis->wavegen.waveform_selected, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].scale, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].offset );
-    }
-    else if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].type == WAVEGEN_TYPE_SQUARE )
-    {
-        wavegen_build_square( wavegen, 1 << pThis->wavegen.waveform_selected, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].scale, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].offset );
-    }
-    else if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].type == WAVEGEN_TYPE_TRIANGLE )
-    {
-        wavegen_build_triangle( wavegen, 1 << pThis->wavegen.waveform_selected, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].scale, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].offset );
-    }
-    else if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].type == WAVEGEN_TYPE_SAWTOOTH )
-    {
-        wavegen_build_sawtooth( wavegen, 1 << pThis->wavegen.waveform_selected, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].scale, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].offset );
-    }
-    else if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].type == WAVEGEN_TYPE_PWM )
-    {
-        wavegen_build_pwm( wavegen, 1 << pThis->wavegen.waveform_selected, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].scale, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].offset, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].duty_cycle );
-    }
-    else if( pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].type == WAVEGEN_TYPE_NOISE )
-    {
-        wavegen_build_noise( wavegen, 1 << pThis->wavegen.waveform_selected, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].scale, pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].offset );
-    }*/
+
     int tim_freq = 170e6;
     int prescaler = 0;
     int period = 0;
     int desired_freq = wavegen->len*pThis->wavegen.waveforms[pThis->wavegen.waveform_selected].frequency;
     get_period_prescaler(tim_freq, desired_freq, &period, &prescaler);
-/*#include "integer_factorization.h"
-    uint32_t n = (tim_freq / desired_freq);
-      uint32_t mx = 65536;
-      uint32_t a = 0;
-      uint32_t b = 0;
-      integer_factorization( n, mx, &a, &b );
-      period = a;
-      prescaler = b;*/
+//#include "integer_factorization.h"
+ //   uint32_t n = (tim_freq / desired_freq);
+  //    uint32_t mx = 65536;
+   //   uint32_t a = 0;
+    //  uint32_t b = 0;
+   //   integer_factorization( n, mx, &a, &b );
+    //  period = a;
+     // prescaler = b;
     prescaler = (tim_freq / desired_freq)/2;
     period = 2;
 
@@ -938,7 +890,7 @@ void ui_build_wavegen( tUi *pThis, struct nk_context *pCtx )
 		nk_tree_pop( pCtx );
 	}
 }
-
+*/
 void ui_build_cursor( tUi *pThis, struct nk_context *pCtx )
 {
     static uint8_t show_keypad_offset = 0;

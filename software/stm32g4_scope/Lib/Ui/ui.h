@@ -162,10 +162,10 @@ void ui_build_vertical2( tUi_Vertical *pThis, struct nk_context *pCtx );
 void ui_build_trigger2( tUi_Trigger *pThis, struct nk_context *pCtx );
 
 void ui_build( tUi *pThis, struct nk_context *pCtx );
-void ui_build_acquire( tUi *pThis, struct nk_context *pCtx );
-void ui_build_horizontal( tUi *pThis, struct nk_context *pCtx );
-void ui_build_vertical( tUi *pThis, struct nk_context *pCtx );
-void ui_build_trigger( tUi *pThis, struct nk_context *pCtx );
+//void ui_build_acquire( tUi *pThis, struct nk_context *pCtx );
+//void ui_build_horizontal( tUi *pThis, struct nk_context *pCtx );
+//void ui_build_vertical( tUi *pThis, struct nk_context *pCtx );
+//void ui_build_trigger( tUi *pThis, struct nk_context *pCtx );
 void ui_build_wavegen( tUi *pThis, struct nk_context *pCtx );
 void ui_build_cursor( tUi *pThis, struct nk_context *pCtx );
 void ui_build_measurements( tUi *pThis, struct nk_context *pCtx );
