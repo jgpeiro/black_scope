@@ -152,6 +152,9 @@ struct sScope_Horizontal
 {
 	TIM_HandleTypeDef *htim_clock;
 	TIM_HandleTypeDef *htim_stop;
+	
+	int32_t offset;
+	int32_t scale;
 };
 typedef struct sScope_Horizontal tScope_Horizontal;
 
@@ -162,6 +165,12 @@ struct sScope_Vertical
 	OPAMP_HandleTypeDef *hopamp2;
 	OPAMP_HandleTypeDef *hopamp3;
 	OPAMP_HandleTypeDef *hopamp4;
+
+	int32_t offset;
+	int32_t gain1;
+	int32_t gain2;
+	int32_t gain3;
+	int32_t gain4;
 };
 typedef struct sScope_Vertical tScope_Vertical;
 
@@ -171,6 +180,11 @@ struct sScope_Trigger
 	ADC_HandleTypeDef *hadc2;
 	ADC_HandleTypeDef *hadc3;
 	ADC_HandleTypeDef *hadc4;
+
+	int channel;
+	int mode;
+	int level;
+	int slope;
 };
 typedef struct sScope_Trigger tScope_Trigger;
 
@@ -193,6 +207,8 @@ struct sScope
 	uint16_t len;
 	uint16_t cnt;
 	tScopeState state;
+
+	uint32_t dma_cndtr;
 
 	uint8_t continuous;
 };
@@ -242,6 +258,11 @@ void scope_stop( tScope *pThis );
 uint8_t scope_wait( tScope *pThis, uint32_t timeout_ms );
 
 void scope_draw( tScope *pThis, tLcd *pLcd );
+void scope_draw_acquire( tScope *pThis, tLcd *pLcd );
+void scope_draw_horizontal( tScope_Horizontal *pThis, tLcd *pLcd );
+void scope_draw_vertical( tScope_Vertical *pThis, tLcd *pLcd );
+void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd );
+void scope_draw_signals( tScope *pThis, tLcd *pLcd );
 void scope_clear( tScope *pThis, tLcd *pLcd );
 
 uint8_t scope_is_continuous( tScope *pThis );

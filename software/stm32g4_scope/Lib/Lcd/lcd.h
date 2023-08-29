@@ -11,6 +11,12 @@
 #include <stdint.h>
 #include "stm32g4xx_hal.h"
 
+#define LCD_COLOR_BLACK     0x0000
+#define LCD_COLOR_WHITE     0xFFFF
+#define LCD_COLOR_RED       0x001F
+#define LCD_COLOR_GREEN     0x07E0
+#define LCD_COLOR_BLUE      0xF800
+
 struct sLcd
 {
     GPIO_TypeDef *reset_port;

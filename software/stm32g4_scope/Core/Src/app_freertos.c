@@ -2072,6 +2072,7 @@ void StartTaskScope(void *argument)
     //struct sQueueUiLcd msgLcd = {0};
     TickType_t xLastWakeTime;
     const TickType_t xFrequency = 1;
+	const int wait_timeout_ms = 10;
 	
     scope_init_ll( &scope,
         &htim2, // horizontal.htim_clock
@@ -2171,12 +2172,11 @@ void StartTaskScope(void *argument)
 
         if( running )
         {
-        	extern int DMA1_Channel1_CNDTR;
         	int a;
         	static int b = 0;
-        	a = DMA1_Channel1_CNDTR;
+        	a = scope.dma_cndtr;
         	scope_start( &scope, 0 );
-            int result = scope_wait( &scope, single?portMAX_DELAY:xFrequency );
+            int result = scope_wait( &scope, single?portMAX_DELAY:wait_timeout_ms );
         	if( a != b )
         	{
         		result = 1;

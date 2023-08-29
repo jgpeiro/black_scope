@@ -964,10 +964,14 @@ void scope_init( tScope *pThis,
 	pThis->cnt = 0;
 	pThis->state = SCOPE_STATE_IDLE;
 	pThis->continuous = 0;
+	pThis->dma_cndtr = 0;
 }
 
 void scope_config_horizontal( tScope *pThis, int offset, int scale )
 {
+	pThis->horizontal.offset = offset;
+	pThis->horizontal.scale = scale;
+
 	pThis->horizontal.htim_clock->Init.Prescaler = (170e6 / (scale*1000))/2 - 1;
 	pThis->horizontal.htim_clock->Init.Period = 2-1;
     HAL_TIM_Base_Init( pThis->horizontal.htim_clock );
@@ -992,6 +996,11 @@ const uint32_t gain_to_opamp_follower_gain[4] = {
 
 void scope_config_vertical( tScope *pThis, int gain1, int gain2, int gain3, int gain4, int offset )
 {
+	pThis->vertical.gain1 = gain1;
+	pThis->vertical.gain2 = gain2;
+	pThis->vertical.gain3 = gain3;
+	pThis->vertical.gain4 = gain4;
+	pThis->vertical.offset = offset;
 	//pThis->vertical_gain1 = gain1;
 	//pThis->vertical_gain2 = gain2;
 	//pThis->vertical_gain3 = gain3;
@@ -1022,6 +1031,11 @@ void scope_config_vertical( tScope *pThis, int gain1, int gain2, int gain3, int 
 
 void scope_config_trigger( tScope *pThis, int channel, int mode, int level, int slope )
 {
+	pThis->trigger.channel = channel;
+	pThis->trigger.mode = mode;
+	pThis->trigger.level = level;
+	pThis->trigger.slope = slope;
+
 	ADC_AnalogWDGConfTypeDef AnalogWDGConfig_arm = {0};
     ADC_AnalogWDGConfTypeDef AnalogWDGConfig_trig = {0};
 
@@ -1101,6 +1115,7 @@ void scope_config_trigger( tScope *pThis, int channel, int mode, int level, int 
 void scope_start( tScope *pThis, uint8_t continuous )
 {
 	pThis->continuous = continuous;
+	pThis->dma_cndtr = 0;
 
 	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp1 );
 	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp2 );
@@ -1183,8 +1198,102 @@ uint8_t scope_wait( tScope *pThis, uint32_t timeout_ms )
 	}
 }
 
-extern uint32_t DMA1_Channel1_CNDTR;
+/*
+void lcd_init( tLcd *pThis, GPIO_TypeDef *reset_port, uint16_t reset_pin, GPIO_TypeDef *bl_port, uint16_t bl_pin, uint16_t width, uint16_t height );
+void lcd_reset( tLcd *pThis );
+void lcd_config( tLcd *pThis );
+void lcd_set_bl( tLcd *pThis, uint8_t on );
+void lcd_set_window( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h );
+void lcd_set_pixel( tLcd *pThis, int16_t x, int16_t y, uint16_t color );
+void lcd_rect( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color );
+void lcd_clear( tLcd *pThis, uint16_t color );
+void lcd_bmp( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *buf );
+*/
+
+void scope_draw_acquire( tScope *pThis, tLcd *pLcd )
+{
+
+}
+
+void lcd_hline( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t color );
+void lcd_vline( tLcd *pThis, int16_t x, int16_t y, uint16_t h, uint16_t color );
+
+void lcd_hline( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t color )
+{
+	lcd_rect( pThis, x, y, w, 1, color );
+}
+void lcd_vline( tLcd *pThis, int16_t x, int16_t y, uint16_t h, uint16_t color )
+{
+	lcd_rect( pThis, x, y, 1, h, color );
+}
+
+void _scope_draw_horizontal(tScope_Horizontal *pThis, tLcd *pLcd) {
+	lcd_vline( pLcd, pThis->offset+pLcd->width/2, 0, pLcd->height, LCD_COLOR_RED );
+}
+#define MIN_OFFSET_VALUE (-100)
+#define MAX_OFFSET_VALUE (100)
+
+int16_t map_value(int32_t value, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
+    return (int16_t)((value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min);
+}
+// Variables de respaldo
+int16_t prevOffsetY = -1;
+int16_t prevScaleStartX = -1;
+int16_t prevScaleEndX = -1;
+
+void scope_draw_horizontal(tScope_Horizontal *pThis, tLcd *pLcd) {
+    // Clear only what was previously drawn
+    if (prevOffsetY >= 0) {
+        lcd_rect(pLcd, pLcd->width / 2 - 1, prevOffsetY, 2, pLcd->height, LCD_COLOR_BLACK);
+    }
+    if (prevScaleStartX >= 0 && prevScaleEndX >= 0) {
+        lcd_rect(pLcd, prevScaleStartX, pLcd->height - 20, prevScaleEndX - prevScaleStartX, 1, LCD_COLOR_BLACK);
+    }
+
+    // Draw the offset line
+    int16_t yOffset = map_value(pThis->offset, MIN_OFFSET_VALUE, MAX_OFFSET_VALUE, 0, pLcd->height);
+    lcd_rect(pLcd, pLcd->width / 2 - 1, 0, 2, pLcd->height, LCD_COLOR_RED);
+    prevOffsetY = 0;
+
+    // Draw the horizontal scale
+    int16_t xScaleStart = 10;
+    int16_t xScaleEnd = pLcd->width - 10;
+
+    // Draw a scale line
+    lcd_rect(pLcd, xScaleStart, pLcd->height - 20, xScaleEnd - xScaleStart, 1, LCD_COLOR_RED);
+    prevScaleStartX = xScaleStart;
+    prevScaleEndX = xScaleEnd;
+
+    // Draw scale marks (simplified example)
+    int16_t numScaleMarks = 10;
+    int16_t scaleMarkWidth = (xScaleEnd - xScaleStart) / numScaleMarks;
+    for (int i = 0; i < numScaleMarks + 1; i++) {
+        int16_t x = xScaleStart + i * scaleMarkWidth;
+        lcd_rect(pLcd, x, pLcd->height - 25, 1, 5, LCD_COLOR_RED);
+    }
+}
+
+void scope_draw_vertical( tScope_Vertical *pThis, tLcd *pLcd )
+{
+	lcd_hline( pLcd, 0, pThis->offset+pLcd->height/2, pLcd->width, LCD_COLOR_GREEN );
+}
+
+void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd )
+{
+	lcd_hline( pLcd, 0, pThis->level+pLcd->height/2, pLcd->width, LCD_COLOR_BLUE );
+	
+}
+
 void scope_draw( tScope *pThis, tLcd *pLcd )
+{
+	//scope_draw_acquire( pThis, pLcd );
+	//scope_draw_horizontal( &pThis->horizontal, pLcd );
+	//scope_draw_vertical( &pThis->vertical, pLcd );
+	//scope_draw_trigger( &pThis->trigger, pLcd );
+	scope_draw_signals( pThis, pLcd );
+}
+//extern uint32_t DMA1_Channel1_CNDTR;
+void scope_draw_signals( tScope *pThis, tLcd *pLcd )
 {
 	{
 		uint16_t i;
@@ -1194,7 +1303,7 @@ void scope_draw( tScope *pThis, tLcd *pLcd )
 		int16_t n, n_bck;
 
 		//lcd_rect( pLcd, 0, 0, 240, 320, 0 );
-		trigger = pThis->len - DMA1_Channel1_CNDTR - pThis->len/2;
+		trigger = pThis->len - pThis->dma_cndtr - pThis->len/2;
 		if( pThis->cnt & 0x01 )
 		{
 			for( i = 0; i < pThis->len; i++ )
