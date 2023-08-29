@@ -1516,7 +1516,7 @@ void StartTaskUi(void *argument)
 	{
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
 
-        if( osMessageQueueGet(queueTscUiHandle, &msgTscUi, NULL, 0U) == osOK )
+        if( osMessageQueueGet(queueTscUiHandle, &msgTscUi, NULL, portMAX_DELAY) == osOK )
         {
         	msgTscUi.x -= lcd.width/2;
             nk_input_begin( &ctx );

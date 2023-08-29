@@ -1241,55 +1241,43 @@ int16_t prevOffsetY = -1;
 int16_t prevScaleStartX = -1;
 int16_t prevScaleEndX = -1;
 
-void scope_draw_horizontal(tScope_Horizontal *pThis, tLcd *pLcd) {
-    // Clear only what was previously drawn
-    if (prevOffsetY >= 0) {
-        lcd_rect(pLcd, pLcd->width / 2 - 1, prevOffsetY, 2, pLcd->height, LCD_COLOR_BLACK);
-    }
-    if (prevScaleStartX >= 0 && prevScaleEndX >= 0) {
-        lcd_rect(pLcd, prevScaleStartX, pLcd->height - 20, prevScaleEndX - prevScaleStartX, 1, LCD_COLOR_BLACK);
-    }
-
-    // Draw the offset line
-    int16_t yOffset = map_value(pThis->offset, MIN_OFFSET_VALUE, MAX_OFFSET_VALUE, 0, pLcd->height);
-    lcd_rect(pLcd, pLcd->width / 2 - 1, 0, 2, pLcd->height, LCD_COLOR_RED);
-    prevOffsetY = 0;
-
-    // Draw the horizontal scale
-    int16_t xScaleStart = 10;
-    int16_t xScaleEnd = pLcd->width - 10;
-
-    // Draw a scale line
-    lcd_rect(pLcd, xScaleStart, pLcd->height - 20, xScaleEnd - xScaleStart, 1, LCD_COLOR_RED);
-    prevScaleStartX = xScaleStart;
-    prevScaleEndX = xScaleEnd;
-
-    // Draw scale marks (simplified example)
-    int16_t numScaleMarks = 10;
-    int16_t scaleMarkWidth = (xScaleEnd - xScaleStart) / numScaleMarks;
-    for (int i = 0; i < numScaleMarks + 1; i++) {
-        int16_t x = xScaleStart + i * scaleMarkWidth;
-        lcd_rect(pLcd, x, pLcd->height - 25, 1, 5, LCD_COLOR_RED);
-    }
+void scope_draw_horizontal(tScope_Horizontal *pThis, tLcd *pLcd)
+{
+	static int last_offset = 0;
+	int offset = pThis->offset;
+	float scale = pLcd->width/2/4096.0f;
+	lcd_rect( pLcd, pLcd->width/4+last_offset*scale, 0, 1, pLcd->height, LCD_COLOR_BLACK );
+	lcd_rect( pLcd, pLcd->width/4+offset*scale, 0, 1, pLcd->height, LCD_COLOR_GREEN );
+	last_offset = offset;
 }
 
 void scope_draw_vertical( tScope_Vertical *pThis, tLcd *pLcd )
 {
-	lcd_hline( pLcd, 0, pThis->offset+pLcd->height/2, pLcd->width, LCD_COLOR_GREEN );
+	static int last_offset = 0;
+	int offset = pThis->offset;
+	float scale = pLcd->height/4096.0f;
+	lcd_rect( pLcd, 0, last_offset*scale, pLcd->width/2, 1, 0x0000 );
+	lcd_rect( pLcd, 0, offset*scale, pLcd->width/2, 1, LCD_COLOR_GREEN );
+	last_offset = offset;
 }
 
 void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd )
 {
-	lcd_hline( pLcd, 0, pThis->level+pLcd->height/2, pLcd->width, LCD_COLOR_BLUE );
-	
+	static int last_level = 0;
+	int level = pThis->level;
+	float scale = pLcd->height/4096.0f;
+	lcd_rect( pLcd, 0, last_level*scale, pLcd->width/2, 1, 0x0000 );
+	lcd_rect( pLcd, 0, level*scale, pLcd->width/2, 1, LCD_COLOR_GREEN );
+	last_level = level;
 }
+
 
 void scope_draw( tScope *pThis, tLcd *pLcd )
 {
 	//scope_draw_acquire( pThis, pLcd );
-	//scope_draw_horizontal( &pThis->horizontal, pLcd );
-	//scope_draw_vertical( &pThis->vertical, pLcd );
-	//scope_draw_trigger( &pThis->trigger, pLcd );
+	scope_draw_horizontal( &pThis->horizontal, pLcd );
+	scope_draw_vertical( &pThis->vertical, pLcd );
+	scope_draw_trigger( &pThis->trigger, pLcd );
 	scope_draw_signals( pThis, pLcd );
 }
 //extern uint32_t DMA1_Channel1_CNDTR;
