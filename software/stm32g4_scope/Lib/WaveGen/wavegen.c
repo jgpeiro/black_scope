@@ -182,7 +182,7 @@ void wavegen_build_noise( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_
 	}
 }
 
-void wavegen_erase( tWaveGen *pThis, tLcd *pLcd )
+void _wavegen_erase( tWaveGen *pThis, tLcd *pLcd )
 {
 	uint16_t i;
 	const float scale = 320/4096.0f;
@@ -193,13 +193,28 @@ void wavegen_erase( tWaveGen *pThis, tLcd *pLcd )
 	}
 }
 
+#define WAVEGEN_CH1_COLOR 0xF00F
+#define WAVEGEN_CH2_COLOR 0x0FF0
+
 void wavegen_draw( tWaveGen *pThis, tLcd *pLcd )
+{
+	wavegen_stroque( pThis, pLcd, WAVEGEN_CH1_COLOR, WAVEGEN_CH2_COLOR );
+}
+
+void wavegen_erase( tWaveGen *pThis, tLcd *pLcd )
+{
+	wavegen_stroque( pThis, pLcd, LCD_COLOR_BLACK, LCD_COLOR_BLACK );
+}
+
+void wavegen_stroque( tWaveGen *pThis, tLcd *pLcd, uint16_t color1, uint16_t color2 )
 {
 	uint16_t i;
 	const float scale = 320/4096.0f;
+	int pLcd_height = pLcd->height;
 	for( i = 0; i < pThis->len; i++ )
 	{
-		lcd_set_pixel( pLcd, i/2, pThis->buffer1[i]*scale, 0x001F );
-		lcd_set_pixel( pLcd, i/2, pThis->buffer2[i]*scale, 0x07E0 );
+		lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer1[i]*scale, color1 );
+		lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer2[i]*scale, color2 );
 	}
 }
+

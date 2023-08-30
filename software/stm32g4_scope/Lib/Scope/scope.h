@@ -259,7 +259,7 @@ uint8_t scope_wait( tScope *pThis, uint32_t timeout_ms );
 
 void scope_draw( tScope *pThis, tLcd *pLcd );
 void scope_draw_acquire( tScope *pThis, tLcd *pLcd );
-void scope_draw_horizontal( tScope_Horizontal *pThis, tLcd *pLcd );
+void scope_draw_horizontal( tScope_Horizontal *pThis, tLcd *pLcd, int len );
 void scope_draw_vertical( tScope_Vertical *pThis, tLcd *pLcd );
 void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd );
 void scope_draw_signals( tScope *pThis, tLcd *pLcd );

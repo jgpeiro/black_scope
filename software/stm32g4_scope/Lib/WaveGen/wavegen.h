@@ -71,5 +71,6 @@ void wavegen_build_noise( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_
 
 void wavegen_draw( tWaveGen *pThis, tLcd *pLcd );
 void wavegen_erase( tWaveGen *pThis, tLcd *pLcd );
+void wavegen_stroque( tWaveGen *pThis, tLcd *pLcd, uint16_t color1, uint16_t color2 );
 
 #endif /* WAVEGEN_H_ */

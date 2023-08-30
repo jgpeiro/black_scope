@@ -966,12 +966,16 @@ void ui_build_info( tUi *pThis, struct nk_context *pCtx )
     {
     	pThis->info.is_visible = 1;
         nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
-        nk_label( pCtx, "FPS", NK_TEXT_LEFT );
+        nk_label( pCtx, "FPS AVG", NK_TEXT_LEFT );
         static int a = 0;
         static int b = 0;
+        int dt;
+        static int dt_low = 0;
         b = a;
         a = HAL_GetTick();
-        snprintf( buffer, sizeof(buffer), "%d", 1000/(a-b) );
+        dt = 1000/(a-b);
+        dt_low = dt_low*0.9f + dt*0.1f;
+        snprintf( buffer, sizeof(buffer), "%d", dt_low );
         nk_label( pCtx, buffer, NK_TEXT_RIGHT );
         nk_label( pCtx, "CPU", NK_TEXT_LEFT );
         nk_label( pCtx, "0", NK_TEXT_RIGHT );

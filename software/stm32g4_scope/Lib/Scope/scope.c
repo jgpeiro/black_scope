@@ -1226,28 +1226,21 @@ void lcd_vline( tLcd *pThis, int16_t x, int16_t y, uint16_t h, uint16_t color )
 {
 	lcd_rect( pThis, x, y, 1, h, color );
 }
-
-void _scope_draw_horizontal(tScope_Horizontal *pThis, tLcd *pLcd) {
-	lcd_vline( pLcd, pThis->offset+pLcd->width/2, 0, pLcd->height, LCD_COLOR_RED );
-}
 #define MIN_OFFSET_VALUE (-100)
 #define MAX_OFFSET_VALUE (100)
 
 int16_t map_value(int32_t value, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
     return (int16_t)((value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min);
 }
-// Variables de respaldo
-int16_t prevOffsetY = -1;
-int16_t prevScaleStartX = -1;
-int16_t prevScaleEndX = -1;
 
-void scope_draw_horizontal(tScope_Horizontal *pThis, tLcd *pLcd)
+void scope_draw_horizontal(tScope_Horizontal *pThis, tLcd *pLcd, int len)
 {
 	static int last_offset = 0;
-	int offset = pThis->offset;
-	float scale = pLcd->width/2/4096.0f;
-	lcd_rect( pLcd, pLcd->width/4+last_offset*scale, 0, 1, pLcd->height, LCD_COLOR_BLACK );
-	lcd_rect( pLcd, pLcd->width/4+offset*scale, 0, 1, pLcd->height, LCD_COLOR_GREEN );
+	int offset = (pThis->offset*pLcd->width)/len;
+	//	lcd_rect( pLcd, last_offset/2+pLcd->width/2, 0, 1, pLcd->height, LCD_COLOR_BLACK );
+	//	lcd_rect( pLcd, offset/2+pLcd->width/2, 0, 1, pLcd->height, 0x07FF );
+	lcd_rect( pLcd, last_offset/4+pLcd->width/4, 0, 1, pLcd->height, LCD_COLOR_BLACK );
+	lcd_rect( pLcd, offset/4+pLcd->width/4, 0, 1, pLcd->height, 0x07FF );
 	last_offset = offset;
 }
 
@@ -1265,6 +1258,41 @@ void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd )
 {
 	static int last_level = 0;
 	int level = pThis->level;
+	lcd_rect( pLcd, 0, pLcd->height-((last_level)*pLcd->height)/4096, pLcd->width/2, 1, 0x0000 );
+	lcd_rect( pLcd, 0, pLcd->height-((level)*pLcd->height)/4096, pLcd->width/2, 1, 0x07FF );
+	last_level = level;
+}
+
+void scope_draw_grid( tScope *pThis, tLcd *pLcd )
+{
+	static int i = 10; // force draw the first time.
+	if( i < 10 )
+	{
+		i++;
+		return;
+	}
+	else
+	{
+		i = 0;
+	}
+
+	for( int d = 0 ; d < pLcd->width ; d += 40 )
+	{
+		lcd_rect( pLcd, d/2, 0, 1, pLcd->height, 0x8410 );
+	}
+	lcd_rect( pLcd, pLcd->width/2-1, 0, 1, pLcd->height, 0x8410 );
+
+	for( int d = 0 ; d < pLcd->height ; d += 40 )
+	{
+		lcd_rect( pLcd, 0/2, d, pLcd->width/2, 1, 0x8410 );
+	}
+	lcd_rect( pLcd, 0/2, pLcd->height, pLcd->width/2, 1, 0x8410 );
+}
+
+void _scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd )
+{
+	static int last_level = 0;
+	int level = pThis->level;
 	float scale = pLcd->height/4096.0f;
 	lcd_rect( pLcd, 0, last_level*scale, pLcd->width/2, 1, 0x0000 );
 	lcd_rect( pLcd, 0, level*scale, pLcd->width/2, 1, LCD_COLOR_GREEN );
@@ -1274,8 +1302,9 @@ void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd )
 
 void scope_draw( tScope *pThis, tLcd *pLcd )
 {
+	scope_draw_grid( pThis, pLcd );
 	//scope_draw_acquire( pThis, pLcd );
-	scope_draw_horizontal( &pThis->horizontal, pLcd );
+	scope_draw_horizontal( &pThis->horizontal, pLcd, pThis->len );
 	scope_draw_vertical( &pThis->vertical, pLcd );
 	scope_draw_trigger( &pThis->trigger, pLcd );
 	scope_draw_signals( pThis, pLcd );
@@ -1289,6 +1318,7 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd )
 		int16_t trigger;
 		static int16_t trigger_bck = 0;
 		int16_t n, n_bck;
+		int pLcd_height = pLcd->height;
 
 		//lcd_rect( pLcd, 0, 0, 240, 320, 0 );
 		trigger = pThis->len - pThis->dma_cndtr - pThis->len/2;
@@ -1305,10 +1335,10 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd )
 				{
 					n_bck -= pThis->len;
 				}
-				lcd_set_pixel( pLcd, i/2, pThis->buffer5[n_bck]*scale, 0x0000 );
-				lcd_set_pixel( pLcd, i/2, pThis->buffer6[n_bck]*scale, 0x0000 );
-				lcd_set_pixel( pLcd, i/2, pThis->buffer7[n_bck]*scale, 0x0000 );
-				lcd_set_pixel( pLcd, i/2, pThis->buffer8[n_bck]*scale, 0x0000 );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer5[n_bck]*scale, 0x0000 );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer6[n_bck]*scale, 0x0000 );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer7[n_bck]*scale, 0x0000 );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer8[n_bck]*scale, 0x0000 );
 
 				n = trigger + i;
 				if( n < 0 )
@@ -1319,10 +1349,10 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd )
 				{
 					n -= pThis->len;
 				}
-				lcd_set_pixel( pLcd, i/2, pThis->buffer1[n]*scale, 0x001F );
-				lcd_set_pixel( pLcd, i/2, pThis->buffer2[n]*scale, 0x07E0 );
-				lcd_set_pixel( pLcd, i/2, pThis->buffer3[n]*scale, 0xF800 );
-				lcd_set_pixel( pLcd, i/2, pThis->buffer4[n]*scale, 0xF81F );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer1[n]*scale, 0x001F );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer2[n]*scale, 0x07E0 );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer3[n]*scale, 0xF800 );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer4[n]*scale, 0xF81F );
 			}
 		}
 		else
@@ -1338,10 +1368,10 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd )
 				{
 					n_bck -= pThis->len;
 				}
-				lcd_set_pixel( pLcd, i/2, pThis->buffer1[n_bck]*scale, 0x0000 );
-				lcd_set_pixel( pLcd, i/2, pThis->buffer2[n_bck]*scale, 0x0000 );
-				lcd_set_pixel( pLcd, i/2, pThis->buffer3[n_bck]*scale, 0x0000 );
-				lcd_set_pixel( pLcd, i/2, pThis->buffer4[n_bck]*scale, 0x0000 );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer1[n_bck]*scale, 0x0000 );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer2[n_bck]*scale, 0x0000 );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer3[n_bck]*scale, 0x0000 );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer4[n_bck]*scale, 0x0000 );
 
 				n = trigger + i;
 				if( n < 0 )
@@ -1352,10 +1382,10 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd )
 				{
 					n -= pThis->len;
 				}
-				lcd_set_pixel( pLcd, i/2, pThis->buffer5[n]*scale, 0x001F );
-				lcd_set_pixel( pLcd, i/2, pThis->buffer6[n]*scale, 0x07E0 );
-				lcd_set_pixel( pLcd, i/2, pThis->buffer7[n]*scale, 0xF800 );
-				lcd_set_pixel( pLcd, i/2, pThis->buffer8[n]*scale, 0xF81F );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer5[n]*scale, 0x001F );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer6[n]*scale, 0x07E0 );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer7[n]*scale, 0xF800 );
+				lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer8[n]*scale, 0xF81F );
 			}
 		}
 		trigger_bck = trigger;
