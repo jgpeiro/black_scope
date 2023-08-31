@@ -151,6 +151,7 @@ struct sUi
     tUi_Cursors cursors;
     tUi_Measurements measurements;
     tUi_Info info;
+	int is_collapsed;
 };
 typedef struct sUi tUi;
 
@@ -161,6 +162,7 @@ void ui_build_horizontal2( tUi_Horizontal *pThis, struct nk_context *pCtx );
 void ui_build_vertical2( tUi_Vertical *pThis, struct nk_context *pCtx );
 void ui_build_trigger2( tUi_Trigger *pThis, struct nk_context *pCtx );
 
+void ui_init( tUi *pThis );
 void ui_build( tUi *pThis, struct nk_context *pCtx );
 //void ui_build_acquire( tUi *pThis, struct nk_context *pCtx );
 //void ui_build_horizontal( tUi *pThis, struct nk_context *pCtx );

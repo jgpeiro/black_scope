@@ -102,6 +102,48 @@ void nk_style_pop_color_channel( struct nk_context *pCtx )
     nk_style_pop_color( pCtx );
 }
 
+void ui_init( tUi *pThis )
+{
+	pThis->acquire.run = 0;
+	pThis->acquire.single = 0;
+
+	pThis->horizontal.offset = 0;
+	pThis->horizontal.scale = 1000;
+
+	pThis->vertical.offset = 2048;
+	pThis->vertical.channels[0].enabled = 1;
+	pThis->vertical.channels[0].coupling = 0;
+	pThis->vertical.channels[0].scale = 0;
+	pThis->vertical.channels[1].enabled = 1;
+	pThis->vertical.channels[1].coupling = 0;
+	pThis->vertical.channels[1].scale = 0;
+	pThis->vertical.channels[2].enabled = 1;
+	pThis->vertical.channels[2].coupling = 0;
+	pThis->vertical.channels[2].scale = 0;
+	pThis->vertical.channels[3].enabled = 1;
+	pThis->vertical.channels[3].coupling = 0;
+	pThis->vertical.channels[3].scale = 0;
+
+	pThis->trigger.level = 2048;
+	pThis->trigger.mode = UI_TRIGGER_MODE_NORMAL;
+	pThis->trigger.slope = UI_TRIGGER_SLOPE_RISING;
+	pThis->trigger.source = 0;
+
+	pThis->wavegen.waveforms[0].enabled = 1;
+	pThis->wavegen.waveforms[0].type = 1;
+	pThis->wavegen.waveforms[0].offset = 2048;
+	pThis->wavegen.waveforms[0].scale = 2000;
+	pThis->wavegen.waveforms[0].frequency = 1000;
+	pThis->wavegen.waveforms[0].duty_cycle = 0;
+
+	pThis->wavegen.waveforms[1].enabled = 1;
+	pThis->wavegen.waveforms[1].type = 1;
+	pThis->wavegen.waveforms[1].offset = 2048;
+	pThis->wavegen.waveforms[1].scale = 2000;
+	pThis->wavegen.waveforms[1].frequency = 1000;
+	pThis->wavegen.waveforms[1].duty_cycle = 0;
+}
+
 void ui_build_acquire2( tUi_Acquire *pThis, struct nk_context *pCtx )
 {
     struct sQueueUiScope msgUiScope = {0};

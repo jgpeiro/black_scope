@@ -13,6 +13,9 @@
 
 #include "lcd.h"
 
+#define WAVEGEN_COLOR_CH1	LCD_COLOR_CYAN
+#define WAVEGEN_COLOR_CH2	LCD_COLOR_MAGENTA
+
 enum eWaveGenChannel
 {
 	WAVEGEN_CHANNEL_1,

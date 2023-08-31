@@ -198,7 +198,7 @@ void _wavegen_erase( tWaveGen *pThis, tLcd *pLcd )
 
 void wavegen_draw( tWaveGen *pThis, tLcd *pLcd )
 {
-	wavegen_stroque( pThis, pLcd, WAVEGEN_CH1_COLOR, WAVEGEN_CH2_COLOR );
+	wavegen_stroque( pThis, pLcd, WAVEGEN_COLOR_CH1, WAVEGEN_COLOR_CH2 );
 }
 
 void wavegen_erase( tWaveGen *pThis, tLcd *pLcd )

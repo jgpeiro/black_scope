@@ -11,6 +11,17 @@
 #include <stdint.h>
 #include "stm32g4xx_hal.h"
 #include "lcd.h"
+
+#define SCOPE_COLOR_ACQUIRE    LCD_COLOR_RED
+#define SCOPE_COLOR_HORIZONTAL LCD_COLOR_GREEN
+#define SCOPE_COLOR_VERTICAL   LCD_COLOR_BLUE
+#define SCOPE_COLOR_TRIGGER    LCD_COLOR_MAGENTA
+
+#define SCOPE_COLOR_CH1			LCD_COLOR_RED
+#define SCOPE_COLOR_CH2			LCD_COLOR_RED
+#define SCOPE_COLOR_CH3			LCD_COLOR_RED
+#define SCOPE_COLOR_CH4			LCD_COLOR_RED
+
 /*
 enum eScopeState
 {
@@ -257,13 +268,13 @@ void scope_start( tScope *pThis, uint8_t continuous );
 void scope_stop( tScope *pThis );
 uint8_t scope_wait( tScope *pThis, uint32_t timeout_ms );
 
-void scope_draw( tScope *pThis, tLcd *pLcd );
-void scope_draw_acquire( tScope *pThis, tLcd *pLcd );
-void scope_draw_horizontal( tScope_Horizontal *pThis, tLcd *pLcd, int len );
-void scope_draw_vertical( tScope_Vertical *pThis, tLcd *pLcd );
-void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd );
-void scope_draw_signals( tScope *pThis, tLcd *pLcd );
-void scope_clear( tScope *pThis, tLcd *pLcd );
+void scope_draw( tScope *pThis, tLcd *pLcd, int is_collapsed );
+void scope_draw_acquire( tScope *pThis, tLcd *pLcd, int is_collapsed );
+void scope_draw_horizontal( tScope_Horizontal *pThis, tLcd *pLcd, int len, int is_collapsed );
+void scope_draw_vertical( tScope_Vertical *pThis, tLcd *pLcd, int is_collapsed );
+void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd, int is_collapsed );
+void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed );
+void scope_clear( tScope *pThis, tLcd *pLcd, int is_collapsed );
 
 uint8_t scope_is_continuous( tScope *pThis );
 uint8_t scope_is_running( tScope *pThis );

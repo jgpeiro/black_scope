@@ -354,47 +354,7 @@ void StartTaskTsc(void *argument)
 #define LCD_COLOR_WHITE		(0xFFFF)
 #define COLOR_UI_CROSS		(LCD_COLOR_WHITE)
 
-void ui_init( tUi *pThis )
-{
-	pThis->acquire.run = 0;
-	pThis->acquire.single = 0;
 
-	pThis->horizontal.offset = 0;
-	pThis->horizontal.scale = 1000;
-
-	pThis->vertical.offset = 2048;
-	pThis->vertical.channels[0].enabled = 1;
-	pThis->vertical.channels[0].coupling = 0;
-	pThis->vertical.channels[0].scale = 0;
-	pThis->vertical.channels[1].enabled = 1;
-	pThis->vertical.channels[1].coupling = 0;
-	pThis->vertical.channels[1].scale = 0;
-	pThis->vertical.channels[2].enabled = 1;
-	pThis->vertical.channels[2].coupling = 0;
-	pThis->vertical.channels[2].scale = 0;
-	pThis->vertical.channels[3].enabled = 1;
-	pThis->vertical.channels[3].coupling = 0;
-	pThis->vertical.channels[3].scale = 0;
-
-	pThis->trigger.level = 2048;
-	pThis->trigger.mode = UI_TRIGGER_MODE_NORMAL;
-	pThis->trigger.slope = UI_TRIGGER_SLOPE_RISING;
-	pThis->trigger.source = 0;
-
-	pThis->wavegen.waveforms[0].enabled = 1;
-	pThis->wavegen.waveforms[0].type = 1;
-	pThis->wavegen.waveforms[0].offset = 2048;
-	pThis->wavegen.waveforms[0].scale = 2000;
-	pThis->wavegen.waveforms[0].frequency = 1000;
-	pThis->wavegen.waveforms[0].duty_cycle = 0;
-
-	pThis->wavegen.waveforms[1].enabled = 1;
-	pThis->wavegen.waveforms[1].type = 1;
-	pThis->wavegen.waveforms[1].offset = 2048;
-	pThis->wavegen.waveforms[1].scale = 2000;
-	pThis->wavegen.waveforms[1].frequency = 1000;
-	pThis->wavegen.waveforms[1].duty_cycle = 0;
-}
 
 void lcd_draw_cross( tLcd *pLcd, uint16_t x, uint16_t y, uint16_t color )
 {
@@ -405,11 +365,11 @@ void lcd_draw_cross( tLcd *pLcd, uint16_t x, uint16_t y, uint16_t color )
 }
 
 struct nk_context ctx = {0};
+static tUi ui = {0};
 tLcd lcd = {0};
 void StartTaskUi(void *argument)
 {
     tFramebuf fb = {0};
-    static tUi ui = {0};
 
     struct sQueueTscUi msgTscUi = {0};
     //struct sQueueUiLcd msgUiLcd = {0};
@@ -440,7 +400,7 @@ void StartTaskUi(void *argument)
 	nk_init_custom( &ctx, &cmds, &pool, &font );
 	
 	ui_init( &ui );
-
+	int is_collapsed_bck = 0;
     TickType_t xLastWakeTime;
 	const TickType_t xFrequency = 10;
 	xLastWakeTime = xTaskGetTickCount();
@@ -471,7 +431,18 @@ void StartTaskUi(void *argument)
 				osSemaphoreRelease( semaphoreLcdHandle );
 			}
         }
-                nk_clear(&ctx);
+        nk_clear(&ctx);
+
+        ui.is_collapsed = nk_window_is_collapsed( &ctx, "STM32G4 Scope" );
+		if( ui.is_collapsed != is_collapsed_bck )
+		{
+			is_collapsed_bck = ui.is_collapsed;
+			if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+			{
+				lcd_clear( &lcd, LCD_COLOR_BLACK );
+				osSemaphoreRelease( semaphoreLcdHandle );
+			}
+		}
 
 		if( msgTscUi.p && (0 <= msgTscUi.x) && (msgTscUi.x < lcd.width/2-5) )
 		{
@@ -531,13 +502,13 @@ void StartTaskScope(void *argument)
 		ADC_BUFFER_LEN 
 	);
 
-
+	int is_collapsed = ui.is_collapsed;
 	scope_config_horizontal( &scope, 0, 1000 );
 	scope_config_vertical( &scope, 0, 0, 0, 0, 2048 );
 	scope_config_trigger( &scope, 0, 0, 3096, 0 );
 	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
 	{
-		scope_draw( &scope, &lcd );
+		scope_draw( &scope, &lcd, is_collapsed );
 		osSemaphoreRelease( semaphoreLcdHandle );
 	}
 
@@ -547,7 +518,7 @@ void StartTaskScope(void *argument)
     for(;;)
     {
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
-
+        is_collapsed = ui.is_collapsed;
         /*if( _scope_is_running( &scope ) )
 		{
 			if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
@@ -626,7 +597,7 @@ void StartTaskScope(void *argument)
 				{
 					lcd_rect( &lcd, 10, 10, 4, 4, 0x0000 );
 				}
-				scope_draw( &scope, &lcd );
+				scope_draw( &scope, &lcd, is_collapsed );
 				osSemaphoreRelease( semaphoreLcdHandle );
 			}
 			if( single )
@@ -648,7 +619,12 @@ enum eQueueUiWavegenType
 void StartTaskWavegen(void *argument)
 {
 	static tWaveGen wavegen = {0};
-
+	int is_visible = 0;
+	int is_visible_bck = 0;
+	int ch1_is_enabled = 0;
+	int ch2_is_enabled = 0;
+	int ch1_is_enabled_bck = 0;
+	int ch2_is_enabled_bck = 0;
 	struct sQueueUiWavegen msgUiWavegen = {0};
 
 	wavegen_init_ll( &wavegen,
@@ -664,19 +640,19 @@ void StartTaskWavegen(void *argument)
 	);
 
 	wavegen_config_horizontal( &wavegen, WAVEGEN_CHANNEL_1, 1000 );
-	wavegen_config_vertical( &wavegen, WAVEGEN_CHANNEL_1, WAVEGEN_TYPE_SINE, 1000, 1000, 0 );
+	wavegen_config_vertical( &wavegen, WAVEGEN_CHANNEL_1, WAVEGEN_TYPE_SINE, 2048, 2000, 0 );
 
 	wavegen_config_horizontal( &wavegen, WAVEGEN_CHANNEL_2, 1000 );
-	wavegen_config_vertical( &wavegen, WAVEGEN_CHANNEL_2, WAVEGEN_TYPE_SINE, 2000, 2000, 0 );
+	wavegen_config_vertical( &wavegen, WAVEGEN_CHANNEL_2, WAVEGEN_TYPE_SINE, 2048, 2000, 0 );
 
 	wavegen_start( &wavegen, WAVEGEN_CHANNEL_1 );
 	wavegen_start( &wavegen, WAVEGEN_CHANNEL_2 );
 
-	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
-	{
-		wavegen_draw( &wavegen, &lcd );
-		osSemaphoreRelease( semaphoreLcdHandle );
-	}
+	//if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+	//{
+	//	wavegen_draw( &wavegen, &lcd );
+	//	osSemaphoreRelease( semaphoreLcdHandle );
+	//}
 
 	TickType_t xLastWakeTime;
 	const TickType_t xFrequency = 1;
@@ -684,13 +660,28 @@ void StartTaskWavegen(void *argument)
 	for(;;)
 	{
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
+		is_visible = ui.wavegen.is_visible;
+		ch1_is_enabled = ui.wavegen.waveforms[0].enabled;
+		ch2_is_enabled = ui.wavegen.waveforms[1].enabled;
+
+		if( is_visible && !is_visible_bck )
+		{
+			if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+			{
+				wavegen_draw( &wavegen, &lcd );
+				osSemaphoreRelease( semaphoreLcdHandle );
+			}
+		}
 
 		if( osMessageQueueGet(queueUiWavegenHandle, &msgUiWavegen, NULL, 0U) == osOK )
 		{
-			if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
+			if( is_visible )
 			{
-				wavegen_erase( &wavegen, &lcd );
-				osSemaphoreRelease( semaphoreLcdHandle );
+				if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
+				{
+					wavegen_erase( &wavegen, &lcd );
+					osSemaphoreRelease( semaphoreLcdHandle );
+				}
 			}
 
 			switch( msgUiWavegen.type )
@@ -721,12 +712,27 @@ void StartTaskWavegen(void *argument)
 					);
 					break;
 			}
-
-			if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
+			if( is_visible )
 			{
-				wavegen_draw( &wavegen, &lcd );
+				if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+				{
+					wavegen_draw( &wavegen, &lcd );
+					osSemaphoreRelease( semaphoreLcdHandle );
+				}
+			}
+		}
+
+		if( !is_visible && is_visible_bck )
+		{
+			if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+			{
+				wavegen_erase( &wavegen, &lcd );
 				osSemaphoreRelease( semaphoreLcdHandle );
 			}
 		}
+
+		is_visible_bck = is_visible;
+
+
 	}
 }

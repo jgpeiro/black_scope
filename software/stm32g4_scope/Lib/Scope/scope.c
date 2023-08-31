@@ -1210,7 +1210,7 @@ void lcd_clear( tLcd *pThis, uint16_t color );
 void lcd_bmp( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *buf );
 */
 
-void scope_draw_acquire( tScope *pThis, tLcd *pLcd )
+void scope_draw_acquire( tScope *pThis, tLcd *pLcd, int is_collapsed )
 {
 
 }
@@ -1233,37 +1233,43 @@ int16_t map_value(int32_t value, int32_t in_min, int32_t in_max, int32_t out_min
     return (int16_t)((value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min);
 }
 
-void scope_draw_horizontal(tScope_Horizontal *pThis, tLcd *pLcd, int len)
+void scope_draw_horizontal(tScope_Horizontal *pThis, tLcd *pLcd, int len, int is_collapsed )
 {
 	static int last_offset = 0;
 	int offset = (pThis->offset*pLcd->width)/len;
-	//	lcd_rect( pLcd, last_offset/2+pLcd->width/2, 0, 1, pLcd->height, LCD_COLOR_BLACK );
-	//	lcd_rect( pLcd, offset/2+pLcd->width/2, 0, 1, pLcd->height, 0x07FF );
-	lcd_rect( pLcd, last_offset/4+pLcd->width/4, 0, 1, pLcd->height, LCD_COLOR_BLACK );
-	lcd_rect( pLcd, offset/4+pLcd->width/4, 0, 1, pLcd->height, 0x07FF );
+	if( is_collapsed )
+	{
+		lcd_rect( pLcd, last_offset/4+pLcd->width/4, 0, 1, pLcd->height, LCD_COLOR_BLACK );
+		lcd_rect( pLcd, offset/4+pLcd->width/4, 0, 1, pLcd->height, SCOPE_COLOR_HORIZONTAL );
+	}
+	else
+	{
+		lcd_rect( pLcd, last_offset/2+pLcd->width/2, 0, 1, pLcd->height, LCD_COLOR_BLACK );
+		lcd_rect( pLcd, offset/2+pLcd->width/2, 0, 1, pLcd->height, SCOPE_COLOR_HORIZONTAL );
+	}
 	last_offset = offset;
 }
 
-void scope_draw_vertical( tScope_Vertical *pThis, tLcd *pLcd )
+void scope_draw_vertical( tScope_Vertical *pThis, tLcd *pLcd, int is_collapsed )
 {
 	static int last_offset = 0;
 	int offset = pThis->offset;
 	float scale = pLcd->height/4096.0f;
-	lcd_rect( pLcd, 0, last_offset*scale, pLcd->width/2, 1, 0x0000 );
-	lcd_rect( pLcd, 0, offset*scale, pLcd->width/2, 1, LCD_COLOR_GREEN );
+	lcd_rect( pLcd, 0, last_offset*scale, pLcd->width/2, 1, LCD_COLOR_BLACK );
+	lcd_rect( pLcd, 0, offset*scale, pLcd->width/2, 1, SCOPE_COLOR_VERTICAL );
 	last_offset = offset;
 }
 
-void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd )
+void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd, int is_collapsed )
 {
 	static int last_level = 0;
 	int level = pThis->level;
-	lcd_rect( pLcd, 0, pLcd->height-((last_level)*pLcd->height)/4096, pLcd->width/2, 1, 0x0000 );
-	lcd_rect( pLcd, 0, pLcd->height-((level)*pLcd->height)/4096, pLcd->width/2, 1, 0x07FF );
+	lcd_rect( pLcd, 0, pLcd->height-((last_level)*pLcd->height)/4096, pLcd->width/2, 1, LCD_COLOR_BLACK );
+	lcd_rect( pLcd, 0, pLcd->height-((level)*pLcd->height)/4096, pLcd->width/2, 1, SCOPE_COLOR_TRIGGER );
 	last_level = level;
 }
 
-void scope_draw_grid( tScope *pThis, tLcd *pLcd )
+void scope_draw_grid( tScope *pThis, tLcd *pLcd, int is_collapsed )
 {
 	static int i = 10; // force draw the first time.
 	if( i < 10 )
@@ -1289,28 +1295,17 @@ void scope_draw_grid( tScope *pThis, tLcd *pLcd )
 	lcd_rect( pLcd, 0/2, pLcd->height, pLcd->width/2, 1, 0x8410 );
 }
 
-void _scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd )
+void scope_draw( tScope *pThis, tLcd *pLcd, int is_collapsed )
 {
-	static int last_level = 0;
-	int level = pThis->level;
-	float scale = pLcd->height/4096.0f;
-	lcd_rect( pLcd, 0, last_level*scale, pLcd->width/2, 1, 0x0000 );
-	lcd_rect( pLcd, 0, level*scale, pLcd->width/2, 1, LCD_COLOR_GREEN );
-	last_level = level;
-}
-
-
-void scope_draw( tScope *pThis, tLcd *pLcd )
-{
-	scope_draw_grid( pThis, pLcd );
-	//scope_draw_acquire( pThis, pLcd );
-	scope_draw_horizontal( &pThis->horizontal, pLcd, pThis->len );
-	scope_draw_vertical( &pThis->vertical, pLcd );
-	scope_draw_trigger( &pThis->trigger, pLcd );
-	scope_draw_signals( pThis, pLcd );
+	scope_draw_grid( pThis, pLcd, is_collapsed );
+	//scope_draw_acquire( pThis, pLcd, is_collapsed );
+	scope_draw_horizontal( &pThis->horizontal, pLcd, pThis->len, is_collapsed );
+	scope_draw_vertical( &pThis->vertical, pLcd, is_collapsed );
+	scope_draw_trigger( &pThis->trigger, pLcd, is_collapsed );
+	scope_draw_signals( pThis, pLcd, is_collapsed );
 }
 //extern uint32_t DMA1_Channel1_CNDTR;
-void scope_draw_signals( tScope *pThis, tLcd *pLcd )
+void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 {
 	{
 		uint16_t i;
@@ -1392,7 +1387,7 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd )
 	}
 }
 
-void scope_clear( tScope *pThis, tLcd *pLcd )
+void scope_clear( tScope *pThis, tLcd *pLcd, int is_collapsed )
 {
 	uint16_t i;
 	if( pThis->cnt & 0x01 )
