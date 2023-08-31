@@ -200,7 +200,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the semaphores(s) */
   /* creation of semaphoreLcd */
-  //semaphoreLcdHandle = osSemaphoreNew(1, 0, &semaphoreLcd_attributes);
+  //semaphoreLcdHandle = osSemaphoreNew(1, 1, &semaphoreLcd_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
 	semaphoreLcdHandle = osSemaphoreNew(1, 0, &semaphoreLcd_attributes);

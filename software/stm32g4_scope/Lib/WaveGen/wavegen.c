@@ -9,6 +9,33 @@
 #include <stdlib.h>
 #include "wavegen.h"
 
+#include "buffer.h"
+extern tBuffer usb_rx;
+#define BUFFER_SIZE 512
+
+#define DAC_BUFFER_LEN 	(512)
+
+
+extern uint16_t dac1_buffer[DAC_BUFFER_LEN];
+extern uint16_t dac2_buffer[DAC_BUFFER_LEN];
+
+void HAL_DAC_ConvHalfCpltCallback( DAC_HandleTypeDef* hadc )
+{
+    // if new block is available, copy to the dac buffer.
+    if( buffer_size( &usb_rx ) >= BUFFER_SIZE / 2 )
+    {
+        buffer_pop( &usb_rx, dac2_buffer, BUFFER_SIZE / 2 );
+    }
+}
+void HAL_DAC_ConvCpltCallback( DAC_HandleTypeDef* hadc )
+{
+    // if new block is available, copy to the dac buffer.
+    if( buffer_size( &usb_rx ) >= BUFFER_SIZE / 2 )
+    {
+        buffer_pop( &usb_rx, dac2_buffer + BUFFER_SIZE / 2, BUFFER_SIZE / 2 );
+    }
+}
+
 void wavegen_init_ll( tWaveGen *pThis,
 	DAC_HandleTypeDef *hdac,
 	TIM_HandleTypeDef *htim1,
