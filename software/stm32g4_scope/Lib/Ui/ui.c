@@ -221,15 +221,15 @@ void ui_build_horizontal2( tUi_Horizontal *pThis, struct nk_context *pCtx )
     	if( nk_property_keypad( pCtx, "Offset", -9999, &pThis->offset, 9999, &show_keypad_offset ) )
     	{
     		msgUiScope.type = QUEUE_UI_SCOPE_TYPE_HORIZONTAL;
-            msgUiScope.data[0] =-pThis->offset+512;
-    		msgUiScope.data[1] = pThis->scale*1000;
+            msgUiScope.data[0] = pThis->offset;
+    		msgUiScope.data[1] = pThis->scale;
             osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
         }
     	if( nk_property_keypad( pCtx, "Scale", 0, &pThis->scale, 9999, &show_keypad_scale ) )
     	{
     		msgUiScope.type = QUEUE_UI_SCOPE_TYPE_HORIZONTAL;
-            msgUiScope.data[0] =-pThis->offset+512;
-    		msgUiScope.data[1] = pThis->scale*1000;
+            msgUiScope.data[0] = pThis->offset;
+    		msgUiScope.data[1] = pThis->scale;
             osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
     	}
         nk_tree_pop( pCtx );

@@ -261,7 +261,7 @@ void scope_init( tScope *pThis,
 );
 
 void scope_config_horizontal( tScope *pThis, int offset, int scale );
-void scope_config_vertical( tScope *pThis, int gain1, int gain2, int gain3, int gain4, int offset );
+void scope_config_vertical( tScope *pThis, int offset, int scale1, int scale2, int scale3, int scale4 );
 void scope_config_trigger( tScope *pThis, int channel, int mode, int level, int slope );
 
 void scope_start( tScope *pThis, uint8_t continuous );

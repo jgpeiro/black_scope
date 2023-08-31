@@ -976,57 +976,83 @@ void scope_config_horizontal( tScope *pThis, int offset, int scale )
 	pThis->horizontal.htim_clock->Init.Period = 2-1;
     HAL_TIM_Base_Init( pThis->horizontal.htim_clock );
 	pThis->horizontal.htim_stop->Init.Prescaler = (170e6 / (scale*1000))/2 - 1;
-	pThis->horizontal.htim_stop->Init.Period = pThis->len - 1;
+	pThis->horizontal.htim_stop->Init.Period = pThis->len + offset - 1;
     HAL_TIM_Base_Init( pThis->horizontal.htim_stop );
 
     TIM_OC_InitTypeDef sConfigOC = {0};
     sConfigOC.OCMode = TIM_OCMODE_TIMING;
-    sConfigOC.Pulse = pThis->len - 1;
+    sConfigOC.Pulse = pThis->len + offset - 1;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     HAL_TIM_OC_ConfigChannel(pThis->horizontal.htim_stop, &sConfigOC, TIM_CHANNEL_1);
 }
 
-const uint32_t gain_to_opamp_follower_gain[4] = {
-	1,//OPAMP_FOLLOWER_GAIN_2,
-	1,//OPAMP_FOLLOWER_GAIN_4,
-	1,//OPAMP_FOLLOWER_GAIN_8,
-	1,//OPAMP_FOLLOWER_GAIN_16
+const uint32_t PgaGain_from_gain[6] = {
+	OPAMP_PGA_GAIN_2_OR_MINUS_1,
+	OPAMP_PGA_GAIN_4_OR_MINUS_3,
+	OPAMP_PGA_GAIN_8_OR_MINUS_7,
+	OPAMP_PGA_GAIN_16_OR_MINUS_15,
+	OPAMP_PGA_GAIN_32_OR_MINUS_31,
+	OPAMP_PGA_GAIN_64_OR_MINUS_63,
 };
 
-void scope_config_vertical( tScope *pThis, int gain1, int gain2, int gain3, int gain4, int offset )
+void scope_config_vertical( tScope *pThis, int offset, int scale1, int scale2, int scale3, int scale4 )
 {
-	pThis->vertical.gain1 = gain1;
-	pThis->vertical.gain2 = gain2;
-	pThis->vertical.gain3 = gain3;
-	pThis->vertical.gain4 = gain4;
 	pThis->vertical.offset = offset;
+
+	pThis->vertical.gain1 = scale1;
+	pThis->vertical.gain2 = scale2;
+	pThis->vertical.gain3 = scale3;
+	pThis->vertical.gain4 = scale4;
 	//pThis->vertical_gain1 = gain1;
 	//pThis->vertical_gain2 = gain2;
 	//pThis->vertical_gain3 = gain3;
 	//pThis->vertical_gain4 = gain4;
 	//pThis->vertical_offset = offset;
+	HAL_DAC_Stop(pThis->vertical.hdac, DAC_CHANNEL_1);
 	HAL_DAC_SetValue( pThis->vertical.hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, offset );
 	HAL_DAC_Start( pThis->vertical.hdac, DAC_CHANNEL_1 );
 	//HAL_DAC_SetValue( pThis->vertical.hdac, DAC_CHANNEL_2, DAC_ALIGN_12B_R, offset );
 	//HAL_DAC_SetValue( pThis->vertical.hdac, DAC_CHANNEL_3, DAC_ALIGN_12B_R, offset );
 	//HAL_DAC_SetValue( pThis->vertical.hdac, DAC_CHANNEL_4, DAC_ALIGN_12B_R, offset );
-	HAL_OPAMP_Stop( pThis->vertical.hopamp1 );
-	HAL_OPAMP_Stop( pThis->vertical.hopamp2 );
-	HAL_OPAMP_Stop( pThis->vertical.hopamp3 );
-	HAL_OPAMP_Stop( pThis->vertical.hopamp4 );
+	//HAL_OPAMP_Stop( pThis->vertical.hopamp1 );
+	//HAL_OPAMP_Stop( pThis->vertical.hopamp2 );
+	//HAL_OPAMP_Stop( pThis->vertical.hopamp3 );
+	//HAL_OPAMP_Stop( pThis->vertical.hopamp4 );
 	//HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp1 );
 	//HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp2 );
 	//HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp3 );
 	//HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp4 );
-	HAL_OPAMP_Start( pThis->vertical.hopamp1 );
-	HAL_OPAMP_Start( pThis->vertical.hopamp2 );
-	HAL_OPAMP_Start( pThis->vertical.hopamp3 );
-	HAL_OPAMP_Start( pThis->vertical.hopamp4 );
+
+	//HAL_OPAMP_Start( pThis->vertical.hopamp1 );
+	//HAL_OPAMP_Start( pThis->vertical.hopamp2 );
+	//HAL_OPAMP_Start( pThis->vertical.hopamp3 );
+	//HAL_OPAMP_Start( pThis->vertical.hopamp4 );
+
 	//HAL_OPAMP_SetGain( pThis->vertical.hopamp1, gain_to_opamp_follower_gain[gain1] );
 	//HAL_OPAMP_SetGain( pThis->vertical.hopamp2, gain_to_opamp_follower_gain[gain2] );
 	//HAL_OPAMP_SetGain( pThis->vertical.hopamp3, gain_to_opamp_follower_gain[gain3] );
 	//HAL_OPAMP_SetGain( pThis->vertical.hopamp4, gain_to_opamp_follower_gain[gain4] );
+
+	pThis->vertical.hopamp1->Init.PgaGain = PgaGain_from_gain[scale1];
+    pThis->vertical.hopamp2->Init.PgaGain = PgaGain_from_gain[scale2];
+    pThis->vertical.hopamp3->Init.PgaGain = PgaGain_from_gain[scale3];
+    pThis->vertical.hopamp4->Init.PgaGain = PgaGain_from_gain[scale4];
+
+    HAL_OPAMP_Stop( pThis->vertical.hopamp1 );
+    HAL_OPAMP_Stop( pThis->vertical.hopamp2 );
+    HAL_OPAMP_Stop( pThis->vertical.hopamp3 );
+    HAL_OPAMP_Stop( pThis->vertical.hopamp4 );
+
+    HAL_OPAMP_Init( pThis->vertical.hopamp1 );
+    HAL_OPAMP_Init( pThis->vertical.hopamp2 );
+    HAL_OPAMP_Init( pThis->vertical.hopamp3 );
+    HAL_OPAMP_Init( pThis->vertical.hopamp4 );
+
+	HAL_OPAMP_Start( pThis->vertical.hopamp1 );
+	HAL_OPAMP_Start( pThis->vertical.hopamp2 );
+	HAL_OPAMP_Start( pThis->vertical.hopamp3 );
+	HAL_OPAMP_Start( pThis->vertical.hopamp4 );
 }
 
 void scope_config_trigger( tScope *pThis, int channel, int mode, int level, int slope )
@@ -1239,13 +1265,13 @@ void scope_draw_horizontal(tScope_Horizontal *pThis, tLcd *pLcd, int len, int is
 	int offset = (pThis->offset*pLcd->width)/len;
 	if( is_collapsed )
 	{
-		lcd_rect( pLcd, last_offset/4+pLcd->width/4, 0, 1, pLcd->height, LCD_COLOR_BLACK );
-		lcd_rect( pLcd, offset/4+pLcd->width/4, 0, 1, pLcd->height, SCOPE_COLOR_HORIZONTAL );
+		lcd_rect( pLcd, last_offset/2+pLcd->width/2, 0, 1, pLcd->height, LCD_COLOR_BLACK );
+		lcd_rect( pLcd, offset/2+pLcd->width/2, 0, 1, pLcd->height, SCOPE_COLOR_HORIZONTAL );
 	}
 	else
 	{
-		lcd_rect( pLcd, last_offset/2+pLcd->width/2, 0, 1, pLcd->height, LCD_COLOR_BLACK );
-		lcd_rect( pLcd, offset/2+pLcd->width/2, 0, 1, pLcd->height, SCOPE_COLOR_HORIZONTAL );
+		lcd_rect( pLcd, last_offset/4+pLcd->width/4, 0, 1, pLcd->height, LCD_COLOR_BLACK );
+		lcd_rect( pLcd, offset/4+pLcd->width/4, 0, 1, pLcd->height, SCOPE_COLOR_HORIZONTAL );
 	}
 	last_offset = offset;
 }
@@ -1338,7 +1364,7 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 			{
 				if( 1 )
 				{
-					n_bck = trigger_bck + i;
+					n_bck = trigger_bck + i - pThis->horizontal.offset/2;
 					if( n_bck < 0 )
 					{
 						n_bck += pThis->len;
@@ -1364,7 +1390,7 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 	                y7_bck = y7;
 	                y8_bck = y8;
 				}
-				n = trigger + i;
+				n = trigger + i - pThis->horizontal.offset/2;
 				if( n < 0 )
 				{
 					n += pThis->len;
@@ -1397,7 +1423,7 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 			{
 				if( 1 )
 				{
-					n_bck = trigger_bck + i;
+					n_bck = trigger_bck + i - pThis->horizontal.offset/2;
 					if( n_bck < 0 )
 					{
 						n_bck += pThis->len;
@@ -1424,7 +1450,7 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 	                y4_bck = y4;
 				}
 
-				n = trigger + i;
+				n = trigger + i - pThis->horizontal.offset/2;
 				if( n < 0 )
 				{
 					n += pThis->len;
