@@ -104,7 +104,7 @@ void StartTaskWavegen(void *argument)
 		{
 			if( is_visible )
 			{
-				if( osSemaphoreAcquire( semaphoreLcdHandle, 0 ) == osOK )
+				if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
 				{
 					wavegen_erase( &wavegen, &lcd );
 					osSemaphoreRelease( semaphoreLcdHandle );

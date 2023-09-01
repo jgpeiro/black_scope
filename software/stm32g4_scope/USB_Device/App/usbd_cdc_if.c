@@ -272,7 +272,7 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   */
 
 #include "buffer.h"
-#define BUFFER_SIZE 512
+#define BUFFER_SIZE (sizeof(uint16_t)*512)
 uint8_t usb_rx_buffer[BUFFER_SIZE];
 tBuffer usb_rx = {
     .pBuffer = usb_rx_buffer,

@@ -11,9 +11,10 @@
 
 #include "buffer.h"
 extern tBuffer usb_rx;
-#define BUFFER_SIZE 512
+
 
 #define DAC_BUFFER_LEN 	(512)
+#define BUFFER_SIZE (sizeof(uint16_t)*DAC_BUFFER_LEN)
 
 
 extern uint16_t dac1_buffer[DAC_BUFFER_LEN];
@@ -236,12 +237,12 @@ void wavegen_erase( tWaveGen *pThis, tLcd *pLcd )
 void wavegen_stroque( tWaveGen *pThis, tLcd *pLcd, uint16_t color1, uint16_t color2 )
 {
 	uint16_t i;
-	const float scale = 320/4096.0f;
-	int pLcd_height = pLcd->height;
+	int offset = pLcd->height;
+	float scale = -320/4096.0f;
 	for( i = 0; i < pThis->len; i++ )
 	{
-		lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer1[i]*scale, color1 );
-		lcd_set_pixel( pLcd, i/2, pLcd_height-pThis->buffer2[i]*scale, color2 );
+		lcd_set_pixel( pLcd, i/2, scale*pThis->buffer1[i]+offset, color1 );
+		lcd_set_pixel( pLcd, i/2, scale*pThis->buffer2[i]+offset, color2 );
 	}
 }
 

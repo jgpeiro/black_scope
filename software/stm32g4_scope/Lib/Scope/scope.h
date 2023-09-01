@@ -276,6 +276,20 @@ void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd, int is_collapsed );
 void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed );
 void scope_clear( tScope *pThis, tLcd *pLcd, int is_collapsed );
 
+void scope_draw( tScope *pThis, tLcd *pLcd, int is_collapsed );
+void scope_erase( tScope *pThis, tLcd *pLcd, int is_collapsed );
+void scope_stroque( tScope *pThis, tLcd *pLcd, uint16_t color_h, uint16_t color_v, uint16_t color_t, int is_collapsed );
+
+void scope_draw_acquire( tScope *pThis, tLcd *pLcd, int is_collapsed );
+void scope_erase_acquire( tScope *pThis, tLcd *pLcd, int is_collapsed );
+void scope_stroque_acquire( tScope *pThis, tLcd *pLcd, uint16_t color_h, uint16_t color_v, uint16_t color_t, int is_collapsed );
+
+//void scope_draw_horizontal( tScope_Horizontal *pThis, tLcd *pLcd, int is_collapsed );
+//void scope_erase_horizontal( tScope_Horizontal *pThis, tLcd *pLcd, int is_collapsed );
+//void scope_stroque_horizontal( tScope_Horizontal *pThis, tLcd *pLcd, uint16_t color_h, uint16_t color_v, uint16_t color_t, int is_collapsed );
+
+
+
 uint8_t scope_is_continuous( tScope *pThis );
 uint8_t scope_is_running( tScope *pThis );
 uint8_t scope_is_busy( tScope *pThis );
