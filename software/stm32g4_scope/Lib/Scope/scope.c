@@ -1390,31 +1390,35 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 	                y7_bck = y7;
 	                y8_bck = y8;
 				}
-				n = trigger + i - pThis->horizontal.offset/2;
-				if( n < 0 )
-				{
-					n += pThis->len;
-				}
-				else if( n >= pThis->len )
-				{
-					n -= pThis->len;
-				}
 
-				x = i/2;
-                y1 = pLcd_height-pThis->buffer1[n]*scale;
-				y2 = pLcd_height-pThis->buffer2[n]*scale;
-                y3 = pLcd_height-pThis->buffer3[n]*scale;
-                y4 = pLcd_height-pThis->buffer4[n]*scale;
-                
-                lcd_rect( pLcd, x, MIN(y1,y1_bck), 1, ABS(y1-y1_bck)+1, SCOPE_COLOR_CH1 );
-                lcd_rect( pLcd, x, MIN(y2,y2_bck), 1, ABS(y2-y2_bck)+1, SCOPE_COLOR_CH2 );
-                lcd_rect( pLcd, x, MIN(y3,y3_bck), 1, ABS(y3-y3_bck)+1, SCOPE_COLOR_CH3 );
-                lcd_rect( pLcd, x, MIN(y4,y4_bck), 1, ABS(y4-y4_bck)+1, SCOPE_COLOR_CH4 );
-                
-                y1_bck = y1;
-                y2_bck = y2;
-                y3_bck = y3;
-                y4_bck = y4;
+				if( i > 2 )
+				{
+					n = trigger + (i-2) - pThis->horizontal.offset/2;
+					if( n < 0 )
+					{
+						n += pThis->len;
+					}
+					else if( n >= pThis->len )
+					{
+						n -= pThis->len;
+					}
+
+					x = (i-2)/2;
+					y1 = pLcd_height-pThis->buffer1[n]*scale;
+					y2 = pLcd_height-pThis->buffer2[n]*scale;
+					y3 = pLcd_height-pThis->buffer3[n]*scale;
+					y4 = pLcd_height-pThis->buffer4[n]*scale;
+
+					lcd_rect( pLcd, x, MIN(y1,y1_bck), 1, ABS(y1-y1_bck)+1, SCOPE_COLOR_CH1 );
+					lcd_rect( pLcd, x, MIN(y2,y2_bck), 1, ABS(y2-y2_bck)+1, SCOPE_COLOR_CH2 );
+					lcd_rect( pLcd, x, MIN(y3,y3_bck), 1, ABS(y3-y3_bck)+1, SCOPE_COLOR_CH3 );
+					lcd_rect( pLcd, x, MIN(y4,y4_bck), 1, ABS(y4-y4_bck)+1, SCOPE_COLOR_CH4 );
+
+					y1_bck = y1;
+					y2_bck = y2;
+					y3_bck = y3;
+					y4_bck = y4;
+				}
 			}
 		}
 		else
@@ -1450,31 +1454,34 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 	                y4_bck = y4;
 				}
 
-				n = trigger + i - pThis->horizontal.offset/2;
-				if( n < 0 )
+				if( i > 2 )
 				{
-					n += pThis->len;
+					n = trigger + (i-2) - pThis->horizontal.offset/2;
+					if( n < 0 )
+					{
+						n += pThis->len;
+					}
+					else if( n >= pThis->len )
+					{
+						n -= pThis->len;
+					}
+
+					x = (i-2)/2;
+					y5 = pLcd_height-pThis->buffer5[n]*scale;
+					y6 = pLcd_height-pThis->buffer6[n]*scale;
+					y7 = pLcd_height-pThis->buffer7[n]*scale;
+					y8 = pLcd_height-pThis->buffer8[n]*scale;
+
+					lcd_rect( pLcd, x, MIN(y5,y5_bck), 1, ABS(y5-y5_bck)+1, SCOPE_COLOR_CH1 );
+					lcd_rect( pLcd, x, MIN(y6,y6_bck), 1, ABS(y6-y6_bck)+1, SCOPE_COLOR_CH2 );
+					lcd_rect( pLcd, x, MIN(y7,y7_bck), 1, ABS(y7-y7_bck)+1, SCOPE_COLOR_CH3 );
+					lcd_rect( pLcd, x, MIN(y8,y8_bck), 1, ABS(y8-y8_bck)+1, SCOPE_COLOR_CH4 );
+
+					y5_bck = y5;
+					y6_bck = y6;
+					y7_bck = y7;
+					y8_bck = y8;
 				}
-				else if( n >= pThis->len )
-				{
-					n -= pThis->len;
-				}
-
-				x = i/2;
-				y5 = pLcd_height-pThis->buffer5[n]*scale;
-				y6 = pLcd_height-pThis->buffer6[n]*scale;
-                y7 = pLcd_height-pThis->buffer7[n]*scale;
-                y8 = pLcd_height-pThis->buffer8[n]*scale;
-
-                lcd_rect( pLcd, x, MIN(y5,y5_bck), 1, ABS(y5-y5_bck)+1, SCOPE_COLOR_CH1 );
-                lcd_rect( pLcd, x, MIN(y6,y6_bck), 1, ABS(y6-y6_bck)+1, SCOPE_COLOR_CH2 );
-                lcd_rect( pLcd, x, MIN(y7,y7_bck), 1, ABS(y7-y7_bck)+1, SCOPE_COLOR_CH3 );
-                lcd_rect( pLcd, x, MIN(y8,y8_bck), 1, ABS(y8-y8_bck)+1, SCOPE_COLOR_CH4 );
-
-                y5_bck = y5;
-                y6_bck = y6;
-                y7_bck = y7;
-                y8_bck = y8;
 			}
 		}
 		trigger_bck = trigger;
