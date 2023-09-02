@@ -232,7 +232,7 @@ void scope_stroque2_horizontal( tScope_Horizontal *pThis, tLcd *pLcd, uint16_t c
     int w = 0;
     int h = 0;
 
-    x = pThis->offset/4+120;
+    x = -pThis->offset/4+120+10;
     y = 0;
     h = pLcd->height;
 
@@ -388,6 +388,7 @@ void StartTaskScope(void *argument)
     int horizontal_is_visible = 0;
     int vertical_is_visible = 0;
     int trigger_is_visible = 0;
+    int slow_cnt = 0;
     //int horizontal_is_visible_bck = 0;
     //int vertical_is_visible_bck = 0;
     //int trigger_is_visible_bck = 0;
@@ -508,9 +509,9 @@ void StartTaskScope(void *argument)
 					if( msgScope.data[1] == 3 )
 						trigger_is_visible = msgScope.data[0];
 					break;
-				//case QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED:
-				//	is_collapsed = msgScope.data[0];
-				//	break;
+				case QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED:
+					is_collapsed = msgScope.data[0];
+					break;
 				default:
 					break;
 			}
@@ -566,11 +567,15 @@ void StartTaskScope(void *argument)
         	b = a;
             scope_stop( &scope );
 
-            if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
-			{
-            	scope_draw_grid( &scope, &lcd, is_collapsed );
-            	osSemaphoreRelease( semaphoreLcdHandle );
-			}
+
+            if( slow_cnt == 0 )
+            {
+				if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+				{
+					scope_draw_grid( &scope, &lcd, is_collapsed );
+					osSemaphoreRelease( semaphoreLcdHandle );
+				}
+            }
 
 			if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
 			{
@@ -585,6 +590,25 @@ void StartTaskScope(void *argument)
 				scope_draw_signals( &scope, &lcd, is_collapsed );
 				osSemaphoreRelease( semaphoreLcdHandle );
 			}
+
+            if( slow_cnt == 0 )
+            {
+				if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+				{
+					//scope_draw2( &scope, &lcd, is_collapsed );
+					scope_draw2_acquire( &scope, &lcd, is_collapsed );
+					if( horizontal_is_visible )
+						scope_draw2_horizontal( &scope.horizontal, &lcd, is_collapsed );
+					if( vertical_is_visible )
+						scope_draw2_vertical( &scope.vertical, &lcd, is_collapsed );
+					if( trigger_is_visible )
+						scope_draw2_trigger( &scope.trigger, &lcd, is_collapsed );
+					osSemaphoreRelease( semaphoreLcdHandle );
+				}
+            }
+            slow_cnt = (slow_cnt+1)%10;
+
+
 			if( single )
 			{
 				running = 0;

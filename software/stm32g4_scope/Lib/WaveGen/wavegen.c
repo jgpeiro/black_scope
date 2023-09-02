@@ -20,12 +20,19 @@ extern tBuffer usb_rx;
 extern uint16_t dac1_buffer[DAC_BUFFER_LEN];
 extern uint16_t dac2_buffer[DAC_BUFFER_LEN];
 
+#include "usbd_cdc_if.h"
+extern USBD_HandleTypeDef hUsbDeviceFS;
+extern uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
+
 void HAL_DACEx_ConvHalfCpltCallbackCh2(DAC_HandleTypeDef *hdac)
 {
     // if new block is available, copy to the dac buffer.
     if( buffer_size( &usb_rx ) >= sizeof(dac2_buffer) / 2 )
     {
         buffer_pop( &usb_rx, dac2_buffer, sizeof(dac2_buffer) / 2 );
+
+        USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
+        USBD_CDC_ReceivePacket(&hUsbDeviceFS);
     }
 }
 void HAL_DACEx_ConvCpltCallbackCh2(DAC_HandleTypeDef *hdac)
@@ -34,6 +41,9 @@ void HAL_DACEx_ConvCpltCallbackCh2(DAC_HandleTypeDef *hdac)
     if( buffer_size( &usb_rx ) >= sizeof(dac2_buffer) / 2 )
     {
         buffer_pop( &usb_rx, dac2_buffer + DAC_BUFFER_LEN / 2, sizeof(dac2_buffer) / 2 );
+
+        USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
+        USBD_CDC_ReceivePacket(&hUsbDeviceFS);
     }
 }
 

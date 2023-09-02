@@ -250,10 +250,10 @@ void DMA1_Channel5_IRQHandler(void)
 void ADC1_2_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC1_2_IRQn 0 */
-	if( pScope->state == SCOPE_STATE_WAIT_FOR_TRIGGER )
-	{
-	  pScope->dma_cndtr = DMA1_Channel1->CNDTR;
-	}
+	//if( pScope->state == SCOPE_STATE_WAIT_FOR_TRIGGER )
+	//{
+	//  pScope->dma_cndtr = DMA1_Channel1->CNDTR;
+	//}
   /* USER CODE END ADC1_2_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc1);
   /* USER CODE BEGIN ADC1_2_IRQn 1 */
@@ -295,7 +295,10 @@ void TIM1_UP_TIM16_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-
+	if( pScope->state == SCOPE_STATE_WAIT_FOR_STOP )
+	{
+	  pScope->dma_cndtr = DMA1_Channel1->CNDTR;
+	}
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */

@@ -280,15 +280,24 @@ tBuffer usb_rx = {
     .head = 0,
     .tail = 0
 };
+int overflow = 0;
+
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
     uint16_t free = buffer_free( &usb_rx );
     uint16_t toCopy = ( *Len < free ) ? *Len : free;
+    if( toCopy < *Len )
+    {
+    	overflow += 1;
+    }
     buffer_push( &usb_rx, Buf, toCopy );
 
-  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
-  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+    if( free > 512 )
+    {
+    	USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
+    	USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+    }
   return (USBD_OK);
   /* USER CODE END 6 */
 }

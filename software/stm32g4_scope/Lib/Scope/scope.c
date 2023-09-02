@@ -1297,16 +1297,16 @@ void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd, int is_collapsed )
 
 void scope_draw_grid( tScope *pThis, tLcd *pLcd, int is_collapsed )
 {
-	static int i = 10; // force draw the first time.
-	if( i < 10 )
-	{
-		i++;
-		return;
-	}
-	else
-	{
-		i = 0;
-	}
+	//static int i = 10; // force draw the first time.
+	//if( i < 10 )
+	//{
+	//	i++;
+	//	return;
+	//}
+	//else
+	//{
+	//	i = 0;
+	//}
 
 	for( int d = 0 ; d < pLcd->width ; d += 40 )
 	{
@@ -1357,14 +1357,16 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
         int16_t y8_bck = 0;
                 
 		//lcd_rect( pLcd, 0, 0, 240, 320, 0 );
-		trigger = pThis->len - pThis->dma_cndtr - pThis->len/2;
+		trigger = (pThis->len - pThis->dma_cndtr);// - pThis->len/2;
+		trigger = (pThis->len - pThis->dma_cndtr) - pThis->len/2 + pThis->len/2;
+		trigger = trigger%pThis->len;
 		if( pThis->cnt & 0x01 )
 		{
 			for( i = 0; i < pThis->len; i++ )
 			{
 				if( 1 )
 				{
-					n_bck = trigger_bck + i - pThis->horizontal.offset/2;
+					n_bck = trigger_bck + i;// - pThis->horizontal.offset/2;
 					if( n_bck < 0 )
 					{
 						n_bck += pThis->len;
@@ -1393,7 +1395,7 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 
 				if( i > 2 )
 				{
-					n = trigger + (i-2) - pThis->horizontal.offset/2;
+					n = trigger + (i-2);// - pThis->horizontal.offset/2;
 					if( n < 0 )
 					{
 						n += pThis->len;
@@ -1427,7 +1429,7 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 			{
 				if( 1 )
 				{
-					n_bck = trigger_bck + i - pThis->horizontal.offset/2;
+					n_bck = trigger_bck + i;// - pThis->horizontal.offset/2;
 					if( n_bck < 0 )
 					{
 						n_bck += pThis->len;
@@ -1456,7 +1458,7 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 
 				if( i > 2 )
 				{
-					n = trigger + (i-2) - pThis->horizontal.offset/2;
+					n = trigger + (i-2);// - pThis->horizontal.offset/2;
 					if( n < 0 )
 					{
 						n += pThis->len;

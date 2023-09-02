@@ -86,14 +86,14 @@ const osThreadAttr_t taskUi_attributes = {
 osThreadId_t taskScopeHandle;
 const osThreadAttr_t taskScope_attributes = {
   .name = "taskScope",
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityNormal2,
   .stack_size = 128 * 4
 };
 /* Definitions for taskWavegen */
 osThreadId_t taskWavegenHandle;
 const osThreadAttr_t taskWavegen_attributes = {
   .name = "taskWavegen",
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityNormal2,
   .stack_size = 128 * 4
 };
 /* Definitions for queueTscUi */
@@ -212,7 +212,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the queue(s) */
   /* creation of queueTscUi */
-  queueTscUiHandle = osMessageQueueNew (4, sizeof(struct sQueueTscUi), &queueTscUi_attributes);
+  queueTscUiHandle = osMessageQueueNew (1, sizeof(struct sQueueTscUi), &queueTscUi_attributes);
 
   /* creation of queueUiLcd */
   //queueUiLcdHandle = osMessageQueueNew (4, sizeof(struct sQueueUiLcd), &queueUiLcd_attributes);
