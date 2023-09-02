@@ -14,7 +14,9 @@ enum eQueueUiScopeType
 	QUEUE_UI_SCOPE_TYPE_STOP,
 	QUEUE_UI_SCOPE_TYPE_HORIZONTAL,
 	QUEUE_UI_SCOPE_TYPE_VERTICAL,
-	QUEUE_UI_SCOPE_TYPE_TRIGGER
+	QUEUE_UI_SCOPE_TYPE_TRIGGER,
+	QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY,
+	QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED
 };
 
 #include "FreeRTOS.h"
@@ -104,6 +106,7 @@ void nk_style_pop_color_channel( struct nk_context *pCtx )
 
 void ui_init( tUi *pThis )
 {
+	//pThis = (tUi){0};
 	pThis->acquire.run = 0;
 	pThis->acquire.single = 0;
 
@@ -124,7 +127,7 @@ void ui_init( tUi *pThis )
 	pThis->vertical.channels[3].coupling = 0;
 	pThis->vertical.channels[3].scale = 0;
 
-	pThis->trigger.level = 2048;
+	pThis->trigger.level = 3096;
 	pThis->trigger.mode = UI_TRIGGER_MODE_NORMAL;
 	pThis->trigger.slope = UI_TRIGGER_SLOPE_RISING;
 	pThis->trigger.source = 0;
@@ -149,7 +152,6 @@ void ui_build_acquire2( tUi_Acquire *pThis, struct nk_context *pCtx )
     struct sQueueUiScope msgUiScope = {0};
     tUi_Acquire tmp;
 
-	pThis->is_visible = 0;
     if( nk_tree_push( pCtx, NK_TREE_TAB, "Acquire", NK_MAXIMIZED) )
     {
     	pThis->is_visible = 1;
@@ -181,12 +183,12 @@ void ui_build_acquire2( tUi_Acquire *pThis, struct nk_context *pCtx )
                 {
                     msgUiScope.type = QUEUE_UI_SCOPE_TYPE_START;
                     msgUiScope.data[0] = 1;
-                    osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+                    osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
                 }
                 else
                 {
                     msgUiScope.type = QUEUE_UI_SCOPE_TYPE_STOP;
-                    osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+                    osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
                 }
         	}
 
@@ -196,7 +198,7 @@ void ui_build_acquire2( tUi_Acquire *pThis, struct nk_context *pCtx )
                 {
                     msgUiScope.type = QUEUE_UI_SCOPE_TYPE_START;
                     msgUiScope.data[0] = 0; // continuous
-                    osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+                    osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
 
                 	pThis->run = 0;
                 }
@@ -205,6 +207,20 @@ void ui_build_acquire2( tUi_Acquire *pThis, struct nk_context *pCtx )
 
         nk_tree_pop( pCtx );
     }
+    else
+    {
+        pThis->is_visible = 0;
+    }
+
+    if( pThis->is_visible != pThis->is_visible_bck )
+    {
+    	msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY;
+		msgUiScope.data[0] = pThis->is_visible;
+		msgUiScope.data[1] = 0; // ACQUIRE
+		osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
+    }
+    pThis->is_visible_bck = pThis->is_visible;
+
 }
 
 void ui_build_horizontal2( tUi_Horizontal *pThis, struct nk_context *pCtx )
@@ -214,7 +230,6 @@ void ui_build_horizontal2( tUi_Horizontal *pThis, struct nk_context *pCtx )
 
     struct sQueueUiScope msgUiScope = {0};
 
-    pThis->is_visible = 0;
     if( nk_tree_push( pCtx, NK_TREE_TAB, "Horizontal", NK_MINIMIZED) )
     {
     	pThis->is_visible = 1;
@@ -223,17 +238,29 @@ void ui_build_horizontal2( tUi_Horizontal *pThis, struct nk_context *pCtx )
     		msgUiScope.type = QUEUE_UI_SCOPE_TYPE_HORIZONTAL;
             msgUiScope.data[0] = pThis->offset;
     		msgUiScope.data[1] = pThis->scale;
-            osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+            osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
         }
     	if( nk_property_keypad( pCtx, "Scale", 0, &pThis->scale, 9999, &show_keypad_scale ) )
     	{
     		msgUiScope.type = QUEUE_UI_SCOPE_TYPE_HORIZONTAL;
             msgUiScope.data[0] = pThis->offset;
     		msgUiScope.data[1] = pThis->scale;
-            osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+            osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
     	}
         nk_tree_pop( pCtx );
     }
+    else
+    {
+        pThis->is_visible = 0;
+    }
+    if( pThis->is_visible != pThis->is_visible_bck )
+    {
+    	msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY;
+		msgUiScope.data[0] = pThis->is_visible;
+		msgUiScope.data[1] = 1; // HORIZONTAL
+		osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
+    }
+    pThis->is_visible_bck = pThis->is_visible;
 }
 
 void ui_build_vertical2( tUi_Vertical *pThis, struct nk_context *pCtx )
@@ -243,7 +270,6 @@ void ui_build_vertical2( tUi_Vertical *pThis, struct nk_context *pCtx )
 
     struct sQueueUiScope msgUiScope = {0};
 
-	pThis->is_visible = 0;
     if( nk_tree_push( pCtx, NK_TREE_TAB, "Vertical", NK_MINIMIZED) )
     {
     	pThis->is_visible = 1;
@@ -275,7 +301,7 @@ void ui_build_vertical2( tUi_Vertical *pThis, struct nk_context *pCtx )
                 msgUiScope.data[2] = pThis->channels[1].scale;
                 msgUiScope.data[3] = pThis->channels[2].scale;
                 msgUiScope.data[4] = pThis->channels[3].scale;
-                osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+                osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
 			}
             if( nk_property_keypad( pCtx, "Scale", 0, &pThis->channels[pThis->channel_selected].scale, 5, &show_keypad_scale ) )
 			{
@@ -285,11 +311,24 @@ void ui_build_vertical2( tUi_Vertical *pThis, struct nk_context *pCtx )
                 msgUiScope.data[2] = pThis->channels[1].scale;
                 msgUiScope.data[3] = pThis->channels[2].scale;
                 msgUiScope.data[4] = pThis->channels[3].scale;
-                osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+                osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
 			}
         }
         nk_tree_pop( pCtx );
     }
+    else
+    {
+        pThis->is_visible = 0;
+    }
+
+    if( pThis->is_visible != pThis->is_visible_bck )
+    {
+    	msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY;
+		msgUiScope.data[0] = pThis->is_visible;
+		msgUiScope.data[1] = 2; // VERTICAL
+		osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
+    }
+    pThis->is_visible_bck = pThis->is_visible;
 }
 
 
@@ -299,7 +338,6 @@ void ui_build_trigger2( tUi_Trigger *pThis, struct nk_context *pCtx )
 
     static uint8_t show_keypad_level = 0;
 
-    pThis->is_visible = 0;
     if( nk_tree_push( pCtx, NK_TREE_TAB, "Trigger", NK_MINIMIZED) )
     {
     	pThis->is_visible = 1;
@@ -327,10 +365,24 @@ void ui_build_trigger2( tUi_Trigger *pThis, struct nk_context *pCtx )
             msgUiScope.data[1] = pThis->mode;
             msgUiScope.data[2] = pThis->level;
             msgUiScope.data[3] = pThis->slope;
-            osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, 0U);
+            osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
         }
         nk_tree_pop( pCtx );
     }
+    else
+    {
+        pThis->is_visible = 0;
+    }
+
+    if( pThis->is_visible != pThis->is_visible_bck )
+    {
+    	msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY;
+		msgUiScope.data[0] = pThis->is_visible;
+		msgUiScope.data[1] = 3; //TRIGGER
+		osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
+    }
+    pThis->is_visible_bck = pThis->is_visible;
+
 }
 enum eWaveGenType2
 {
@@ -359,7 +411,6 @@ void ui_build_wavegen2( tUi_Wavegen *pThis, struct nk_context *pCtx )
     static uint8_t show_keypad_scale = 0;
     static uint8_t show_keypad_freq = 0;
     static uint8_t show_keypad_duty = 0;
-	pThis->is_visible = 0;
 
     if( nk_tree_push( pCtx, NK_TREE_TAB, "Waveform", NK_MINIMIZED) )
     {
@@ -412,7 +463,7 @@ void ui_build_wavegen2( tUi_Wavegen *pThis, struct nk_context *pCtx )
                     msgUiWavegen.type = QUEUE_UI_WAVEGEN_TYPE_STOP;
                 }
                 msgUiWavegen.data[0] = pThis->waveform_selected;
-                osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, 0U);
+                osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, portMAX_DELAY);
             }
 
             if( tmp.waveforms[tmp.waveform_selected].frequency != pThis->waveforms[pThis->waveform_selected].frequency )
@@ -420,7 +471,7 @@ void ui_build_wavegen2( tUi_Wavegen *pThis, struct nk_context *pCtx )
                 msgUiWavegen.type = QUEUE_UI_WAVEGEN_TYPE_CONFIG_HORIZONTAL;
                 msgUiWavegen.data[0] = pThis->waveform_selected;
                 msgUiWavegen.data[1] = pThis->waveforms[pThis->waveform_selected].frequency;
-                osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, 0U);
+                osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, portMAX_DELAY);
             }
 
             if( tmp.waveforms[tmp.waveform_selected].type != pThis->waveforms[pThis->waveform_selected].type ||
@@ -435,12 +486,17 @@ void ui_build_wavegen2( tUi_Wavegen *pThis, struct nk_context *pCtx )
                 msgUiWavegen.data[2] = pThis->waveforms[pThis->waveform_selected].offset;
                 msgUiWavegen.data[3] = pThis->waveforms[pThis->waveform_selected].scale;
                 msgUiWavegen.data[4] = pThis->waveforms[pThis->waveform_selected].duty_cycle;
-                osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, 0U);
+                osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, portMAX_DELAY);
             }
             
         }
 		nk_tree_pop( pCtx );
 	}
+    else
+    {
+        pThis->is_visible = 0;
+    }
+    pThis->is_visible_bck = pThis->is_visible;
 }
 
 uint8_t nk_keypad( struct nk_context *pCtx, int32_t min, int32_t *pValue, int32_t max )
@@ -560,20 +616,87 @@ void ui_build_color_picker( tUi *pThis, struct nk_context *pCtx )
     }
 }
 
+static const char *theme_names[] = {
+	"Black",
+	"White",
+	"Red",
+	"Blue",
+	"Dark",
+};
+static int selected_theme = 0; // Initial theme selection
+
+void ui_build_theme_chooser(struct nk_context *ctx)
+{
+    if (nk_tree_push(ctx, NK_TREE_TAB, "Theme Chooser", NK_MINIMIZED))
+    {
+        // Combo box to select a theme
+        if (nk_combo_begin_label(ctx, theme_names[selected_theme], nk_vec2(200, 200)))
+        {
+            nk_layout_row_dynamic(ctx, 25, 1);
+            for (int i = 0; i < sizeof(theme_names) / sizeof(theme_names[0]); i++)
+            {
+                if (nk_combo_item_label(ctx, theme_names[i], NK_TEXT_LEFT))
+                {
+                    selected_theme = i;
+                    nk_combo_close(ctx);
+                }
+            }
+            nk_combo_end(ctx);
+        }
+
+        // Button to apply the selected theme
+        if (nk_button_label(ctx, "Apply Theme"))
+        {
+            nk_set_theme(ctx, selected_theme);
+        }
+
+        nk_tree_pop(ctx);
+    }
+}
+
 void ui_build( tUi *pThis, struct nk_context *pCtx )
 {
     if( nk_begin( pCtx, "STM32G4 Scope", nk_rect(0, 0, 240, 320), NK_WINDOW_MINIMIZABLE ) )
 	{
-        ui_build_acquire2( &pThis->acquire, pCtx );
+    	pThis->is_visible = 1;
+
+    	ui_build_theme_chooser( pCtx );
+    	ui_build_color_picker( pThis, pCtx );
+        ui_build_info( pThis, pCtx );
+
+    	ui_build_acquire2( &pThis->acquire, pCtx );
         ui_build_horizontal2( &pThis->horizontal, pCtx );
         ui_build_vertical2( &pThis->vertical, pCtx );
         ui_build_trigger2( &pThis->trigger, pCtx );
         ui_build_wavegen2( &pThis->wavegen, pCtx );
         ui_build_cursor( pThis, pCtx );
         ui_build_measurements( pThis, pCtx );
-        ui_build_info( pThis, pCtx );
-        ui_build_color_picker( pThis, pCtx );
     }
+    else
+    {
+    	pThis->is_visible = 0;
+    }
+    /*
+    if( pThis->is_visible != pThis->is_visible_bck )
+    {
+    	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+		{
+			lcd_clear( &lcd, LCD_COLOR_BLACK );
+			osSemaphoreRelease( semaphoreLcdHandle );
+		}
+        struct sQueueUiScope msgUiScope = {0};
+    	msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED;
+    	msgUiScope.data[0] = pThis->is_visible;
+    	osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
+
+    	struct sQueueUiScope msgUiWavegen = {0};
+        msgUiWavegen.type = QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED;
+        msgUiWavegen.data[0] = pThis->is_visible;
+    	//osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, portMAX_DELAY);
+    }
+    pThis->is_visible_bck = pThis->is_visible;
+    */
+
 	nk_end( pCtx );
 }
 /*

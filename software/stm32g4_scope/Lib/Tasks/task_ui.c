@@ -120,6 +120,77 @@ void StartTaskUi(void *argument)
         }
 
         ui_build( &ui, &ctx );
+        {
+        	tUi *pThis = &ui;
+            if( pThis->is_visible != pThis->is_visible_bck )
+            {
+            	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+        		{
+        			lcd_clear( &lcd, LCD_COLOR_BLACK );
+        			osSemaphoreRelease( semaphoreLcdHandle );
+        		}
+            	enum eQueueUiScopeType
+            	{
+            		QUEUE_UI_SCOPE_TYPE_START,
+            		QUEUE_UI_SCOPE_TYPE_STOP,
+            		QUEUE_UI_SCOPE_TYPE_HORIZONTAL,
+            		QUEUE_UI_SCOPE_TYPE_VERTICAL,
+            		QUEUE_UI_SCOPE_TYPE_TRIGGER,
+            		QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY,
+            		QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED
+            	};
+                struct sQueueUiScope msgUiScope = {0};
+            	msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED;
+            	msgUiScope.data[0] = pThis->is_visible;
+            	osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
+
+            	struct sQueueUiScope msgUiWavegen = {0};
+                msgUiWavegen.type = QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED;
+                msgUiWavegen.data[0] = pThis->is_visible;
+            	//osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, portMAX_DELAY);
+            }
+            pThis->is_visible_bck = pThis->is_visible;
+        }
+        /*if( ui.is_visible != ui.is_visible_bck )
+        {
+			if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+			{
+				lcd_clear( &lcd, LCD_COLOR_BLACK );
+				osSemaphoreRelease( semaphoreLcdHandle );
+			}
+			struct sQueueUiScope msgUiScope = {0};
+			enum eQueueUiScopeType
+			{
+				QUEUE_UI_SCOPE_TYPE_START,
+				QUEUE_UI_SCOPE_TYPE_STOP,
+				QUEUE_UI_SCOPE_TYPE_HORIZONTAL,
+				QUEUE_UI_SCOPE_TYPE_VERTICAL,
+				QUEUE_UI_SCOPE_TYPE_TRIGGER,
+				QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY
+			};
+			msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY;
+			msgUiScope.data[0] = ui.is_visible;
+			msgUiScope.data[1] = 0; // HORIZONTAL
+			osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
+
+			msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY;
+			msgUiScope.data[0] = ui.horizontal.is_visible;
+			msgUiScope.data[1] = 1; // HORIZONTAL
+			osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
+
+			msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY;
+			msgUiScope.data[0] = ui.vertical.is_visible;
+			msgUiScope.data[1] = 2; // HORIZONTAL
+			osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
+
+			msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY;
+			msgUiScope.data[0] = ui.trigger.is_visible;
+			msgUiScope.data[1] = 3; // HORIZONTAL
+			osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
+        }
+        ui.is_visible_bck = ui.is_visible;*/
+
+
 
         x0 = 0;
         for( y0 = 0; y0 < lcd.height; y0 += fb.height)
@@ -134,14 +205,14 @@ void StartTaskUi(void *argument)
         }
         nk_clear(&ctx);
 
-        ui.is_collapsed = nk_window_is_collapsed( &ctx, "STM32G4 Scope" );
-		if( ui.is_collapsed != is_collapsed_bck )
+        //ui.is_collapsed = nk_window_is_collapsed( &ctx, "STM32G4 Scope" );
+		///if( ui.is_collapsed != is_collapsed_bck )
 		{
-			is_collapsed_bck = ui.is_collapsed;
-			if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+			//is_collapsed_bck = ui.is_collapsed;
+			//if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
 			{
-				lcd_clear( &lcd, LCD_COLOR_BLACK );
-				osSemaphoreRelease( semaphoreLcdHandle );
+				//lcd_clear( &lcd, LCD_COLOR_BLACK );
+				//osSemaphoreRelease( semaphoreLcdHandle );
 			}
 		}
 

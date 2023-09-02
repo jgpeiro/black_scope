@@ -23,17 +23,17 @@ extern uint16_t dac2_buffer[DAC_BUFFER_LEN];
 void HAL_DACEx_ConvHalfCpltCallbackCh2(DAC_HandleTypeDef *hdac)
 {
     // if new block is available, copy to the dac buffer.
-    if( buffer_size( &usb_rx ) >= BUFFER_SIZE / 2 )
+    if( buffer_size( &usb_rx ) >= sizeof(dac2_buffer) / 2 )
     {
-        buffer_pop( &usb_rx, dac2_buffer, BUFFER_SIZE / 2 );
+        buffer_pop( &usb_rx, dac2_buffer, sizeof(dac2_buffer) / 2 );
     }
 }
 void HAL_DACEx_ConvCpltCallbackCh2(DAC_HandleTypeDef *hdac)
 {
     // if new block is available, copy to the dac buffer.
-    if( buffer_size( &usb_rx ) >= BUFFER_SIZE / 2 )
+    if( buffer_size( &usb_rx ) >= sizeof(dac2_buffer) / 2 )
     {
-        buffer_pop( &usb_rx, dac2_buffer + BUFFER_SIZE / 2, BUFFER_SIZE / 2 );
+        buffer_pop( &usb_rx, dac2_buffer + DAC_BUFFER_LEN / 2, sizeof(dac2_buffer) / 2 );
     }
 }
 

@@ -36,6 +36,7 @@ struct sUi_Acquire
     uint8_t run;
     uint8_t single;
     uint8_t is_visible;
+    uint8_t is_visible_bck;
 };
 typedef struct sUi_Acquire tUi_Acquire;
 
@@ -44,6 +45,7 @@ struct sUi_Horizontal
     int32_t offset;
     int32_t scale;
     uint8_t is_visible;
+    uint8_t is_visible_bck;
 };
 typedef struct sUi_Horizontal tUi_Horizontal;
 
@@ -61,6 +63,7 @@ struct sUi_Vertical
     tUi_Vertical_Channel channels[UI_CHANNEL_COUNT];
     uint8_t channel_selected;
     uint8_t is_visible;
+    uint8_t is_visible_bck;
 };
 typedef struct sUi_Vertical tUi_Vertical;
 
@@ -72,6 +75,7 @@ struct sUi_Trigger
     int32_t source;
     //uint8_t armed;
     uint8_t is_visible;
+    uint8_t is_visible_bck;
 };
 typedef struct sUi_Trigger tUi_Trigger;
 
@@ -84,6 +88,7 @@ struct sUi_Waveform
     int32_t duty_cycle;
     int32_t frequency;
     uint8_t is_visible;
+    uint8_t is_visible_bck;
 };
 typedef struct sUi_Waveform tUi_Waveform;
 
@@ -92,6 +97,7 @@ struct sUi_Wavegen
     tUi_Waveform waveforms[UI_WAVEFORM_COUNT];
     uint8_t waveform_selected;
     uint8_t is_visible;
+    uint8_t is_visible_bck;
 };
 typedef struct sUi_Wavegen tUi_Wavegen;
 
@@ -110,6 +116,7 @@ struct sUi_Cursors
     tUi_Cursor cursors[UI_CURSOR_COUNT];
     uint8_t cursor_selected;
     uint8_t is_visible;
+    uint8_t is_visible_bck;
 };
 typedef struct sUi_Cursors tUi_Cursors;
 
@@ -129,6 +136,7 @@ struct sUi_Measurements
     int32_t vrms_to_vavg;
     int32_t vdc_to_vavg;
     uint8_t is_visible;
+    uint8_t is_visible_bck;
 };
 typedef struct sUi_Measurements tUi_Measurements;
 
@@ -138,6 +146,7 @@ struct sUi_Info
     int32_t cpu;
     int32_t mem;
     uint8_t is_visible;
+    uint8_t is_visible_bck;
 };
 typedef struct sUi_Info tUi_Info;
 
@@ -151,7 +160,10 @@ struct sUi
     tUi_Cursors cursors;
     tUi_Measurements measurements;
     tUi_Info info;
-	int is_collapsed;
+
+    //int is_collapsed;
+    uint8_t is_visible;
+    uint8_t is_visible_bck;
 };
 typedef struct sUi tUi;
 

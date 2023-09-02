@@ -37,7 +37,9 @@ enum eQueueUiScopeType
 	QUEUE_UI_SCOPE_TYPE_STOP,
 	QUEUE_UI_SCOPE_TYPE_HORIZONTAL,
 	QUEUE_UI_SCOPE_TYPE_VERTICAL,
-	QUEUE_UI_SCOPE_TYPE_TRIGGER
+	QUEUE_UI_SCOPE_TYPE_TRIGGER,
+	QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY,
+	QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED
 };
 
 struct sQueueUiScope {
@@ -89,7 +91,7 @@ void _StartTaskScope(void *argument)
 		ADC_BUFFER_LEN
 	);
 
-	int is_collapsed = ui.is_collapsed;
+	int is_collapsed = 0;//ui.is_collapsed;
 	scope_config_horizontal( &scope, 0, 1000 );
 	scope_config_vertical( &scope, 0, 0, 0, 0, 2048 );
 	scope_config_trigger( &scope, 0, 0, 3096, 0 );
@@ -105,7 +107,7 @@ void _StartTaskScope(void *argument)
     for(;;)
     {
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
-        is_collapsed = ui.is_collapsed;
+        //is_collapsed = ui.is_collapsed;
 
         if( osMessageQueueGet(queueUiScopeHandle, &msgScope, NULL, 0U) == osOK )
         {
@@ -230,7 +232,7 @@ void scope_stroque2_horizontal( tScope_Horizontal *pThis, tLcd *pLcd, uint16_t c
     int w = 0;
     int h = 0;
 
-    x = pThis->offset;
+    x = pThis->offset/4+120;
     y = 0;
     h = pLcd->height;
 
@@ -340,7 +342,7 @@ void StartTaskScope(void *argument)
     //struct sQueueUiLcd msgLcd = {0};
     TickType_t xLastWakeTime;
     const TickType_t xFrequency = 1;
-	const int wait_timeout_ms = 100;
+	const int wait_timeout_ms = 50;
 
     scope_init_ll( &scope,
         &htim2, // horizontal.htim_clock
@@ -370,7 +372,7 @@ void StartTaskScope(void *argument)
 		ADC_BUFFER_LEN
 	);
 
-	int is_collapsed = ui.is_collapsed;
+	int is_collapsed = 0;
 	scope_config_horizontal( &scope, 0, 1000 );
 	scope_config_vertical( &scope, 0, 0, 0, 0, 2048 );
 	scope_config_trigger( &scope, 0, 0, 3096, 0 );
@@ -386,17 +388,17 @@ void StartTaskScope(void *argument)
     int horizontal_is_visible = 0;
     int vertical_is_visible = 0;
     int trigger_is_visible = 0;
-    int horizontal_is_visible_bck = 0;
-    int vertical_is_visible_bck = 0;
-    int trigger_is_visible_bck = 0;
+    //int horizontal_is_visible_bck = 0;
+    //int vertical_is_visible_bck = 0;
+    //int trigger_is_visible_bck = 0;
     for(;;)
     {
     	vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    	horizontal_is_visible = ui.horizontal.is_visible;
-		vertical_is_visible = ui.vertical.is_visible;
-		trigger_is_visible = ui.trigger.is_visible;
+    	//horizontal_is_visible = ui.horizontal.is_visible;
+		//vertical_is_visible = ui.vertical.is_visible;
+		//trigger_is_visible = ui.trigger.is_visible;
 
-		if( horizontal_is_visible && !horizontal_is_visible_bck ||
+		/*if( horizontal_is_visible && !horizontal_is_visible_bck ||
 			vertical_is_visible && !vertical_is_visible_bck ||
 			trigger_is_visible && !trigger_is_visible_bck )
 		{
@@ -412,7 +414,7 @@ void StartTaskScope(void *argument)
 					scope_draw2_trigger( &scope.trigger, &lcd, is_collapsed );
 				osSemaphoreRelease( semaphoreLcdHandle );
 			}
-		}
+		}*/
 
 		if( osMessageQueueGet(queueUiScopeHandle, &msgScope, NULL, 0U) == osOK )
 		{
@@ -466,6 +468,51 @@ void StartTaskScope(void *argument)
 						msgScope.data[3]  // slope
 					);
 					break;
+				case QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY:
+					/*if( msgScope.data[0] == 1 )
+					{
+						if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+						{
+							if( 1 || msgScope.data[1] == 0 )
+								scope_draw2_acquire( &scope, &lcd, is_collapsed );
+							if( msgScope.data[1] == 1 )
+								scope_draw2_horizontal( &scope.horizontal, &lcd, is_collapsed );
+							if( msgScope.data[1] == 2 )
+								scope_draw2_vertical( &scope.vertical, &lcd, is_collapsed );
+							if( msgScope.data[1] == 3 )
+								scope_draw2_trigger( &scope.trigger, &lcd, is_collapsed );
+							osSemaphoreRelease( semaphoreLcdHandle );
+						}
+					}
+					else
+					{
+						if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+						{
+							if( 1 || msgScope.data[1] == 0 )
+								scope_erase2_acquire( &scope, &lcd, is_collapsed );
+							if( msgScope.data[1] == 1 )
+								scope_erase2_horizontal( &scope.horizontal, &lcd, is_collapsed );
+							if( msgScope.data[1] == 2 )
+								scope_erase2_vertical( &scope.vertical, &lcd, is_collapsed );
+							if( msgScope.data[1] == 3 )
+								scope_erase2_trigger( &scope.trigger, &lcd, is_collapsed );
+							osSemaphoreRelease( semaphoreLcdHandle );
+						}
+					}*/
+					if( msgScope.data[1] == 0 )
+						;
+					if( msgScope.data[1] == 1 )
+						horizontal_is_visible = msgScope.data[0];
+					if( msgScope.data[1] == 2 )
+						vertical_is_visible = msgScope.data[0];
+					if( msgScope.data[1] == 3 )
+						trigger_is_visible = msgScope.data[0];
+					break;
+				//case QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED:
+				//	is_collapsed = msgScope.data[0];
+				//	break;
+				default:
+					break;
 			}
 
 			if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
@@ -482,7 +529,7 @@ void StartTaskScope(void *argument)
 			}
 		}
 
-		if( !horizontal_is_visible && horizontal_is_visible_bck ||
+		/*if( !horizontal_is_visible && horizontal_is_visible_bck ||
 			!vertical_is_visible && vertical_is_visible_bck ||
 			!trigger_is_visible && trigger_is_visible_bck )
 		{
@@ -498,7 +545,7 @@ void StartTaskScope(void *argument)
 					scope_erase2_trigger( &scope.trigger, &lcd, is_collapsed );
 				osSemaphoreRelease( semaphoreLcdHandle );
 			}
-		}
+		}*/
 
 
         if( running )
@@ -518,6 +565,13 @@ void StartTaskScope(void *argument)
         	}
         	b = a;
             scope_stop( &scope );
+
+            if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+			{
+            	scope_draw_grid( &scope, &lcd, is_collapsed );
+            	osSemaphoreRelease( semaphoreLcdHandle );
+			}
+
 			if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
 			{
 				if( result )
@@ -537,9 +591,9 @@ void StartTaskScope(void *argument)
 			}
         }
 
-    	horizontal_is_visible_bck = horizontal_is_visible;
-    	vertical_is_visible_bck = vertical_is_visible;
-    	trigger_is_visible_bck = trigger_is_visible;
+    	//horizontal_is_visible_bck = horizontal_is_visible;
+    	//vertical_is_visible_bck = vertical_is_visible;
+    	//trigger_is_visible_bck = trigger_is_visible;
     }
 }
 
