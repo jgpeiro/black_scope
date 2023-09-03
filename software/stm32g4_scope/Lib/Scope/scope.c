@@ -1307,18 +1307,36 @@ void scope_draw_grid( tScope *pThis, tLcd *pLcd, int is_collapsed )
 	//{
 	//	i = 0;
 	//}
-
-	for( int d = 0 ; d < pLcd->width ; d += 40 )
+	if( is_collapsed )
 	{
-		lcd_rect( pLcd, d/2, 0, 1, pLcd->height, 0x8410 );
-	}
-	lcd_rect( pLcd, pLcd->width/2-1, 0, 1, pLcd->height, 0x8410 );
+		for( int d = 0 ; d < pLcd->width ; d += 40 )
+		{
+			lcd_rect( pLcd, d/2, 0, 1, pLcd->height, 0x8410 );
+		}
+		lcd_rect( pLcd, pLcd->width/2-1, 0, 1, pLcd->height, 0x8410 );
 
-	for( int d = 0 ; d < pLcd->height ; d += 40 )
-	{
-		lcd_rect( pLcd, 0/2, d, pLcd->width/2, 1, 0x8410 );
+		for( int d = 0 ; d < pLcd->height ; d += 40 )
+		{
+			lcd_rect( pLcd, 0, d, pLcd->width/2, 1, 0x8410 );
+		}
+		lcd_rect( pLcd, 0, pLcd->height, pLcd->width/2, 1, 0x8410 );
+
 	}
-	lcd_rect( pLcd, 0/2, pLcd->height, pLcd->width/2, 1, 0x8410 );
+	else
+	{
+		for( int d = 0 ; d < pLcd->width ; d += 40 )
+		{
+			lcd_rect( pLcd, d, 0, 1, pLcd->height, 0x8410 );
+		}
+		lcd_rect( pLcd, pLcd->width-1, 0, 1, pLcd->height, 0x8410 );
+
+		for( int d = 0 ; d < pLcd->height ; d += 40 )
+		{
+			lcd_rect( pLcd, 0, d, pLcd->width, 1, 0x8410 );
+		}
+		lcd_rect( pLcd, 0, pLcd->height, pLcd->width, 1, 0x8410 );
+
+	}
 }
 
 void scope_draw( tScope *pThis, tLcd *pLcd, int is_collapsed )
@@ -1376,7 +1394,14 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 						n_bck -= pThis->len;
 					}
 
-					x = (i)/2;
+					if( is_collapsed )
+					{
+						x = (i)/2;
+					}
+					else
+					{
+						x = i;
+					}
 					y5 = pLcd_height-pThis->buffer5[n_bck]*scale;
 					y6 = pLcd_height-pThis->buffer6[n_bck]*scale;
 					y7 = pLcd_height-pThis->buffer7[n_bck]*scale;
@@ -1405,7 +1430,15 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 						n -= pThis->len;
 					}
 
-					x = (i-2)/2;
+					if( is_collapsed )
+					{
+						x = (i-2)/2;
+					}
+					else
+					{
+						x = (i-2);
+					}
+
 					y1 = pLcd_height-pThis->buffer1[n]*scale;
 					y2 = pLcd_height-pThis->buffer2[n]*scale;
 					y3 = pLcd_height-pThis->buffer3[n]*scale;
@@ -1439,7 +1472,14 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 						n_bck -= pThis->len;
 					}
 
-					x = (i)/2;
+					if( is_collapsed )
+					{
+						x = i/2;
+					}
+					else
+					{
+						x = i;
+					}
 					y1 = pLcd_height-pThis->buffer1[n_bck]*scale;
 					y2 = pLcd_height-pThis->buffer2[n_bck]*scale;
 					y3 = pLcd_height-pThis->buffer3[n_bck]*scale;
@@ -1468,7 +1508,14 @@ void scope_draw_signals( tScope *pThis, tLcd *pLcd, int is_collapsed )
 						n -= pThis->len;
 					}
 
-					x = (i-2)/2;
+					if( is_collapsed )
+					{
+						x = (i-2)/2;
+					}
+					else
+					{
+						x = (i-2);
+					}
 					y5 = pLcd_height-pThis->buffer5[n]*scale;
 					y6 = pLcd_height-pThis->buffer6[n]*scale;
 					y7 = pLcd_height-pThis->buffer7[n]*scale;

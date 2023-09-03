@@ -124,11 +124,7 @@ void StartTaskUi(void *argument)
         	tUi *pThis = &ui;
             if( pThis->is_visible != pThis->is_visible_bck )
             {
-            	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
-        		{
-        			lcd_clear( &lcd, LCD_COLOR_BLACK );
-        			osSemaphoreRelease( semaphoreLcdHandle );
-        		}
+
             	enum eQueueUiScopeType
             	{
             		QUEUE_UI_SCOPE_TYPE_START,
@@ -148,6 +144,12 @@ void StartTaskUi(void *argument)
                 msgUiWavegen.type = QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED;
                 msgUiWavegen.data[0] = pThis->is_visible;
             	//osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, portMAX_DELAY);
+
+            	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+        		{
+        			lcd_clear( &lcd, LCD_COLOR_BLACK );
+        			osSemaphoreRelease( semaphoreLcdHandle );
+        		}
             }
             pThis->is_visible_bck = pThis->is_visible;
         }
