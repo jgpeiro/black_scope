@@ -127,6 +127,15 @@ void lcd_set_pixel( tLcd *pThis, int16_t x, int16_t y, uint16_t color )
     LCD_DATA_ADDR = color;
 }
 
+void lcd_hline( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t color )
+{
+	lcd_rect( pThis, x, y, w, 1, color );
+}
+void lcd_vline( tLcd *pThis, int16_t x, int16_t y, uint16_t h, uint16_t color )
+{
+	lcd_rect( pThis, x, y, 1, h, color );
+}
+
 void lcd_rect( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color )
 {
     uint32_t i = 0;

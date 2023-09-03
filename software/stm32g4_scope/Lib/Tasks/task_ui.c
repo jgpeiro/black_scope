@@ -31,7 +31,7 @@ struct sQueueTscUi {
     uint16_t x;
     uint16_t y;
 };
-
+/*
 struct sQueueUiScope {
     uint16_t type;
     uint16_t data[8];
@@ -40,7 +40,7 @@ struct sQueueUiScope {
 struct sQueueUiWavegen {
     uint16_t type;
     uint16_t data[8];
-};
+};*/
 
 extern osMessageQueueId_t queueTscUiHandle;
 extern osMessageQueueId_t queueUiScopeHandle;
@@ -110,7 +110,6 @@ void StartTaskUi(void *argument)
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
 
         if( osMessageQueueGet(queueTscUiHandle, &msgTscUi, NULL, portMAX_DELAY) == osOK )
-		//if( osMessageQueueGet(queueTscUiHandle, &msgTscUi, NULL, xFrequency*10) == osOK )
 		{
         	msgTscUi.x -= lcd.width/2;
             nk_input_begin( &ctx );
@@ -124,6 +123,11 @@ void StartTaskUi(void *argument)
         	tUi *pThis = &ui;
             if( pThis->is_visible != pThis->is_visible_bck )
             {
+            	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+        		{
+        			lcd_clear( &lcd, LCD_COLOR_BLACK );
+        			osSemaphoreRelease( semaphoreLcdHandle );
+        		}
 
             	enum eQueueUiScopeType
             	{
@@ -140,59 +144,24 @@ void StartTaskUi(void *argument)
             	msgUiScope.data[0] = pThis->is_visible;
             	osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
 
+            	enum eQueueUiWavegenType
+            	{
+            		QUEUE_UI_WAVEGEN_TYPE_START,
+            		QUEUE_UI_WAVEGEN_TYPE_STOP,
+            		QUEUE_UI_WAVEGEN_TYPE_CONFIG_HORIZONTAL,
+            		QUEUE_UI_WAVEGEN_TYPE_CONFIG_VERTICAL,
+            		QUEUE_UI_WAVEGEN_TYPE_CHANGE_VISIBILITY,
+            		QUEUE_UI_WAVEGEN_TYPE_CHANGE_COLLAPSED
+            	};
             	struct sQueueUiScope msgUiWavegen = {0};
-                msgUiWavegen.type = QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED;
+                msgUiWavegen.type = QUEUE_UI_WAVEGEN_TYPE_CHANGE_COLLAPSED;
                 msgUiWavegen.data[0] = pThis->is_visible;
-            	//osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, portMAX_DELAY);
+            	osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, portMAX_DELAY);
 
-            	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
-        		{
-        			lcd_clear( &lcd, LCD_COLOR_BLACK );
-        			osSemaphoreRelease( semaphoreLcdHandle );
-        		}
+
             }
             pThis->is_visible_bck = pThis->is_visible;
         }
-        /*if( ui.is_visible != ui.is_visible_bck )
-        {
-			if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
-			{
-				lcd_clear( &lcd, LCD_COLOR_BLACK );
-				osSemaphoreRelease( semaphoreLcdHandle );
-			}
-			struct sQueueUiScope msgUiScope = {0};
-			enum eQueueUiScopeType
-			{
-				QUEUE_UI_SCOPE_TYPE_START,
-				QUEUE_UI_SCOPE_TYPE_STOP,
-				QUEUE_UI_SCOPE_TYPE_HORIZONTAL,
-				QUEUE_UI_SCOPE_TYPE_VERTICAL,
-				QUEUE_UI_SCOPE_TYPE_TRIGGER,
-				QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY
-			};
-			msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY;
-			msgUiScope.data[0] = ui.is_visible;
-			msgUiScope.data[1] = 0; // HORIZONTAL
-			osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
-
-			msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY;
-			msgUiScope.data[0] = ui.horizontal.is_visible;
-			msgUiScope.data[1] = 1; // HORIZONTAL
-			osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
-
-			msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY;
-			msgUiScope.data[0] = ui.vertical.is_visible;
-			msgUiScope.data[1] = 2; // HORIZONTAL
-			osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
-
-			msgUiScope.type = QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY;
-			msgUiScope.data[0] = ui.trigger.is_visible;
-			msgUiScope.data[1] = 3; // HORIZONTAL
-			osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
-        }
-        ui.is_visible_bck = ui.is_visible;*/
-
-
 
         x0 = 0;
         for( y0 = 0; y0 < lcd.height; y0 += fb.height)

@@ -13,8 +13,7 @@
 
 #include "lcd.h"
 
-#define WAVEGEN_COLOR_CH1	LCD_COLOR_CYAN
-#define WAVEGEN_COLOR_CH2	LCD_COLOR_MAGENTA
+//#include "wavegen_draw.h"
 
 enum eWaveGenChannel
 {
@@ -71,9 +70,5 @@ void wavegen_build_triangle( tWaveGen *pThis, enum eWaveGenChannel channel, uint
 void wavegen_build_sawtooth( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale );
 void wavegen_build_pwm( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale, uint16_t duty_cycle );
 void wavegen_build_noise( tWaveGen *pThis, enum eWaveGenChannel channel, uint16_t offset, uint16_t scale );
-
-void wavegen_draw( tWaveGen *pThis, tLcd *pLcd );
-void wavegen_erase( tWaveGen *pThis, tLcd *pLcd );
-void wavegen_stroque( tWaveGen *pThis, tLcd *pLcd, uint16_t color1, uint16_t color2 );
 
 #endif /* WAVEGEN_H_ */

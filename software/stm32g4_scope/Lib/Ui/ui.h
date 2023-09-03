@@ -11,6 +11,42 @@
 #include <stdint.h>
 #include "nuklear.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+//#include "main.h"
+#include "cmsis_os.h"
+enum eQueueUiScopeType
+{
+	QUEUE_UI_SCOPE_TYPE_START,
+	QUEUE_UI_SCOPE_TYPE_STOP,
+	QUEUE_UI_SCOPE_TYPE_HORIZONTAL,
+	QUEUE_UI_SCOPE_TYPE_VERTICAL,
+	QUEUE_UI_SCOPE_TYPE_TRIGGER,
+	QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY,
+	QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED
+};
+struct sQueueUiScope {
+    uint16_t type;
+    uint16_t data[8];
+};
+
+struct sQueueUiWavegen {
+    uint16_t type;
+    uint16_t data[8];
+};
+
+extern osMessageQueueId_t queueUiScopeHandle;
+extern osMessageQueueId_t queueUiWavegenHandle;
+
+
+#define COLOR_BUTTON_ENABLED (struct nk_color){40,200,40, 255}
+#define COLOR_BUTTON_DISABLED (struct nk_color){200,40,40, 255}
+
+#define COLOR_CHANNEL1 (struct nk_color){255,0,0, 255}
+#define COLOR_CHANNEL2 (struct nk_color){0,255,0, 255}
+#define COLOR_CHANNEL3 (struct nk_color){0,0,255, 255}
+#define COLOR_CHANNEL4 (struct nk_color){255,0,255, 255}
+
 #define UI_CHANNEL_COUNT    (4)
 #define UI_WAVEFORM_COUNT   (2)
 #define UI_CURSOR_COUNT     (2)
@@ -169,22 +205,20 @@ typedef struct sUi tUi;
 
 uint8_t nk_property_keypad( struct nk_context *pCtx, uint8_t *pLabel, int32_t min, int32_t *pValue, int32_t max, uint8_t *pShow_keypad );
 
-void ui_build_acquire2( tUi_Acquire *pThis, struct nk_context *pCtx );
-void ui_build_horizontal2( tUi_Horizontal *pThis, struct nk_context *pCtx );
-void ui_build_vertical2( tUi_Vertical *pThis, struct nk_context *pCtx );
-void ui_build_trigger2( tUi_Trigger *pThis, struct nk_context *pCtx );
 
 void ui_init( tUi *pThis );
 void ui_build( tUi *pThis, struct nk_context *pCtx );
-//void ui_build_acquire( tUi *pThis, struct nk_context *pCtx );
-//void ui_build_horizontal( tUi *pThis, struct nk_context *pCtx );
-//void ui_build_vertical( tUi *pThis, struct nk_context *pCtx );
-//void ui_build_trigger( tUi *pThis, struct nk_context *pCtx );
-void ui_build_wavegen( tUi *pThis, struct nk_context *pCtx );
+
+void ui_build_acquire( tUi_Acquire *pThis, struct nk_context *pCtx );
+void ui_build_horizontal( tUi_Horizontal *pThis, struct nk_context *pCtx );
+void ui_build_vertical( tUi_Vertical *pThis, struct nk_context *pCtx );
+void ui_build_trigger( tUi_Trigger *pThis, struct nk_context *pCtx );
+void ui_build_wavegen( tUi_Wavegen *pThis, struct nk_context *pCtx );
 void ui_build_cursor( tUi *pThis, struct nk_context *pCtx );
 void ui_build_measurements( tUi *pThis, struct nk_context *pCtx );
+
 void ui_build_info( tUi *pThis, struct nk_context *pCtx );
 void ui_build_color_picker( tUi *pThis, struct nk_context *pCtx );
-
+void ui_build_theme_chooser(struct nk_context *ctx);
 
 #endif /* UI_H_ */
