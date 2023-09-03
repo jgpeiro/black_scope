@@ -50,6 +50,7 @@ void StartTaskWavegen(void *argument)
 	static tWaveGen wavegen = {0};
 	int is_visible = 0;
 	int is_collapsed = 0;
+	int slow_cnt = 0;
 	//int is_visible_bck = 0;
 	//int ch1_is_enabled = 0;
 	//int ch2_is_enabled = 0;
@@ -159,6 +160,20 @@ void StartTaskWavegen(void *argument)
 				}
 			}
 		}
+
+
+        if( slow_cnt == 0 )
+        {
+        	if( is_visible )
+        	{
+				if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+				{
+					wavegen_draw( &wavegen, &lcd, is_collapsed );
+					osSemaphoreRelease( semaphoreLcdHandle );
+				}
+        	}
+        }
+        slow_cnt = (slow_cnt+1)%10;
 
 		//is_visible_bck = is_visible;
 

@@ -139,6 +139,9 @@ uint8_t nk_keypad( struct nk_context *pCtx, int32_t min, int32_t *pValue, int32_
         if( nk_button_label( pCtx, "0" ) )	value = value*10 + 0;
         if( nk_button_label( pCtx, "-" ) )	value =-value;
 
+        //nk_layout_row( pCtx, NK_STATIC, 30, 1, (float[]){30+30+30});
+        //nk_slider_int( pCtx, min, &value, max, 1 );
+
         if( value > max )
         {
         	value = max;
@@ -158,6 +161,7 @@ uint8_t nk_keypad( struct nk_context *pCtx, int32_t min, int32_t *pValue, int32_
 
     return retval;
 }
+
 
 uint8_t nk_property_keypad( struct nk_context *pCtx, uint8_t *pLabel, int32_t min, int32_t *pValue, int32_t max, uint8_t *pShow_keypad )
 {

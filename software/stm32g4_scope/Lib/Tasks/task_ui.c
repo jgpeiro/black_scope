@@ -119,6 +119,20 @@ void StartTaskUi(void *argument)
         }
 
         ui_build( &ui, &ctx );
+
+        x0 = 0;
+        for( y0 = 0; y0 < lcd.height; y0 += fb.height)
+        {
+	    	framebuf_fill( &fb, 0x0000 );
+            nk_draw_fb2( &ctx, &fb, x0, y0 );
+        	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+			{
+				lcd_bmp( &lcd, lcd.width/2, y0, fb.width, fb.height, fb.buf);
+				osSemaphoreRelease( semaphoreLcdHandle );
+			}
+        }
+        nk_clear(&ctx);
+
         {
         	tUi *pThis = &ui;
             if( pThis->is_visible != pThis->is_visible_bck )
@@ -158,35 +172,15 @@ void StartTaskUi(void *argument)
                 msgUiWavegen.data[0] = pThis->is_visible;
             	osMessageQueuePut(queueUiWavegenHandle, &msgUiWavegen, 0U, portMAX_DELAY);
 
+				// wait until msgUiScope and msgUiWavegen are processed.
+				while( osMessageQueueGetCount(queueUiScopeHandle) || osMessageQueueGetCount(queueUiWavegenHandle) )
+				{
+					vTaskDelay( 1 );
+				}
 
             }
             pThis->is_visible_bck = pThis->is_visible;
         }
-
-        x0 = 0;
-        for( y0 = 0; y0 < lcd.height; y0 += fb.height)
-        {
-	    	framebuf_fill( &fb, 0x0000 );
-            nk_draw_fb2( &ctx, &fb, x0, y0 );
-        	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
-			{
-				lcd_bmp( &lcd, lcd.width/2, y0, fb.width, fb.height, fb.buf);
-				osSemaphoreRelease( semaphoreLcdHandle );
-			}
-        }
-        nk_clear(&ctx);
-
-        //ui.is_collapsed = nk_window_is_collapsed( &ctx, "STM32G4 Scope" );
-		///if( ui.is_collapsed != is_collapsed_bck )
-		{
-			//is_collapsed_bck = ui.is_collapsed;
-			//if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
-			{
-				//lcd_clear( &lcd, LCD_COLOR_BLACK );
-				//osSemaphoreRelease( semaphoreLcdHandle );
-			}
-		}
-
 		if( msgTscUi.p && (0 <= msgTscUi.x) && (msgTscUi.x < lcd.width/2-5) )
 		{
 			lcd_draw_cross( &lcd, msgTscUi.x+lcd.width/2, msgTscUi.y, COLOR_UI_CROSS );
