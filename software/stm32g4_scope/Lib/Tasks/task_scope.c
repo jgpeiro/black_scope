@@ -63,7 +63,7 @@ void StartTaskScope(void *argument)
 
     TickType_t xLastWakeTime;
     const TickType_t xFrequency = 1;
-	const int wait_timeout_ms = 50;
+	const int wait_timeout_ms = 20;
 
     int running = 0;
     int single = 0;

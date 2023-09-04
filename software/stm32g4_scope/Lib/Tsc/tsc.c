@@ -10,124 +10,58 @@
 #include "tsc.h"
 
 
-void tsc_init( tTsc* tsc, SPI_HandleTypeDef* spi, GPIO_TypeDef* cs_port, uint16_t cs_pin, float ax, float bx, float ay, float by, int avg )
+void tsc_init( tTsc* pThis, SPI_HandleTypeDef* spi, GPIO_TypeDef* cs_port, uint16_t cs_pin, float ax, float bx, float ay, float by, int avg )
 {
-	tsc->spi = spi;
-	tsc->cs_port = cs_port;
-	tsc->cs_pin = cs_pin;
-	tsc->ax = ax;
-	tsc->bx = bx;
-	tsc->ay = ay;
-	tsc->by = by;
-	tsc->avg = avg;
+	pThis->spi = spi;
+	pThis->cs_port = cs_port;
+	pThis->cs_pin = cs_pin;
+	pThis->ax = ax;
+	pThis->bx = bx;
+	pThis->ay = ay;
+	pThis->by = by;
+	pThis->avg = avg;
 
-    HAL_GPIO_WritePin(tsc->cs_port, tsc->cs_pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(pThis->cs_port, pThis->cs_pin, GPIO_PIN_SET);
 }
 
-void tsc_read_ll( tTsc* tsc, uint16_t* x, uint16_t* y) {
+void tsc_read_ll( tTsc* pThis, uint16_t* x, uint16_t* y) {
 	uint8_t buf_tx[3] = {0};
 	uint8_t buf_rx[3] = {0};
 
-    HAL_GPIO_WritePin(tsc->cs_port, tsc->cs_pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(pThis->cs_port, pThis->cs_pin, GPIO_PIN_RESET);
 
     buf_tx[0] = TSC_CHANNEL_X;
-    HAL_SPI_TransmitReceive(tsc->spi, buf_tx, buf_rx, 3, HAL_MAX_DELAY);
+    HAL_SPI_TransmitReceive(pThis->spi, buf_tx, buf_rx, 3, HAL_MAX_DELAY);
     *x = (buf_rx[1] << 4) | (buf_rx[2] >> 4);
 
     buf_tx[0] = TSC_CHANNEL_Y;
-    HAL_SPI_TransmitReceive(tsc->spi, buf_tx, buf_rx, 3, HAL_MAX_DELAY);
+    HAL_SPI_TransmitReceive(pThis->spi, buf_tx, buf_rx, 3, HAL_MAX_DELAY);
     *y = (buf_rx[1] << 4) | (buf_rx[2] >> 4);
 
-    HAL_GPIO_WritePin(tsc->cs_port, tsc->cs_pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(pThis->cs_port, pThis->cs_pin, GPIO_PIN_SET);
 
     if (*x == 2047) {
         *x = 0;
     }
 }
-/*
-void tsc_read( tTsc* tsc, uint16_t* x, uint16_t* y)
-{
-	tsc_read_ll( tsc, x, y );
 
-	if( *x )
-	{
-		tsc->cnt += 1;
-	}
-	else
-	{
-		tsc->cnt = 0;
+void tsc_read(tTsc* pThis, uint16_t* x, uint16_t* y, uint16_t* p) {
+	tsc_read_ll(pThis, x, y);
+	if (*x && *y) {
+		pThis->cnt += 1;
+	} else {
+    	pThis->x_low = 0;
+    	pThis->y_low = 0;
+		pThis->cnt = 0;
 	}
 
-	x_low = x*0.1 + x_low*0.9;
-	y_low = y*0.1 + y_low*0.9;
+	pThis->x_low = pThis->x_low*0.9 + *x*0.1;
+	pThis->y_low = pThis->y_low*0.9 + *y*0.1;
 
-	x = tsc->ax*x_low + tsc->bx;
-	y = tsc->ay*y_low + tsc->by;
-
-	*x = tsc->x;
-	*x = tsc->y;
-}
-*/
-
-void _tsc_read( tTsc* tsc, uint16_t* x, uint16_t* y) {
-    int32_t x_acc = 0;
-    int32_t y_acc = 0;
-
-    for (int i = 0; i < tsc->avg; i++) {
-    	tsc_read_ll(tsc, x, y);
-        if (*x && *y) {
-            x_acc += *x;
-            y_acc += *y;
-            tsc->cnt += 1;
-        } else {
-            *x = 0;
-            *y = 0;
-            tsc->cnt = 0;
-            return;
-        }
-        //HAL_Delay(1);
-    }
-
-    if( tsc->cnt >= tsc->avg )
-    {
-        *x = x_acc / tsc->avg;
-        *y = y_acc / tsc->avg;
-        *x = tsc->ax * *x + tsc->bx;
-        *y = tsc->ay * *y + tsc->by;
-    }
-    else
-    {
-        *x = 0;
-        *y = 0;
-    }
-}
-
-
-void tsc_read(tTsc* tsc, uint16_t* p, uint16_t* x, uint16_t* y) {
-    int32_t x_acc = 0;
-    int32_t y_acc = 0;
-
-    for (int i = 0; i < tsc->avg; i++) {
-        tsc_read_ll(tsc, x, y);
-        if (*x && *y) {
-            x_acc += *x;
-            y_acc += *y;
-            tsc->cnt += 1;
-        } else {
-            *x = 0;
-            *y = 0;
-            *p = 0; // Additional code to set pressure to 0
-            tsc->cnt = 0;
-            return;
-        }
-    }
-
-    if (tsc->cnt >= tsc->avg) {
-        *x = x_acc / tsc->avg;
-        *y = y_acc / tsc->avg;
-        *x = tsc->ax * *x + tsc->bx;
-        *y = tsc->ay * *y + tsc->by;
-        *p = 1; // Additional code to set pressure to 1
+	if( pThis->cnt >= 40 ) {
+        *x = pThis->ax * pThis->x_low + pThis->bx;
+        *y = pThis->ay * pThis->y_low + pThis->by;
+        *p = 1;
     } else {
         *x = 0;
         *y = 0;

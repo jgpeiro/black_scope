@@ -31,9 +31,8 @@ typedef struct {
 } tTsc;
 
 
-void tsc_init( tTsc* tsc, SPI_HandleTypeDef* spi, GPIO_TypeDef* cs_port, uint16_t cs_pin, float ax, float bx, float ay, float by, int avg );
-void tsc_read_ll( tTsc* tsc, uint16_t* x, uint16_t* y );
-//void tsc_read( tTsc* tsc, uint16_t* x, uint16_t* y );
-void tsc_read(tTsc* tsc, uint16_t* p, uint16_t* x, uint16_t* y);
+void tsc_init( tTsc* pThis, SPI_HandleTypeDef* spi, GPIO_TypeDef* cs_port, uint16_t cs_pin, float ax, float bx, float ay, float by, int avg );
+void tsc_read_ll( tTsc* pThis, uint16_t* x, uint16_t* y );
+void tsc_read(tTsc* pThis, uint16_t* x, uint16_t* y,uint16_t* p );
 
 #endif /* TSC_H_ */
