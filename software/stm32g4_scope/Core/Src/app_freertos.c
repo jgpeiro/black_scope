@@ -30,7 +30,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-struct sQueueTscUi {
+/*struct sQueueTscUi {
     uint16_t p;
     uint16_t x;
     uint16_t y;
@@ -44,7 +44,7 @@ struct sQueueUiScope {
 struct sQueueUiWavegen {
     uint16_t type;
     uint16_t data[8];
-};
+};*/
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
