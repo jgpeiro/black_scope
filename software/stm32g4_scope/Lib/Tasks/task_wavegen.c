@@ -19,6 +19,8 @@
 #include "wavegen.h"
 #include "ui.h"
 
+#include "scope_tasks.h"
+
 #define DAC_BUFFER_LEN 	(512)
 
 
@@ -30,20 +32,11 @@ struct sQueueUiWavegen {
     uint16_t data[8];
 };*/
 
-extern osMessageQueueId_t queueUiWavegenHandle;
-extern osSemaphoreId_t semaphoreLcdHandle;
+//extern osMessageQueueId_t queueUiWavegenHandle;
+//extern osSemaphoreId_t semaphoreLcdHandle;
 extern tUi ui;
 extern tLcd lcd;
 
-enum eQueueUiWavegenType
-{
-	QUEUE_UI_WAVEGEN_TYPE_START,
-	QUEUE_UI_WAVEGEN_TYPE_STOP,
-	QUEUE_UI_WAVEGEN_TYPE_CONFIG_HORIZONTAL,
-	QUEUE_UI_WAVEGEN_TYPE_CONFIG_VERTICAL,
-	QUEUE_UI_WAVEGEN_TYPE_CHANGE_VISIBILITY,
-	QUEUE_UI_WAVEGEN_TYPE_CHANGE_COLLAPSED
-};
 
 void StartTaskWavegen(void *argument)
 {

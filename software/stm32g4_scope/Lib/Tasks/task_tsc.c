@@ -12,13 +12,8 @@
 #include "Tsc.h"
 #include "spi.h"
 
-struct sQueueTscUi {
-    uint16_t x;
-    uint16_t y;
-    uint16_t p;
-};
+#include "scope_tasks.h"
 
-extern osMessageQueueId_t queueTscUiHandle;
 
 void StartTaskTsc(void *argument) {
 	const TickType_t xFrequency = 1;

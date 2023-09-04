@@ -21,6 +21,8 @@
 #include "scope.h"
 #include "ui.h"
 
+#include "scope_tasks.h"
+
 #define ADC_BUFFER_LEN 	(512)
 
 uint16_t buffer1[ADC_BUFFER_LEN];
@@ -48,8 +50,8 @@ struct sQueueUiScope {
     uint16_t data[8];
 };*/
 
-extern osMessageQueueId_t queueUiScopeHandle;
-extern osSemaphoreId_t semaphoreLcdHandle;
+//extern osMessageQueueId_t queueUiScopeHandle;
+//extern osSemaphoreId_t semaphoreLcdHandle;
 extern tUi ui;
 extern tLcd lcd;
 

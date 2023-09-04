@@ -15,7 +15,10 @@
 #include "task.h"
 //#include "main.h"
 #include "cmsis_os.h"
-enum eQueueUiScopeType
+
+#include "scope_tasks.h"
+
+/*enum eQueueUiScopeType
 {
 	QUEUE_UI_SCOPE_TYPE_START,
 	QUEUE_UI_SCOPE_TYPE_STOP,
@@ -38,7 +41,7 @@ struct sQueueUiWavegen {
 extern osMessageQueueId_t queueUiScopeHandle;
 extern osMessageQueueId_t queueUiWavegenHandle;
 
-
+*/
 #define COLOR_BUTTON_ENABLED (struct nk_color){40,200,40, 255}
 #define COLOR_BUTTON_DISABLED (struct nk_color){200,40,40, 255}
 

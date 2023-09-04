@@ -26,27 +26,6 @@
 #define COLOR_UI_CROSS		(LCD_COLOR_WHITE)
 
 
-struct sQueueTscUi {
-    uint16_t x;
-    uint16_t y;
-    uint16_t p;
-};
-/*
-struct sQueueUiScope {
-    uint16_t type;
-    uint16_t data[8];
-};
-
-struct sQueueUiWavegen {
-    uint16_t type;
-    uint16_t data[8];
-};*/
-
-extern osMessageQueueId_t queueTscUiHandle;
-extern osMessageQueueId_t queueUiScopeHandle;
-extern osMessageQueueId_t queueUiWavegenHandle;
-extern osSemaphoreId_t semaphoreLcdHandle;
-
 uint8_t nk_buf_cmds[NK_BUFFER_CMDS_LEN] = {0};
 uint8_t nk_buf_pool[NK_BUFFER_POOL_LEN] = {0};
 uint16_t fb_buf[FB_WIDTH*FB_HEIGHT];
