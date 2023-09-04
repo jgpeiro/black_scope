@@ -298,6 +298,7 @@ void TIM3_IRQHandler(void)
 	if( pScope->state == SCOPE_STATE_WAIT_FOR_STOP )
 	{
 	  pScope->dma_cndtr = DMA1_Channel1->CNDTR;
+	  pScope->trigged = 1;
 	}
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);

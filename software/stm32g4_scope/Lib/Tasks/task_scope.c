@@ -33,25 +33,7 @@ uint16_t buffer5[ADC_BUFFER_LEN];
 uint16_t buffer6[ADC_BUFFER_LEN];
 uint16_t buffer7[ADC_BUFFER_LEN];
 uint16_t buffer8[ADC_BUFFER_LEN];
-/*
-enum eQueueUiScopeType
-{
-	QUEUE_UI_SCOPE_TYPE_START,
-	QUEUE_UI_SCOPE_TYPE_STOP,
-	QUEUE_UI_SCOPE_TYPE_HORIZONTAL,
-	QUEUE_UI_SCOPE_TYPE_VERTICAL,
-	QUEUE_UI_SCOPE_TYPE_TRIGGER,
-	QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY,
-	QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED
-};
 
-struct sQueueUiScope {
-    uint16_t type;
-    uint16_t data[8];
-};*/
-
-//extern osMessageQueueId_t queueUiScopeHandle;
-//extern osSemaphoreId_t semaphoreLcdHandle;
 extern tUi ui;
 extern tLcd lcd;
 
@@ -64,8 +46,8 @@ void StartTaskScope(void *argument)
     struct sQueueUiScope msgScope = {0};
 
     TickType_t xLastWakeTime;
-    const TickType_t xFrequency = 1;
-	const int wait_timeout_ms = 20;
+    const TickType_t xFrequency = 10;
+	const int wait_timeout_ms = 100;
 
     int running = 0;
     int single = 0;
@@ -183,11 +165,6 @@ void StartTaskScope(void *argument)
 						trigger_is_visible = msgScope.data[0];
 					break;
 				case QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED:
-					if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
-					{
-					//	lcd_clear( &lcd, LCD_COLOR_BLACK );
-						osSemaphoreRelease( semaphoreLcdHandle );
-					}
 					is_collapsed = msgScope.data[0];
 					break;
 				default:
@@ -213,7 +190,7 @@ void StartTaskScope(void *argument)
         	a = scope.dma_cndtr;
         	scope_start( &scope, 0 );
             int result = scope_wait( &scope, single?portMAX_DELAY:wait_timeout_ms );
-        	if( a != b )
+        	if( scope.trigged )
         	{
         		result = 1;
         	}

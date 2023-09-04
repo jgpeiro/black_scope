@@ -51,8 +51,10 @@ void StartTaskUi(void *argument)
 {
     tFramebuf fb = {0};
 
+    TickType_t xLastWakeTime;
+	const TickType_t xFrequency = 10;
+
     struct sQueueTscUi msgTscUi = {0};
-    //struct sQueueUiLcd msgUiLcd = {0};
 
 	struct nk_buffer cmds = {0};
 	struct nk_buffer pool = {0};
@@ -80,9 +82,7 @@ void StartTaskUi(void *argument)
 	nk_init_custom( &ctx, &cmds, &pool, &font );
 
 	ui_init( &ui );
-	int is_collapsed_bck = 0;
-    TickType_t xLastWakeTime;
-	const TickType_t xFrequency = 10;
+
 	xLastWakeTime = xTaskGetTickCount();
 	for(;;)
 	{

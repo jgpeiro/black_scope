@@ -95,6 +95,7 @@ struct sScope
 	uint32_t dma_cndtr;
 
 	uint8_t continuous;
+	uint8_t trigged;
 };
 typedef struct sScope tScope;
 

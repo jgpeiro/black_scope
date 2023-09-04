@@ -21,35 +21,35 @@ void draw_marker( tLcd *pLcd, uint16_t x, uint16_t y, uint16_t direction, uint16
 	int w = 0;
 	int h = 0;
 
-	w = 10;
-	h = 10;
+	w = 9;
+	h = 9;
 
-	lcd_rect( pLcd, x-w/2, y-h/2, w, h, color );
+	lcd_rect( pLcd, x, y, w/2, h/2, color );
 
 	switch( direction )
 	{
 		case MARKER_ORIENTATION_NORTH:
 			for( int i = 0; i < w/2; i++ )
 			{
-				lcd_hline( pLcd, x-w/2+i, y+h/2+i, 2*i, color );
+				lcd_hline( pLcd, x - w / 2 + 1 + i, y - h / 2 - 1 - i, w - 2 - 2 * i, color );
 			}
 			break;
 		case MARKER_ORIENTATION_SOUTH:
 			for( int i = 0; i < w/2; i++ )
 			{
-				lcd_hline( pLcd, x-w/2+i, y-h/2-i, 2*i, color );
+				lcd_hline( pLcd, x - w / 2 + 1 + i, y + h / 2 + 1 + i, w - 2 - 2 * i, color );
 			}
 			break;
 		case MARKER_ORIENTATION_EAST:
 			for( int i = 0; i < w/2; i++ )
 			{
-				lcd_vline( pLcd, x+w/2-i, y+h/2+i, 2*i, color );
+				lcd_vline( pLcd, x + w / 2 + 1 + i, y - h / 2 + 1 + i, h - 2 - 2 * i, color );
 			}
 			break;
 		case MARKER_ORIENTATION_WEST:
 			for( int i = 0; i < w/2; i++ )
 			{
-				lcd_vline( pLcd, x+w/2-i, y-h/2-i, 2*i, color );
+				lcd_vline( pLcd, x - w / 2 - 1 - i, y - h / 2 + 1 + i, h - 2 - 2 * i, color );
 			}
 			break;
 		default:
@@ -192,7 +192,7 @@ void scope_stroque_horizontal( tScope_Horizontal *pThis, tLcd *pLcd, uint16_t co
 
 	// Draw a marker
 	draw_marker( pLcd, x, 0, MARKER_ORIENTATION_SOUTH, color );
-	font_draw_text( &fontUbuntuBookRNormal16, x+1, y+1, "H", color, lcd_set_pixel, pLcd );
+	//font_draw_text( &fontUbuntuBookRNormal16, x+1, y+1, "H", color, lcd_set_pixel, pLcd );
 }
 
 void scope_stroque_vertical( tScope_Vertical *pThis, tLcd *pLcd, uint16_t color,
@@ -217,7 +217,7 @@ void scope_stroque_vertical( tScope_Vertical *pThis, tLcd *pLcd, uint16_t color,
 	//w = pLcd->width/2;
 	lcd_hline( pLcd, x, y, w, color );
 	draw_marker( pLcd, x, y, MARKER_ORIENTATION_EAST, color );
-	font_draw_text( &fontUbuntuBookRNormal16, x+1, y+1, "V", color, lcd_set_pixel, pLcd );
+	//font_draw_text( &fontUbuntuBookRNormal16, x+1, y+1, "V", color, lcd_set_pixel, pLcd );
 
 	x = 0;
 	y = pThis->gain1;
@@ -259,7 +259,7 @@ void scope_stroque_trigger( tScope_Trigger *pThis, tLcd *pLcd, uint16_t color, i
 	 }
 	lcd_hline( pLcd, x, y, w, color );
 	draw_marker( pLcd, x, y, MARKER_ORIENTATION_EAST, color );
-	font_draw_text( &fontUbuntuBookRNormal16, x+1, y+1, "T", color, lcd_set_pixel, pLcd );
+	//font_draw_text( &fontUbuntuBookRNormal16, x+1, y+1, "T", color, lcd_set_pixel, pLcd );
 }
 
 

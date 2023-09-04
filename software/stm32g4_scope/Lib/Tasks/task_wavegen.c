@@ -26,14 +26,7 @@
 
 uint16_t dac1_buffer[DAC_BUFFER_LEN];
 uint16_t dac2_buffer[DAC_BUFFER_LEN];
-/*
-struct sQueueUiWavegen {
-    uint16_t type;
-    uint16_t data[8];
-};*/
 
-//extern osMessageQueueId_t queueUiWavegenHandle;
-//extern osSemaphoreId_t semaphoreLcdHandle;
 extern tUi ui;
 extern tLcd lcd;
 
@@ -44,11 +37,7 @@ void StartTaskWavegen(void *argument)
 	int is_visible = 0;
 	int is_collapsed = 0;
 	int slow_cnt = 0;
-	//int is_visible_bck = 0;
-	//int ch1_is_enabled = 0;
-	//int ch2_is_enabled = 0;
-	//int ch1_is_enabled_bck = 0;
-	//int ch2_is_enabled_bck = 0;
+
 	struct sQueueUiWavegen msgUiWavegen = {0};
 
 	wavegen_init_ll( &wavegen,
@@ -72,30 +61,12 @@ void StartTaskWavegen(void *argument)
 	wavegen_start( &wavegen, WAVEGEN_CHANNEL_1 );
 	wavegen_start( &wavegen, WAVEGEN_CHANNEL_2 );
 
-	//if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
-	//{
-	//	wavegen_draw( &wavegen, &lcd );
-	//	osSemaphoreRelease( semaphoreLcdHandle );
-	//}
-
 	TickType_t xLastWakeTime;
 	const TickType_t xFrequency = 1;
 	xLastWakeTime = xTaskGetTickCount();
 	for(;;)
 	{
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
-		//is_visible = ui.wavegen.is_visible;
-		//ch1_is_enabled = ui.wavegen.waveforms[0].enabled;
-		//ch2_is_enabled = ui.wavegen.waveforms[1].enabled;
-
-		//if( is_visible && !is_visible_bck )
-		{
-			//	if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
-			{
-				//		wavegen_draw( &wavegen, &lcd );
-				//		osSemaphoreRelease( semaphoreLcdHandle );
-			}
-		}
 
 		if( osMessageQueueGet(queueUiWavegenHandle, &msgUiWavegen, NULL, 0U) == osOK )
 		{
@@ -167,10 +138,6 @@ void StartTaskWavegen(void *argument)
         	}
         }
         slow_cnt = (slow_cnt+1)%10;
-
-		//is_visible_bck = is_visible;
-
-
 	}
 }
 

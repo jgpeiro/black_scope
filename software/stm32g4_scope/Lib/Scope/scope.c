@@ -117,6 +117,7 @@ void scope_init( tScope *pThis,
 	pThis->state = SCOPE_STATE_IDLE;
 	pThis->continuous = 0;
 	pThis->dma_cndtr = 0;
+	pThis->trigged = 0;
 }
 
 void scope_config_horizontal( tScope *pThis, int offset, int scale )
@@ -294,6 +295,7 @@ void scope_start( tScope *pThis, uint8_t continuous )
 {
 	pThis->continuous = continuous;
 	pThis->dma_cndtr = 0;
+	pThis->trigged = 0;
 
 	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp1 );
 	HAL_OPAMP_SelfCalibrate( pThis->vertical.hopamp2 );
@@ -359,14 +361,15 @@ void scope_stop( tScope *pThis )
 	pThis->state = SCOPE_STATE_IDLE;
 
 }
-
+#include "cmsis_os.h"
 uint8_t scope_wait( tScope *pThis, uint32_t timeout_ms )
 {
 	{
 		uint32_t start = HAL_GetTick();
 		while( scope_is_busy( pThis ) )
 		{
-			vTaskDelay(1);
+			//vTaskDelay(1);
+			osDelay(1);
 			if( HAL_GetTick() - start > timeout_ms )
 			{
 				return 0;
@@ -375,16 +378,6 @@ uint8_t scope_wait( tScope *pThis, uint32_t timeout_ms )
 		return 1;
 	}
 }
-
-
-//#define MIN_OFFSET_VALUE (-100)
-//#define MAX_OFFSET_VALUE (100)
-/*
-int16_t map_value(int32_t value, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
-    return (int16_t)((value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min);
-}*/
-
-
 
 uint8_t scope_is_continuous( tScope *pThis )
 {
