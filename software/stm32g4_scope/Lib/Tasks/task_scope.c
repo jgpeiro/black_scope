@@ -58,6 +58,25 @@ extern tLcd lcd;
  *         If the trigger conditions are met, mark the trigger point.
  *         Handle single-shot mode.
  *
+@startuml
+start
+:Initialize scope hardware components;
+:Configure initial scope settings;
+:Draw the initial scope display;
+while (true) is (true)
+    :Wait for a fixed time interval (xFrequency);
+    if (UI scope messages are available) then (yes)
+        :Erase the previous scope display;
+        :Update scope settings based on messages;
+        :Redraw the scope display with updated settings;
+    endif
+    if (running) then (yes)
+        :Acquire and display data;
+        :Update the display with grid and signal information;
+        :Handle single-shot mode;
+    endif
+endwhile
+@enduml
  * @param argument Task argument.
  */
 void StartTaskScope(void *argument) {

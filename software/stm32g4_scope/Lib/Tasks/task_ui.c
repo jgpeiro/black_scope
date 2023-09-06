@@ -73,6 +73,25 @@ void lcd_draw_cross( tLcd *pLcd, uint16_t x, uint16_t y, uint16_t color )
  *         Send a message to the Scope and Wavegen tasks to update visibility.
  * }
  *
+@startuml
+start
+:Initialize LCD and UI components;
+:Initialize NK (Nuklear) GUI context;
+while (true) is (true)
+    :Wait for a fixed time interval (xFrequency);
+    if (touch data is available in the TSC UI queue) then (yes)
+        :Update NK input with touch data;
+    endif
+    :Build the UI based on the NK context
+         Optionally send data to the 
+         Scope or Wavegen queues;
+    :Draw the UI on the frame buffer;
+    :Display the frame buffer on the LCD screen;
+    if (UI visibility changes) then (yes)
+        :Send messages to update visibility in Scope and Wavegen tasks;
+    endif
+endwhile
+@enduml
  * @param argument Task argument.
  */
 void StartTaskUi(void *argument)

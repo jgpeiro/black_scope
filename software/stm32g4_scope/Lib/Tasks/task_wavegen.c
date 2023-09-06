@@ -52,6 +52,20 @@ extern tLcd lcd;
  *
  * Additionally, a slow count is used to periodically redraw the wavegen display for visibility.
  *
+@startuml
+start
+:Initialize wavegen structure with DAC and timer handles;
+:Configure wavegen settings for channel 1 and channel 2;
+:Start wave generation for both channels;
+while (true) is (true)
+    :Wait for a fixed time interval (xFrequency);
+    if (UI wavegen messages are available) then (yes)
+        :Erase the previous wavegen display on the LCD;
+        :Handle UI messages to adjust wavegen settings;
+        :Draw the updated wavegen display on the LCD;
+    endif
+endwhile
+@enduml
  * @param argument Task argument.
  */
 void StartTaskWavegen(void *argument) {

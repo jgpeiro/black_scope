@@ -18,30 +18,6 @@
 
 #include "scope_tasks.h"
 
-/*enum eQueueUiScopeType
-{
-	QUEUE_UI_SCOPE_TYPE_START,
-	QUEUE_UI_SCOPE_TYPE_STOP,
-	QUEUE_UI_SCOPE_TYPE_HORIZONTAL,
-	QUEUE_UI_SCOPE_TYPE_VERTICAL,
-	QUEUE_UI_SCOPE_TYPE_TRIGGER,
-	QUEUE_UI_SCOPE_TYPE_CHANGE_VISIBILITY,
-	QUEUE_UI_SCOPE_TYPE_CHANGE_COLLAPSED
-};
-struct sQueueUiScope {
-    uint16_t type;
-    uint16_t data[8];
-};
-
-struct sQueueUiWavegen {
-    uint16_t type;
-    uint16_t data[8];
-};
-
-extern osMessageQueueId_t queueUiScopeHandle;
-extern osMessageQueueId_t queueUiWavegenHandle;
-
-*/
 #define COLOR_BUTTON_ENABLED (struct nk_color){40,200,40, 255}
 #define COLOR_BUTTON_DISABLED (struct nk_color){200,40,40, 255}
 

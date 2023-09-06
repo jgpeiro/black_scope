@@ -3,6 +3,31 @@
  *
  *  Created on: Aug 31, 2023
  *      Author: jgpei
+@startuml
+actor User
+participant TaskTsc
+participant TaskUi
+participant TaskScope
+participant TaskWavegen
+participant semLcdHandle
+
+User -> TaskTsc: Touch Input
+TaskTsc --> TaskUi: Touch Data
+
+TaskUi --> TaskScope: UI Scope Messages
+
+TaskScope --> semLcdHandle: Acquire LCD Semaphore
+TaskScope --> semLcdHandle: Release LCD Semaphore
+
+TaskUi --> TaskWavegen: UI Wavegen Messages
+
+TaskWavegen --> semLcdHandle: Acquire LCD Semaphore
+TaskWavegen --> semLcdHandle: Release LCD Semaphore
+
+TaskUi -> semLcdHandle: Acquire LCD Semaphore
+TaskUi --> semLcdHandle: Release LCD Semaphore
+@enduml
+
  */
 
 #ifndef TASKS_SCOPE_TASKS_H_

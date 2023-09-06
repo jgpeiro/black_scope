@@ -41,6 +41,17 @@
  *             Send the data to the UI queue with maximum delay.
  * }
  *
+@startuml
+start
+:Initialize TSC2046 touch controller;
+while (true) is (true)
+    :Wait for a fixed time interval (xFrequency);
+    :Read touch data from the TSC2046;
+    if (pressure is detected) then (yes)
+        :Send data to the UI queue;
+    endif
+endwhile
+@enduml
  * @param argument Task argument.
  */
 void StartTaskTsc(void *argument) {
