@@ -117,9 +117,10 @@ uint8_t nk_keypad( struct nk_context *pCtx, int32_t min, int32_t *pValue, int32_
 	int retval = 0;
 	char buffer[32];
 
-	if (nk_popup_begin( pCtx, NK_POPUP_STATIC, "Keypad", NK_WINDOW_CLOSABLE | NK_WINDOW_NO_SCROLLBAR, (struct nk_rect){0, -30, 108, 208} ) )
+//	if (nk_popup_begin( pCtx, NK_POPUP_STATIC, "Keypad", NK_WINDOW_CLOSABLE | NK_WINDOW_NO_SCROLLBAR, (struct nk_rect){0, -30, 108, 208} ) )
+	if (nk_popup_begin( pCtx, NK_POPUP_STATIC, "Keypad", NK_WINDOW_CLOSABLE | NK_WINDOW_NO_SCROLLBAR, (struct nk_rect){0, -30, 108, 208+30+30} ) )
     {
-    	retval = 1;
+        retval = 1;
     	nk_layout_row( pCtx, NK_STATIC, 30, 1, (float[]){30+30+30});
 
 		snprintf( buffer, sizeof( buffer), "%d", value );
@@ -139,8 +140,21 @@ uint8_t nk_keypad( struct nk_context *pCtx, int32_t min, int32_t *pValue, int32_
         if( nk_button_label( pCtx, "0" ) )	value = value*10 + 0;
         if( nk_button_label( pCtx, "-" ) )	value =-value;
 
-        //nk_layout_row( pCtx, NK_STATIC, 30, 1, (float[]){30+30+30});
-        //nk_slider_int( pCtx, min, &value, max, 1 );
+        if( value > max )
+        {
+        	value = max;
+        }
+        if( value < min )
+        {
+        	value = min;
+        }
+
+        nk_layout_row( pCtx, NK_STATIC, 30, 1, (float[]){30+30+30});
+        int vH = (value>>8)&0xFF;
+        int vL = (value>>0)&0xFF;
+        nk_progress(pCtx, &vH, max/0xFF, 1);
+        nk_progress(pCtx, &vL, 0xFF, 1);
+        value = vH<<8 | vL;
 
         if( value > max )
         {
@@ -299,7 +313,7 @@ void ui_build( tUi *pThis, struct nk_context *pCtx )
 
 
 
-void ui_build_info( tUi *pThis, struct nk_context *pCtx )
+void _ui_build_info( tUi *pThis, struct nk_context *pCtx )
 {
     uint8_t buffer[32];
 	pThis->info.is_visible = 0;
@@ -323,5 +337,70 @@ void ui_build_info( tUi *pThis, struct nk_context *pCtx )
         nk_label( pCtx, "MEM", NK_TEXT_LEFT );
         nk_label( pCtx, "0", NK_TEXT_RIGHT );
         nk_tree_pop( pCtx );
+    }
+}
+
+#include "scope_tasks.h"
+
+void ui_build_info(tUi *pThis, struct nk_context *pCtx) {
+    uint8_t buffer[32];
+    pThis->info.is_visible = 0;
+
+    if (nk_tree_push(pCtx, NK_TREE_TAB, "Info", NK_MINIMIZED)) {
+        pThis->info.is_visible = 1;
+        nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
+        nk_label(pCtx, "FPS AVG", NK_TEXT_LEFT);
+        static int a = 0;
+        static int b = 0;
+        int dt;
+        static int dt_low = 0;
+        b = a;
+        a = HAL_GetTick();
+        dt = 1000 / (a - b);
+        dt_low = dt_low * 0.9f + dt * 0.1f;
+        snprintf(buffer, sizeof(buffer), "%d", dt_low);
+        nk_label(pCtx, buffer, NK_TEXT_RIGHT);
+
+        // CPU Usage Calculation
+        TaskStatus_t xTaskStatus;
+        extern osThreadId_t taskTscHandle;
+        extern osThreadId_t taskUiHandle;
+        extern osThreadId_t taskScopeHandle;
+        extern osThreadId_t taskWavegenHandle;
+        vTaskGetInfo(taskTscHandle, &xTaskStatus, pdTRUE, eInvalid);
+        float cpuUsageTaskTsc = ((float)xTaskStatus.ulRunTimeCounter / xTaskGetTickCount()) * 100;
+        snprintf(buffer, sizeof(buffer), "%.2f%%", cpuUsageTaskTsc);
+        nk_label(pCtx, "TaskTsc", NK_TEXT_LEFT);
+        nk_label(pCtx, buffer, NK_TEXT_LEFT);
+
+        vTaskGetInfo(taskUiHandle, &xTaskStatus, pdTRUE, eInvalid);
+        float cpuUsageTaskUI = ((float)xTaskStatus.ulRunTimeCounter / xTaskGetTickCount()) * 100;
+        snprintf(buffer, sizeof(buffer), "%.2f%%", cpuUsageTaskUI);
+        nk_label(pCtx, "TaskUI", NK_TEXT_LEFT);
+        nk_label(pCtx, buffer, NK_TEXT_LEFT);
+
+        vTaskGetInfo(taskScopeHandle, &xTaskStatus, pdTRUE, eInvalid);
+        float cpuUsageTaskScope = ((float)xTaskStatus.ulRunTimeCounter / xTaskGetTickCount()) * 100;
+        snprintf(buffer, sizeof(buffer), "%.2f%%", cpuUsageTaskScope);
+        nk_label(pCtx, "TaskScope", NK_TEXT_LEFT);
+        nk_label(pCtx, buffer, NK_TEXT_LEFT);
+
+        vTaskGetInfo(taskWavegenHandle, &xTaskStatus, pdTRUE, eInvalid);
+        float cpuUsageTaskWavegen = ((float)xTaskStatus.ulRunTimeCounter / xTaskGetTickCount()) * 100;
+        snprintf(buffer, sizeof(buffer), "%.2f%%", cpuUsageTaskWavegen);
+        nk_label(pCtx, "TaskWavegen", NK_TEXT_LEFT);
+        nk_label(pCtx, buffer, NK_TEXT_LEFT);
+
+        // Calculate total CPU usage
+        float totalCPUUsage = cpuUsageTaskTsc + cpuUsageTaskUI + cpuUsageTaskScope + cpuUsageTaskWavegen;
+        snprintf(buffer, sizeof(buffer), "%.2f%%", totalCPUUsage);
+        nk_label(pCtx, "CPU", NK_TEXT_LEFT);
+        nk_label(pCtx, buffer, NK_TEXT_LEFT);
+
+        nk_label(pCtx, "MEM", NK_TEXT_LEFT);
+        // You can add memory information here if needed
+        nk_label(pCtx, "0", NK_TEXT_RIGHT);
+
+        nk_tree_pop(pCtx);
     }
 }

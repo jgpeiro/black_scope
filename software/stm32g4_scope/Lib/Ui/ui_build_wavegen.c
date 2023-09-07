@@ -17,16 +17,6 @@ enum eWaveGenType2
 	WAVEGEN_TYPE2_PWM,
 	WAVEGEN_TYPE2_NOISE
 };
-/*
-enum eQueueUiWavegenType
-{
-	QUEUE_UI_WAVEGEN_TYPE_START,
-	QUEUE_UI_WAVEGEN_TYPE_STOP,
-	QUEUE_UI_WAVEGEN_TYPE_CONFIG_HORIZONTAL,
-	QUEUE_UI_WAVEGEN_TYPE_CONFIG_VERTICAL,
-	QUEUE_UI_WAVEGEN_TYPE_CHANGE_VISIBILITY,
-	QUEUE_UI_WAVEGEN_TYPE_CHANGE_COLLAPSED
-};*/
 
 void ui_build_wavegen( tUi_Wavegen *pThis, struct nk_context *pCtx )
 {
@@ -59,11 +49,11 @@ void ui_build_wavegen( tUi_Wavegen *pThis, struct nk_context *pCtx )
 		{
 			nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
 			pThis->waveforms[pThis->waveform_selected].type = nk_combo( pCtx, (const char*[]){"Dc", "Sine", "Square", "Triangle", "Saw", "PWM", "Noise"}, 7, pThis->waveforms[pThis->waveform_selected].type, 30, nk_vec2(94, 120));
-			nk_property_keypad( pCtx, "Offset", -9999, &pThis->waveforms[pThis->waveform_selected].offset, 9999, &show_keypad_offset );
+			nk_property_keypad( pCtx, "Offset", -4096, &pThis->waveforms[pThis->waveform_selected].offset, 4095, &show_keypad_offset );
 			if( pThis->waveforms[pThis->waveform_selected].type != WAVEGEN_TYPE2_DC )
 			{
-				nk_property_keypad( pCtx, "Scale", 0, &pThis->waveforms[pThis->waveform_selected].scale, 9999, &show_keypad_scale );
-				nk_property_keypad( pCtx, "Freq", 0, &pThis->waveforms[pThis->waveform_selected].frequency, 999999, &show_keypad_freq );
+				nk_property_keypad( pCtx, "Scale", 0, &pThis->waveforms[pThis->waveform_selected].scale, 4095, &show_keypad_scale );
+				nk_property_keypad( pCtx, "Freq", 0, &pThis->waveforms[pThis->waveform_selected].frequency, 4095, &show_keypad_freq );
 			}
 			if( pThis->waveforms[pThis->waveform_selected].type == WAVEGEN_TYPE2_PWM )
 			{

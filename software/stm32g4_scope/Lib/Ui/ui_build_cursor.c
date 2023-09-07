@@ -42,8 +42,8 @@ void ui_build_cursor( tUi *pThis, struct nk_context *pCtx )
         if( pThis->cursors.cursors[pThis->cursors.cursor_selected].enabled )
         {
         	pThis->cursors.cursors[pThis->cursors.cursor_selected].horizontal = nk_combo( pCtx, (const char*[]){"Hori", "Vert"}, 2, pThis->cursors.cursors[pThis->cursors.cursor_selected].horizontal, 30, nk_vec2(94, 120));
-        	nk_property_keypad( pCtx, "Offset", -9999, &pThis->cursors.cursors[pThis->cursors.cursor_selected].offset, 9999, &show_keypad_offset );
-            nk_property_keypad( pCtx, "Track", -9999, &pThis->cursors.cursors[pThis->cursors.cursor_selected].track, 9999, &show_keypad_track );
+        	nk_property_keypad( pCtx, "Offset", 0, &pThis->cursors.cursors[pThis->cursors.cursor_selected].offset, 4095, &show_keypad_offset );
+            nk_property_keypad( pCtx, "Track", 0, &pThis->cursors.cursors[pThis->cursors.cursor_selected].track, 4095, &show_keypad_track );
         }
         nk_tree_pop( pCtx );
     }

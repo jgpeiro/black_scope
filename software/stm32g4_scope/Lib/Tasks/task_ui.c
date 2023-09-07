@@ -20,8 +20,8 @@
 #define FB_WIDTH    (240)
 #define FB_HEIGHT   (80)
 
-#define NK_BUFFER_CMDS_LEN  (1024*6)
-#define NK_BUFFER_POOL_LEN  (1024*6)
+#define NK_BUFFER_CMDS_LEN  (1024*4)
+#define NK_BUFFER_POOL_LEN  (1024*4)
 
 #define COLOR_UI_CROSS      (LCD_COLOR_WHITE)
 

@@ -189,9 +189,10 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   * @param  None
   * @retval None
   */
+extern void ConfigureRuntimeStatsTimer();
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-
+	//ConfigureRuntimeStatsTimer();
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -294,6 +295,46 @@ void _StartTaskTsc(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+void ConfigureRuntimeStatsTimer() {
+    TIM_HandleTypeDef htim8;
 
+    // Enable TIM8 clock
+    __HAL_RCC_TIM8_CLK_ENABLE();
+
+    // Initialize TIM8 handle
+    htim8.Instance = TIM8;
+    htim8.Init.Prescaler = (uint32_t)(SystemCoreClock / 1000) - 1;  // 1 kHz timer frequency
+    htim8.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim8.Init.Period = 999;  // 1 ms period
+    htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim8.Init.RepetitionCounter = 0;
+
+    if (HAL_TIM_Base_Init(&htim8) != HAL_OK) {
+        // Initialization Error
+        Error_Handler();  // Implement your error handling mechanism here
+    }
+
+    // Start the TIM8 base timer in interrupt mode
+    if (HAL_TIM_Base_Start_IT(&htim8) != HAL_OK) {
+        // Start Error
+        Error_Handler();  // Implement your error handling mechanism here
+    }
+
+    // Enable TIM8 interrupt in NVIC
+   // HAL_NVIC_SetPriority(TIM8_UP_TIM13_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
+  //  HAL_NVIC_EnableIRQ(TIM8_UP_TIM13_IRQn);
+}
+// TIM8 interrupt handler
+void _TIM8_UP_TIM13_IRQHandler() {
+    // Clear timer interrupt flag
+   // __HAL_TIM_CLEAR_IT(&htim8, TIM_IT_UPDATE);
+
+    // Update FreeRTOS tick count
+    //vTaskStepTick();
+}
+uint32_t get_tim8_cnt()
+{
+	return TIM8->CNT;
+}
 /* USER CODE END Application */
 

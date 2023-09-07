@@ -30,7 +30,7 @@ void ui_build_trigger( tUi_Trigger *pThis, struct nk_context *pCtx )
     		nk_style_pop_color_channel( pCtx );
 
             pThis->slope = nk_combo( pCtx, (const char*[]){"Rising", "Falling"}, 2, pThis->slope, 30, nk_vec2(94, 120));
-            nk_property_keypad( pCtx, "Level", -9999, &pThis->level, 9999, &show_keypad_level );
+            nk_property_keypad( pCtx, "Level", 0, &pThis->level, 4095, &show_keypad_level );
         }
 
         if( memcmp( &tmp, pThis, sizeof(tUi_Trigger) ) )

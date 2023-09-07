@@ -90,6 +90,11 @@ extern osMessageQueueId_t queueUiScopeHandle;
 extern osMessageQueueId_t queueUiWavegenHandle;
 extern osSemaphoreId_t semaphoreLcdHandle;
 
+extern osThreadId_t taskTscHandle;
+extern osThreadId_t taskUiHandle;
+extern osThreadId_t taskScopeHandle;
+extern osThreadId_t taskWavegenHandle;
+
 /**
  * @brief Start the TSC task.
  * @param argument Task argument.

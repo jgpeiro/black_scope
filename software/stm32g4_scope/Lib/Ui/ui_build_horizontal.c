@@ -16,14 +16,14 @@ void ui_build_horizontal( tUi_Horizontal *pThis, struct nk_context *pCtx )
     if( nk_tree_push( pCtx, NK_TREE_TAB, "Horizontal", NK_MINIMIZED) )
     {
     	pThis->is_visible = 1;
-    	if( nk_property_keypad( pCtx, "Offset", -9999, &pThis->offset, 9999, &show_keypad_offset ) )
+    	if( nk_property_keypad( pCtx, "Offset", 0, &pThis->offset, 4095, &show_keypad_offset ) )
     	{
     		msgUiScope.type = QUEUE_UI_SCOPE_TYPE_HORIZONTAL;
             msgUiScope.data[0] = pThis->offset;
     		msgUiScope.data[1] = pThis->scale;
             osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
         }
-    	if( nk_property_keypad( pCtx, "Scale", 0, &pThis->scale, 9999, &show_keypad_scale ) )
+    	if( nk_property_keypad( pCtx, "Scale", 0, &pThis->scale, 2500, &show_keypad_scale ) )
     	{
     		msgUiScope.type = QUEUE_UI_SCOPE_TYPE_HORIZONTAL;
             msgUiScope.data[0] = pThis->offset;
