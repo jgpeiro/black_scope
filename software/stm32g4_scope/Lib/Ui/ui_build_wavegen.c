@@ -34,7 +34,7 @@ void ui_build_wavegen( tUi_Wavegen *pThis, struct nk_context *pCtx )
 
     	nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
 
-		nk_style_push_color_channel( pCtx, pThis->waveform_selected );
+		nk_style_push_color_wavegen_channel( pCtx, pThis->waveform_selected );
     	pThis->waveform_selected = nk_combo(pCtx, (const char*[]){"Wg1", "Wg2"}, UI_WAVEFORM_COUNT, pThis->waveform_selected, 30, nk_vec2(94, 160));
 		nk_style_pop_color_channel( pCtx );
 

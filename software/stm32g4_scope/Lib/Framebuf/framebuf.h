@@ -27,6 +27,7 @@ typedef struct sFramebuf tFramebuf;
 void framebuf_init(tFramebuf *fb, uint16_t width, uint16_t height, uint16_t *buf );
 void framebuf_fill( const tFramebuf *pThis, uint16_t color );
 void framebuf_pixel( const tFramebuf *pThis, int16_t x, int16_t y, uint16_t color );
+uint16_t framebuf_get_pixel( const tFramebuf *pThis, int16_t x, int16_t y );
 void framebuf_hline( const tFramebuf *pThis, int16_t x, int16_t y, int16_t width, uint16_t color );
 void framebuf_vline( const tFramebuf *pThis, int16_t x, int16_t y, int16_t height, uint16_t color );
 void _framebuf_fill_rect( const tFramebuf *pThis, int16_t x, int16_t y, int16_t width, int16_t height, uint16_t color );

@@ -62,7 +62,7 @@ enum eQueueUiScopeType {
  */
 struct sQueueUiScope {
     uint16_t type; /**< Type of the message. */
-    uint16_t data[8]; /**< Message data. */
+    uint16_t data[32]; /**< Message data. */
 };
 
 /**

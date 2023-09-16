@@ -131,6 +131,19 @@ nk_widget_has_mouse_click_down(struct nk_context *ctx, enum nk_buttons btn, nk_b
         return 0;
     return nk_input_has_mouse_click_down_in_rect(&ctx->input, btn, bounds, down);
 }
+
+extern struct nk_rect rects[32];
+extern int rects_max;
+extern int rects_ptr;
+extern int rects_pressed;
+
+
+#include "cmsis_os.h"
+#include "lcd.h"
+#include "scope_tasks.h"
+#include "font.h"
+#include "FontUbuntuBookRNormal16.h"
+
 NK_API enum nk_widget_layout_states
 nk_widget(struct nk_rect *bounds, const struct nk_context *ctx)
 {
@@ -173,6 +186,47 @@ nk_widget(struct nk_rect *bounds, const struct nk_context *ctx)
     c.h = (float)((int)c.h);
 
     nk_unify(&v, &c, bounds->x, bounds->y, bounds->x + bounds->w, bounds->y + bounds->h);
+
+    extern int cnt_hovering;
+    extern int cnt_click;
+    extern int cnt_target;
+    extern int cnt_on;
+    printf( "%d, %d, %d, %d, %d,\n", cnt_hovering, (int)bounds->x, (int)bounds->y, (int)bounds->w, (int)bounds->h );
+    extern tLcd lcd;
+
+    cnt_hovering += 1;
+
+    if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+    {
+    	if( 0 <= (int)bounds->y && (int)bounds->y < 320 && 0 <= (int)bounds->y+(int)bounds->h && (int)bounds->y+(int)bounds->h < 320 )
+    	{
+			lcd_hline( &lcd, (int)bounds->x, (int)bounds->y, (int)bounds->w, LCD_COLOR_WHITE );
+			lcd_hline( &lcd, (int)bounds->x, (int)bounds->y+(int)bounds->h, (int)bounds->w, LCD_COLOR_WHITE );
+			lcd_vline( &lcd, (int)bounds->x, (int)bounds->y, (int)bounds->h, LCD_COLOR_WHITE );
+			lcd_vline( &lcd, (int)bounds->x+(int)bounds->w, (int)bounds->y, (int)bounds->h, LCD_COLOR_WHITE );
+			uint8_t buffer[32];
+			snprintf( buffer, sizeof(buffer), "%d", rects_max );
+			font_draw_text( &fontUbuntuBookRNormal16, (int)bounds->x, (int)bounds->y, buffer, LCD_COLOR_WHITE, lcd_set_pixel, &lcd );
+			if( rects_ptr == rects_max )
+			{
+				lcd_rect( &lcd, (int)bounds->x, (int)bounds->y, 5, 5, LCD_COLOR_GREEN );
+			}
+
+			rects[rects_max] = *bounds;
+			rects_max += 1;
+    	}
+        osSemaphoreRelease( semaphoreLcdHandle );
+    }
+
+
+    if( cnt_on )
+    {
+    	if( cnt_hovering == cnt_target )
+    	{
+    		return NK_WIDGET_VALID;
+    	}
+    }
+
     if (!NK_INTERSECT(c.x, c.y, c.w, c.h, bounds->x, bounds->y, bounds->w, bounds->h))
         return NK_WIDGET_INVALID;
     if (!NK_INBOX(in->mouse.pos.x, in->mouse.pos.y, v.x, v.y, v.w, v.h))

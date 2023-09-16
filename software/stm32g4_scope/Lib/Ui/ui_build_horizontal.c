@@ -6,6 +6,7 @@
  */
 #include "ui.h"
 
+
 void ui_build_horizontal( tUi_Horizontal *pThis, struct nk_context *pCtx )
 {
     static uint8_t show_keypad_offset = 0;
@@ -30,6 +31,29 @@ void ui_build_horizontal( tUi_Horizontal *pThis, struct nk_context *pCtx )
     		msgUiScope.data[1] = pThis->scale;
             osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
     	}
+
+    	/*nk_layout_row( pCtx, NK_STATIC, 30, 1, (float[]){180});
+
+    	int tmp = pThis->offset;
+    	nk_property_int( pCtx, "Offset", 0, &pThis->offset, 4095, 1, 4096/240);
+    	if( pThis->offset != tmp )
+    	{
+    		msgUiScope.type = QUEUE_UI_SCOPE_TYPE_HORIZONTAL;
+            msgUiScope.data[0] = pThis->offset;
+    		msgUiScope.data[1] = pThis->scale;
+            osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
+    	}
+    	tmp = pThis->scale;
+		nk_property_int( pCtx, "Scale", 0, &pThis->scale, 2500, 1, 2500/240);
+		if( pThis->scale != tmp )
+		{
+			msgUiScope.type = QUEUE_UI_SCOPE_TYPE_HORIZONTAL;
+			msgUiScope.data[0] = pThis->offset;
+			msgUiScope.data[1] = pThis->scale;
+			osMessageQueuePut(queueUiScopeHandle, &msgUiScope, 0U, portMAX_DELAY);
+		}
+		*/
+
         nk_tree_pop( pCtx );
     }
     else

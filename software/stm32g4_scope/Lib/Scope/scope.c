@@ -272,7 +272,13 @@ void scope_init(tScope *pThis,
   * @param scale The horizontal scale factor.
   */
 void scope_config_horizontal(tScope *pThis, int offset, int scale) {
-    // Set the horizontal offset and scale
+	// Skip configuration with the same values
+	if( pThis->horizontal.offset == offset && pThis->horizontal.scale == scale )
+    {
+    	return;
+    }
+
+	// Set the horizontal offset and scale
     pThis->horizontal.offset = offset;
     pThis->horizontal.scale = scale;
 
@@ -283,13 +289,13 @@ void scope_config_horizontal(tScope *pThis, int offset, int scale) {
 
     // Configure the timer for stop time calculation
     pThis->horizontal.htim_stop->Init.Prescaler = (170e6 / (scale * 1000)) / 2 - 1;
-    pThis->horizontal.htim_stop->Init.Period = pThis->len + offset - 1;
+    pThis->horizontal.htim_stop->Init.Period = (pThis->len/2 + offset)*2 - 1;
     HAL_TIM_Base_Init(pThis->horizontal.htim_stop);
 
     // Configure the timer output compare channel for triggering
     TIM_OC_InitTypeDef sConfigOC = {0};
     sConfigOC.OCMode = TIM_OCMODE_TIMING;
-    sConfigOC.Pulse = pThis->len + offset - 1;
+    sConfigOC.Pulse = (pThis->len/2 + offset)*2 - 1;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     HAL_TIM_OC_ConfigChannel(pThis->horizontal.htim_stop, &sConfigOC, TIM_CHANNEL_1);

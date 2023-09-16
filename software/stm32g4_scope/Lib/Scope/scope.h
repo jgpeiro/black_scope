@@ -65,6 +65,21 @@ struct sScope_Vertical
 	int32_t gain2;  /**< Vertical gain for channel 2. */
 	int32_t gain3;  /**< Vertical gain for channel 3. */
 	int32_t gain4;  /**< Vertical gain for channel 4. */
+
+	uint8_t enable1;
+	uint8_t enable2;
+	uint8_t enable3;
+	uint8_t enable4;
+
+	int32_t offset1;
+	int32_t offset2;
+	int32_t offset3;
+	int32_t offset4;
+
+	int32_t scale1;
+	int32_t scale2;
+	int32_t scale3;
+	int32_t scale4;
 };
 typedef struct sScope_Vertical tScope_Vertical;
 

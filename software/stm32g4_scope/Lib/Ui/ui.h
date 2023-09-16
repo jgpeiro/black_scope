@@ -26,9 +26,12 @@
 #define COLOR_CHANNEL3 (struct nk_color){0,0,255, 255}
 #define COLOR_CHANNEL4 (struct nk_color){255,0,255, 255}
 
+#define COLOR_WAVEGEN_CHANNEL1 (struct nk_color){0,255,255, 255}
+#define COLOR_WAVEGEN_CHANNEL2 (struct nk_color){255,0,255, 255}
+
 #define UI_CHANNEL_COUNT    (4)
 #define UI_WAVEFORM_COUNT   (2)
-#define UI_CURSOR_COUNT     (2)
+#define UI_CURSOR_COUNT     (4)
 
 enum UI_TRIGGER_MODE {
     UI_TRIGGER_MODE_AUTO,
@@ -68,6 +71,8 @@ struct sUi_Vertical_Channel
 {
     uint8_t enabled;
     enum UI_VERTICAL_CHANNEL_COUPLING coupling;
+    int32_t offset;
+    int32_t gain;
     int32_t scale;
 };
 typedef struct sUi_Vertical_Channel tUi_Vertical_Channel;
@@ -119,10 +124,10 @@ typedef struct sUi_Wavegen tUi_Wavegen;
 struct sUi_Cursor
 {
     uint8_t enabled;
-    uint8_t horizontal;
+    //uint8_t horizontal;
     int32_t offset;
-    int32_t track;
-    struct nk_color color;
+    //int32_t track;
+    //struct nk_color color;
 };
 typedef struct sUi_Cursor tUi_Cursor;
 
@@ -199,5 +204,12 @@ void ui_build_measurements( tUi *pThis, struct nk_context *pCtx );
 void ui_build_info( tUi *pThis, struct nk_context *pCtx );
 void ui_build_color_picker( tUi *pThis, struct nk_context *pCtx );
 void ui_build_theme_chooser(struct nk_context *ctx);
+
+#include "lcd.h"
+void ui_draw_cursors( tUi_Cursors *pThis, tLcd *pLcd, int is_collapsed);
+void ui_erase_cursors( tUi_Cursors *pThis, tLcd *pLcd, int is_collapsed);
+void ui_stroque_cursors( tUi_Cursors *pThis, tLcd *pLcd,
+		uint16_t color1, uint16_t color2, uint16_t color3, uint16_t color4,
+		int is_collapsed );
 
 #endif /* UI_H_ */

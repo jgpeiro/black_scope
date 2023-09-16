@@ -16,7 +16,7 @@ void ui_build_cursor( tUi *pThis, struct nk_context *pCtx )
     {
     	pThis->cursors.is_visible = 1;
         nk_layout_row(pCtx, NK_STATIC, 30, 2, (float[]){94, 94});
-        pThis->cursors.cursor_selected = nk_combo(pCtx, (const char*[]){"C1", "C2"}, UI_CURSOR_COUNT, pThis->cursors.cursor_selected, 30, nk_vec2(94, 160));
+        pThis->cursors.cursor_selected = nk_combo(pCtx, (const char*[]){"X0", "X1", "Y0", "Y1"}, UI_CURSOR_COUNT, pThis->cursors.cursor_selected, 30, nk_vec2(94, 160));
 
 		if( pThis->cursors.cursors[pThis->cursors.cursor_selected].enabled )
 		{
@@ -41,9 +41,23 @@ void ui_build_cursor( tUi *pThis, struct nk_context *pCtx )
 
         if( pThis->cursors.cursors[pThis->cursors.cursor_selected].enabled )
         {
-        	pThis->cursors.cursors[pThis->cursors.cursor_selected].horizontal = nk_combo( pCtx, (const char*[]){"Hori", "Vert"}, 2, pThis->cursors.cursors[pThis->cursors.cursor_selected].horizontal, 30, nk_vec2(94, 120));
+        	//pThis->cursors.cursors[pThis->cursors.cursor_selected].horizontal = nk_combo( pCtx, (const char*[]){"Hori", "Vert"}, 2, pThis->cursors.cursors[pThis->cursors.cursor_selected].horizontal, 30, nk_vec2(94, 120));
         	nk_property_keypad( pCtx, "Offset", 0, &pThis->cursors.cursors[pThis->cursors.cursor_selected].offset, 4095, &show_keypad_offset );
-            nk_property_keypad( pCtx, "Track", 0, &pThis->cursors.cursors[pThis->cursors.cursor_selected].track, 4095, &show_keypad_track );
+            //nk_property_keypad( pCtx, "Track", 0, &pThis->cursors.cursors[pThis->cursors.cursor_selected].track, 4095, &show_keypad_track );
+
+        	nk_label( pCtx, "x0", NK_TEXT_LEFT );
+        	nk_label( pCtx, "0", NK_TEXT_LEFT );
+        	nk_label( pCtx, "x1", NK_TEXT_LEFT );
+        	nk_label( pCtx, "0", NK_TEXT_LEFT );
+        	nk_label( pCtx, "dx", NK_TEXT_LEFT );
+        	nk_label( pCtx, "0", NK_TEXT_LEFT );
+
+        	nk_label( pCtx, "y0", NK_TEXT_LEFT );
+        	nk_label( pCtx, "0", NK_TEXT_LEFT );
+        	nk_label( pCtx, "y1", NK_TEXT_LEFT );
+        	nk_label( pCtx, "0", NK_TEXT_LEFT );
+        	nk_label( pCtx, "dy", NK_TEXT_LEFT );
+        	nk_label( pCtx, "0", NK_TEXT_LEFT );
         }
         nk_tree_pop( pCtx );
     }

@@ -25,6 +25,10 @@ nk_input_begin(struct nk_context *ctx)
     in->mouse.delta.y = 0;
     for (i = 0; i < NK_KEY_MAX; i++)
         in->keyboard.keys[i].clicked = 0;
+
+    // Reset gamepad input
+    for (i = 0; i < 4; i++)
+        in->gamepad.keys[i] = 0;
 }
 NK_API void
 nk_input_end(struct nk_context *ctx)
@@ -40,6 +44,8 @@ nk_input_end(struct nk_context *ctx)
         in->mouse.ungrab = 0;
         in->mouse.grab = 0;
     }
+    for (int i = 0; i < 4; i++)
+        in->gamepad_prev.keys[i] = in->gamepad.keys[i];
 }
 NK_API void
 nk_input_motion(struct nk_context *ctx, int x, int y)
@@ -154,12 +160,24 @@ nk_input_has_mouse_click_in_rect(const struct nk_input *i, enum nk_buttons id,
         return nk_false;
     return nk_true;
 }
+int cnt_hovering = 0;
+int cnt_click = 0;
+int cnt_target = 0;
+int cnt_on = 0;
+
 NK_API nk_bool
 nk_input_has_mouse_click_in_button_rect(const struct nk_input *i, enum nk_buttons id,
     struct nk_rect b)
 {
     const struct nk_mouse_button *btn;
     if (!i) return nk_false;
+    if( cnt_on )
+    {
+    	if( cnt_hovering == cnt_target )
+    	{
+    		return nk_true;
+    	}
+    }
     btn = &i->mouse.buttons[id];
 #ifdef NK_BUTTON_TRIGGER_ON_RELEASE
     if (!NK_INBOX(btn->clicked_pos.x,btn->clicked_pos.y,b.x,b.y,b.w,b.h)
@@ -207,10 +225,18 @@ nk_input_any_mouse_click_in_rect(const struct nk_input *in, struct nk_rect b)
         down = down || nk_input_is_mouse_click_in_rect(in, (enum nk_buttons)i, b);
     return down;
 }
+
 NK_API nk_bool
 nk_input_is_mouse_hovering_rect(const struct nk_input *i, struct nk_rect rect)
 {
     if (!i) return nk_false;
+    if( cnt_on )
+    {
+    	if( cnt_hovering == cnt_target )
+    	{
+    		return nk_true;
+    	}
+    }
     return NK_INBOX(i->mouse.pos.x, i->mouse.pos.y, rect.x, rect.y, rect.w, rect.h);
 }
 NK_API nk_bool

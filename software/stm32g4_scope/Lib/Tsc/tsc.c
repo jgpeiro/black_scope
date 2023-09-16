@@ -122,8 +122,16 @@ void tsc_read(tTsc* pThis, uint16_t* x, uint16_t* y, uint16_t* p) {
     }
 
     // Low-pass filtering for X and Y coordinates
-    pThis->x_low = pThis->x_low * pThis->tau + *x * (1 - pThis->tau);
-    pThis->y_low = pThis->y_low * pThis->tau + *y * (1 - pThis->tau);
+    if( pThis->cnt < pThis->cnt_max/2 )
+    {
+		pThis->x_low = pThis->x_low * pThis->tau/4 + *x * (1 - pThis->tau/4);
+		pThis->y_low = pThis->y_low * pThis->tau/4 + *y * (1 - pThis->tau/4);
+    }
+    else
+    {
+		pThis->x_low = pThis->x_low * pThis->tau + *x * (1 - pThis->tau);
+		pThis->y_low = pThis->y_low * pThis->tau + *y * (1 - pThis->tau);
+    }
 
     // Check if stabilization count is reached
     if (pThis->cnt >= pThis->cnt_max) {

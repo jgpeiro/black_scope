@@ -85,6 +85,28 @@ void StartTaskTsc(void *argument) {
 
         // Read touch data from the TSC2046
         tsc_read(&tsc, &msg.x, &msg.y, &msg.p);
+#include "nuklear.h"
+        extern struct nk_rect rects[32];
+        extern int rects_max;
+        extern int rects_ptr;
+        extern int rects_pressed;
+        static int rects_pressed_bck = 0;
+        if( rects_pressed && !rects_pressed_bck )
+        {
+        	msg.p = 1;
+        	msg.x = rects[rects_ptr].x+240 + 10;
+			msg.y = rects[rects_ptr].y + 10;
+			osMessageQueuePut(queueTscUiHandle, &msg, 0U, portMAX_DELAY);
+        }
+        if( !rects_pressed && rects_pressed_bck )
+		{
+			msg.p = 0;
+			msg.x = rects[rects_ptr].x+240 + 10;
+			msg.y = rects[rects_ptr].y + 10;
+			osMessageQueuePut(queueTscUiHandle, &msg, 0U, portMAX_DELAY);
+		}
+
+        rects_pressed_bck = rects_pressed;
 
         // Handle pressure detection and slow count
         if( msg.p && !msg_p_bck ) {

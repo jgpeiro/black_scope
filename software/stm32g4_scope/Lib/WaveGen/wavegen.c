@@ -37,11 +37,11 @@ void HAL_DACEx_ConvHalfCpltCallbackCh2(DAC_HandleTypeDef *hdac)
     // If a new block is available, copy it to the DAC buffer.
     if (buffer_size(&usb_rx) >= sizeof(dac2_buffer) / 2)
     {
-        buffer_pop(&usb_rx, dac2_buffer, sizeof(dac2_buffer) / 2);
+        //buffer_pop(&usb_rx, dac2_buffer, sizeof(dac2_buffer) / 2);
 
         // Prepare for USB reception
-        USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
-        USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+        //USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
+        //USBD_CDC_ReceivePacket(&hUsbDeviceFS);
     }
 }
 
@@ -55,11 +55,11 @@ void HAL_DACEx_ConvCpltCallbackCh2(DAC_HandleTypeDef *hdac)
     // If a new block is available, copy it to the DAC buffer.
     if (buffer_size(&usb_rx) >= sizeof(dac2_buffer) / 2)
     {
-        buffer_pop(&usb_rx, dac2_buffer + DAC_BUFFER_LEN / 2, sizeof(dac2_buffer) / 2);
+        //buffer_pop(&usb_rx, dac2_buffer + DAC_BUFFER_LEN / 2, sizeof(dac2_buffer) / 2);
 
         // Prepare for USB reception
-        USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
-        USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+        //USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
+        //USBD_CDC_ReceivePacket(&hUsbDeviceFS);
     }
 }
 

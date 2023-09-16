@@ -39,10 +39,13 @@ void lcd_config( tLcd *pThis );
 void lcd_set_bl( tLcd *pThis, uint8_t on );
 void lcd_set_window( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h );
 void lcd_set_pixel( tLcd *pThis, int16_t x, int16_t y, uint16_t color );
+uint16_t lcd_get_pixel( tLcd *pThis, int16_t x, int16_t y );
 void lcd_hline( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t color );
 void lcd_vline( tLcd *pThis, int16_t x, int16_t y, uint16_t h, uint16_t color );
 void lcd_rect( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t color );
 void lcd_clear( tLcd *pThis, uint16_t color );
 void lcd_bmp( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *buf );
+void lcd_get_bmp( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *buf );
+uint16_t lcd_get_chip_id( tLcd *pThis );
 
 #endif /* LCD_H_ */

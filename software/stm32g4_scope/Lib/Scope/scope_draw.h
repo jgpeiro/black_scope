@@ -117,7 +117,7 @@ void scope_draw_vertical( tScope_Vertical *pThis, tLcd *pLcd, int is_collapsed )
  * @param pLcd Pointer to the LCD structure.
  * @param is_collapsed Flag indicating whether the scope is in a collapsed state.
  */
-void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd, int is_collapsed );
+void scope_draw_trigger( tScope_Trigger *pThis, tScope_Vertical *pVertical, tLcd *pLcd, int is_collapsed );
 
 /**
  * @brief Erase the acquisition area of the scope from the LCD.
@@ -169,7 +169,7 @@ void scope_erase_vertical( tScope_Vertical *pThis, tLcd *pLcd, int is_collapsed 
  * @param pLcd Pointer to the LCD structure.
  * @param is_collapsed Flag indicating whether the scope is in a collapsed state.
  */
-void scope_erase_trigger( tScope_Trigger *pThis, tLcd *pLcd, int is_collapsed );
+void scope_erase_trigger( tScope_Trigger *pThis, tScope_Vertical *pVertical, tLcd *pLcd, int is_collapsed );
 
 /**
  * @brief Draw the acquisition area of the scope with a custom color on the LCD.
@@ -231,7 +231,7 @@ void scope_stroke_vertical( tScope_Vertical *pThis, tLcd *pLcd, uint16_t color,
  * @param color The custom color to use for drawing.
  * @param is_collapsed Flag indicating whether the scope is in a collapsed state.
  */
-void scope_stroke_trigger( tScope_Trigger *pThis, tLcd *pLcd, uint16_t color, int is_collapsed );
+void scope_stroke_trigger( tScope_Trigger *pThis, tScope_Vertical *pVertical, tLcd *pLcd, uint16_t color, int is_collapsed );
 
 /**
  * @brief Draw the signals (waveforms) of the scope on the LCD.

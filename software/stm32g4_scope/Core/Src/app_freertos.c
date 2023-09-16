@@ -30,21 +30,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-/*struct sQueueTscUi {
-    uint16_t p;
-    uint16_t x;
-    uint16_t y;
-};
 
-struct sQueueUiScope {
-    uint16_t type;
-    uint16_t data[8];
-};
-
-struct sQueueUiWavegen {
-    uint16_t type;
-    uint16_t data[8];
-};*/
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -80,14 +66,14 @@ osThreadId_t taskUiHandle;
 const osThreadAttr_t taskUi_attributes = {
   .name = "taskUi",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 1024 * 4
+  .stack_size = 1024 * 4 + 128 *2
 };
 /* Definitions for taskScope */
 osThreadId_t taskScopeHandle;
 const osThreadAttr_t taskScope_attributes = {
   .name = "taskScope",
   .priority = (osPriority_t) osPriorityNormal2,
-  .stack_size = 128 * 4
+  .stack_size = 128 * 6 + 128
 };
 /* Definitions for taskWavegen */
 osThreadId_t taskWavegenHandle;
@@ -233,7 +219,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  //defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* creation of taskTsc */
   taskTscHandle = osThreadNew(StartTaskTsc, NULL, &taskTsc_attributes);
@@ -264,13 +250,45 @@ void MX_FREERTOS_Init(void) {
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
+//#include "lcd.h"
+//extern tLcd lcd;
+//uint8_t lcd_buf[480*2];
+//#include "framebuf.h"
+//extern tFramebuf fb;
 void StartDefaultTask(void *argument)
 {
+	int i, j;
+	osDelay(1000);
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  /*for( i = 0 ; i < 80 ; i++ )
+	  {
+	      if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+	      {
+			  for( j = 0 ; j < 240 ; j++ )
+			  {
+				  lcd_buf[j] = framebuf_get_pixel( &fb, j, i );
+			  }
+	      //    lcd_get_bmp( &lcd, 0, i, 480, 1, lcd_buf );
+	          osSemaphoreRelease( semaphoreLcdHandle );
+	      }
+	      lcd_buf[0] = i;
+	      lcd_buf[1] = 0;
+	      extern uint8_t usb_done;
+	      usb_done = 0;
+	      while( 1 == CDC_Transmit_FS( lcd_buf, 480*2 ) )
+	      {
+	    	  osDelay(1);
+	      }
+	      while( !usb_done )
+	      {
+	    	  osDelay(1);
+	      }
+	  }*/
+
+      osDelay(10);
   }
   /* USER CODE END StartDefaultTask */
 }

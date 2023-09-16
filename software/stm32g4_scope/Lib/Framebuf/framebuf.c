@@ -42,6 +42,18 @@ void framebuf_pixel( const tFramebuf *pThis, int16_t x, int16_t y, uint16_t colo
     }
 }
 
+uint16_t framebuf_get_pixel( const tFramebuf *pThis, int16_t x, int16_t y )
+{
+	uint16_t color = 0;
+    if( 0 <= x && x < pThis->width )
+    {
+        if( 0 <= y && y < pThis->height )
+        {
+        	color = pThis->buf[y*pThis->width+x];
+        }
+    }
+    return color;
+}
 void framebuf_hline( const tFramebuf *pThis, int16_t x, int16_t y, int16_t width, uint16_t color )
 {
 	if ( width < 1 || x + width <= 0 ||  y >= pThis->height || x >= pThis->width) {

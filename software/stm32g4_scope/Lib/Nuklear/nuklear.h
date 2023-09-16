@@ -4470,9 +4470,15 @@ struct nk_keyboard {
     int text_len;
 };
 
+struct nk_gamepad {
+    int keys[4]; // up, down, left, right.
+};
+
 struct nk_input {
     struct nk_keyboard keyboard;
     struct nk_mouse mouse;
+    struct nk_gamepad gamepad;
+    struct nk_gamepad gamepad_prev;
 };
 
 NK_API nk_bool nk_input_has_mouse_click(const struct nk_input*, enum nk_buttons);

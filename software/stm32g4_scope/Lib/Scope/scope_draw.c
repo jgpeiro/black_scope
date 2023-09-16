@@ -34,8 +34,24 @@ void draw_marker(tLcd *pLcd, uint16_t x, uint16_t y, uint16_t direction, uint16_
     int h = 9;  // Marker height
 
     // Draw the marker body
-    lcd_rect(pLcd, x, y, w / 2, h / 2, color);
-
+    if( direction == MARKER_ORIENTATION_SOUTH )
+    {
+		if (x - w / 2 < 0)
+			lcd_rect(pLcd, 0, y-h/2+1, w/2, h-2+1, color);
+		else if (y - h / 2 < 0)
+			lcd_rect(pLcd, x-w/2+1, 0, w-2, h/2+1, color);
+		else
+			lcd_rect(pLcd, x-w/2+1, y-h/2+1, w-2, h-2+1, color);
+    }
+    if( direction == MARKER_ORIENTATION_EAST )
+    {
+		if (x - w / 2 < 0)
+			lcd_rect(pLcd, 0, y-h/2+1, w/2+1, h-2, color);
+		else if (y - h / 2 < 0)
+			lcd_rect(pLcd, x-w/2+1, 0, w-2+1, h/2, color);
+		else
+			lcd_rect(pLcd, x-w/2+1, y-h/2+1, w-2+1, h-2, color);
+    }
     // Draw the arrowhead based on the specified direction
     switch (direction) {
         case MARKER_ORIENTATION_NORTH:
@@ -101,7 +117,7 @@ void scope_draw(tScope *pThis, tLcd *pLcd,
     }
     if (trigger_is_visible) {
         // Draw the trigger settings
-        scope_draw_trigger(&pThis->trigger, pLcd, is_collapsed);
+        scope_draw_trigger(&pThis->trigger, &pThis->vertical, pLcd, is_collapsed);
     }
 }
 
@@ -126,7 +142,7 @@ void scope_erase( tScope *pThis, tLcd *pLcd,
     }
     if( trigger_is_visible )
     {
-        scope_erase_trigger( &pThis->trigger, pLcd, is_collapsed );
+        scope_erase_trigger( &pThis->trigger, &pThis->vertical, pLcd, is_collapsed );
     }
 }
 
@@ -147,9 +163,9 @@ void scope_draw_vertical( tScope_Vertical *pThis, tLcd *pLcd, int is_collapsed )
 
 }
 
-void scope_draw_trigger( tScope_Trigger *pThis, tLcd *pLcd, int is_collapsed )
+void scope_draw_trigger( tScope_Trigger *pThis, tScope_Vertical *pVertical, tLcd *pLcd, int is_collapsed )
 {
-    scope_stroque_trigger( pThis, pLcd, SCOPE_COLOR_TRIGGER, is_collapsed );
+    scope_stroque_trigger( pThis, pVertical, pLcd, SCOPE_COLOR_TRIGGER, is_collapsed );
 
 }
 
@@ -172,9 +188,9 @@ void scope_erase_vertical( tScope_Vertical *pThis, tLcd *pLcd, int is_collapsed 
 
 }
 
-void scope_erase_trigger( tScope_Trigger *pThis, tLcd *pLcd, int is_collapsed )
+void scope_erase_trigger( tScope_Trigger *pThis, tScope_Vertical *pVertical, tLcd *pLcd, int is_collapsed )
 {
-       scope_stroque_trigger( pThis, pLcd, SCOPE_COLOR_BACKGROUND, is_collapsed );
+       scope_stroque_trigger( pThis, pVertical, pLcd, SCOPE_COLOR_BACKGROUND, is_collapsed );
 
 }
 
@@ -213,11 +229,16 @@ void scope_stroque_horizontal(tScope_Horizontal *pThis, tLcd *pLcd, uint16_t col
     int w = 0;
     int h = 0;
 
-    if (is_collapsed) {
-        x = -pThis->offset / 4 + 120 + 10;
+    /*if (is_collapsed) {
+    	x = -pThis->offset/4 + pLcd->width/4;
     } else {
-        x = -pThis->offset / 2 + 240 + 20;
-    }
+        x = -pThis->offset/2 + pLcd->width/2;
+    }*/
+    if (is_collapsed) {
+		x = -pThis->offset/2 + pLcd->width/4;
+	} else {
+		x = -pThis->offset + pLcd->width/2;
+	}
     y = 0;
     h = pLcd->height;
 
@@ -262,7 +283,7 @@ void scope_stroque_vertical(tScope_Vertical *pThis, tLcd *pLcd, uint16_t color,
     } else {
         w = pLcd->width;
     }
-
+    /*
     // Draw the main stroque line
     x = 0;
     y = pThis->offset;
@@ -285,6 +306,27 @@ void scope_stroque_vertical(tScope_Vertical *pThis, tLcd *pLcd, uint16_t color,
     x = 0;
     y = pThis->gain4;
     lcd_hline(pLcd, x, y, w, color4);
+	*/
+    if( pThis->enable1 )
+    {
+		lcd_hline(pLcd, 0, pLcd->height/2 + pLcd->height + pThis->offset1, w, color1);
+    	draw_marker(pLcd, 0, pLcd->height/2 + pLcd->height + pThis->offset1, MARKER_ORIENTATION_EAST, color1);
+    }
+    if( pThis->enable2 )
+    {
+    	lcd_hline(pLcd, 0, pLcd->height/2 + pLcd->height + pThis->offset2, w, color2);
+    	draw_marker(pLcd, 0, pLcd->height/2 + pLcd->height + pThis->offset2, MARKER_ORIENTATION_EAST, color2);
+    }
+    if( pThis->enable3 )
+    {
+    	lcd_hline(pLcd, 0, pLcd->height/2 + pLcd->height + pThis->offset3, w, color3);
+    	draw_marker(pLcd, 0, pLcd->height/2 + pLcd->height + pThis->offset3, MARKER_ORIENTATION_EAST, color3);
+    }
+    if( pThis->enable4 )
+    {
+    	lcd_hline(pLcd, 0, pLcd->height/2 + pLcd->height + pThis->offset4, w, color4);
+    	draw_marker(pLcd, 0, pLcd->height/2 + pLcd->height + pThis->offset4, MARKER_ORIENTATION_EAST, color4);
+    }
 }
 
 
@@ -301,7 +343,7 @@ void scope_stroque_vertical(tScope_Vertical *pThis, tLcd *pLcd, uint16_t color,
   * @param is_collapsed Flag indicating whether the trigger stroque should be collapsed.
   *                     If true, it is drawn with half the width; otherwise, it spans the full width.
   */
-void scope_stroque_trigger(tScope_Trigger *pThis, tLcd *pLcd, uint16_t color, int is_collapsed) {
+void scope_stroque_trigger(tScope_Trigger *pThis, tScope_Vertical *pVertical, tLcd *pLcd, uint16_t color, int is_collapsed) {
     int x = 0;  // X-coordinate of the trigger stroque
     int y = 0;  // Y-coordinate of the trigger stroque
     int w = 0;  // Width of the trigger stroque
@@ -310,7 +352,23 @@ void scope_stroque_trigger(tScope_Trigger *pThis, tLcd *pLcd, uint16_t color, in
     x = 0;  // Initialize x-coordinate
 
     // Calculate the y-coordinate based on the trigger level
-    y = pLcd->height - pThis->level * pLcd->height / 4096.0f;
+    //y = pLcd->height - pThis->level * pLcd->height / 4096.0f;
+    if( pThis->channel == 0 )
+    {
+        y = pLcd->height/2 + pLcd->height - (pThis->level-2048) * pVertical->scale1/1000.0f + pVertical->offset1;
+    }
+    if( pThis->channel == 1 )
+    {
+        y = pLcd->height/2 + pLcd->height - (pThis->level-2048) * pVertical->scale2/1000.0f + pVertical->offset2;
+    }
+    if( pThis->channel == 2 )
+    {
+        y = pLcd->height/2 + pLcd->height - (pThis->level-2048) * pVertical->scale3/1000.0f + pVertical->offset3;
+    }
+    if( pThis->channel == 3 )
+    {
+        y = pLcd->height/2 + pLcd->height - (pThis->level-2048) * pVertical->scale4/1000.0f + pVertical->offset4;
+    }
 
     // Determine the width of the trigger stroque based on the 'is_collapsed' flag
     if (is_collapsed) {
@@ -383,17 +441,32 @@ void scope_draw_grid(tScope *pThis, tLcd *pLcd, int is_collapsed) {
   */
 #define ABS(a)   ((a>0)?(a):-(a))
 #define MIN(a,b) ((a<b)?(a):(b))
-
+int kkk = 0;
 void scope_draw_signals(tScope *pThis, tLcd *pLcd, int is_collapsed) {
     uint16_t i;
-    float scale = 320 / 4096.0f; // Scale factor for signal amplitudes
-    int16_t trigger;
-    static int16_t trigger_bck = 0;
-    int16_t n, n_bck;
+    //float scale = 320 / 4096.0f; // Scale factor for signal amplitudes
+    uint16_t trigger;
+    static uint16_t trigger_bck = 0;
+    uint16_t n, n_bck;
     int pLcd_height = pLcd->height;
     static int is_collapsed_bck = 0;
 
-    uint16_t x;
+    static int vertical_enable1_bck = 0;
+    static int vertical_enable2_bck = 0;
+    static int vertical_enable3_bck = 0;
+    static int vertical_enable4_bck = 0;
+
+    static int vertical_offset1_bck = 0;
+    static int vertical_offset2_bck = 0;
+    static int vertical_offset3_bck = 0;
+    static int vertical_offset4_bck = 0;
+
+    static int vertical_scale1_bck = 0;
+    static int vertical_scale2_bck = 0;
+    static int vertical_scale3_bck = 0;
+    static int vertical_scale4_bck = 0;
+
+    uint16_t x, w;
     int16_t y1, y2, y3, y4, y5, y6, y7, y8;
     int16_t y1_bck = 0;
     int16_t y2_bck = 0;
@@ -405,13 +478,14 @@ void scope_draw_signals(tScope *pThis, tLcd *pLcd, int is_collapsed) {
     int16_t y8_bck = 0;
 
     // Calculate the trigger position
-    trigger = (pThis->len - pThis->dma_cndtr) - pThis->len / 2 + pThis->len / 2;
+    trigger = (pThis->len - pThis->dma_cndtr) - pThis->len/2 - pLcd->width/2;
+    trigger += (20*pThis->horizontal.scale)/2500.0f;
     trigger = trigger % pThis->len;
 
     // Check if the signal is in the first or second half of the buffer
     if (pThis->cnt & 0x01) {
-        for (i = 0; i < pThis->len; i++) {
-            if (1) {
+    	for (i = 0; i < pLcd->width; i++) {
+    	    if (1) {
                 // Calculate the current sample index for the signal data
                 n_bck = trigger_bck + i;
                 n_bck = n_bck % pThis->len;
@@ -424,17 +498,24 @@ void scope_draw_signals(tScope *pThis, tLcd *pLcd, int is_collapsed) {
                 }
                 
                 // Calculate the y-coordinates for signal traces
-                y5 = pLcd_height - pThis->buffer5[n_bck] * scale;
-                y6 = pLcd_height - pThis->buffer6[n_bck] * scale;
-                y7 = pLcd_height - pThis->buffer7[n_bck] * scale;
-                y8 = pLcd_height - pThis->buffer8[n_bck] * scale;
+                y5 = pLcd_height/2 + pLcd_height - (pThis->buffer5[n_bck]-2048) * vertical_scale1_bck/1000.0f + vertical_offset1_bck;
+                y6 = pLcd_height/2 + pLcd_height - (pThis->buffer6[n_bck]-2048) * vertical_scale2_bck/1000.0f + vertical_offset2_bck;
+                y7 = pLcd_height/2 + pLcd_height - (pThis->buffer7[n_bck]-2048) * vertical_scale3_bck/1000.0f + vertical_offset3_bck;
+                y8 = pLcd_height/2 + pLcd_height - (pThis->buffer8[n_bck]-2048) * vertical_scale4_bck/1000.0f + vertical_offset4_bck;
+
                 
-                // Draw vertical lines for signal traces
-                lcd_vline(pLcd, x, MIN(y5, y5_bck), ABS(y5 - y5_bck) + 1, LCD_COLOR_BLACK);
-                lcd_vline(pLcd, x, MIN(y6, y6_bck), ABS(y6 - y6_bck) + 1, LCD_COLOR_BLACK);
-                lcd_vline(pLcd, x, MIN(y7, y7_bck), ABS(y7 - y7_bck) + 1, LCD_COLOR_BLACK);
-                lcd_vline(pLcd, x, MIN(y8, y8_bck), ABS(y8 - y8_bck) + 1, LCD_COLOR_BLACK);
-                
+                if( x > 0 )
+				{
+					// Draw vertical lines for signal traces
+					if( vertical_enable1_bck )
+						lcd_vline(pLcd, x, MIN(y5, y5_bck), ABS(y5 - y5_bck) + 1, LCD_COLOR_BLACK);
+					if( vertical_enable2_bck )
+						lcd_vline(pLcd, x, MIN(y6, y6_bck), ABS(y6 - y6_bck) + 1, LCD_COLOR_BLACK);
+					if( vertical_enable3_bck )
+						lcd_vline(pLcd, x, MIN(y7, y7_bck), ABS(y7 - y7_bck) + 1, LCD_COLOR_BLACK);
+					if( vertical_enable4_bck )
+						lcd_vline(pLcd, x, MIN(y8, y8_bck), ABS(y8 - y8_bck) + 1, LCD_COLOR_BLACK);
+				}
                 // Update previous values for next iteration
                 y5_bck = y5;
                 y6_bck = y6;
@@ -455,16 +536,23 @@ void scope_draw_signals(tScope *pThis, tLcd *pLcd, int is_collapsed) {
                 }
                 
                 // Calculate the y-coordinates for signal traces
-                y1 = pLcd_height - pThis->buffer1[n] * scale;
-                y2 = pLcd_height - pThis->buffer2[n] * scale;
-                y3 = pLcd_height - pThis->buffer3[n] * scale;
-                y4 = pLcd_height - pThis->buffer4[n] * scale;
+                y1 = pLcd_height/2 + pLcd_height - (pThis->buffer1[n]-2048) * pThis->vertical.scale1/1000.0f + pThis->vertical.offset1;
+                y2 = pLcd_height/2 + pLcd_height - (pThis->buffer2[n]-2048) * pThis->vertical.scale2/1000.0f + pThis->vertical.offset2;
+                y3 = pLcd_height/2 + pLcd_height - (pThis->buffer3[n]-2048) * pThis->vertical.scale3/1000.0f + pThis->vertical.offset3;
+                y4 = pLcd_height/2 + pLcd_height - (pThis->buffer4[n]-2048) * pThis->vertical.scale4/1000.0f + pThis->vertical.offset4;
                 
-                // Draw vertical lines for signal traces with channel-specific colors
-                lcd_vline(pLcd, x, MIN(y1, y1_bck), ABS(y1 - y1_bck) + 1, SCOPE_COLOR_CH1);
-                lcd_vline(pLcd, x, MIN(y2, y2_bck), ABS(y2 - y2_bck) + 1, SCOPE_COLOR_CH2);
-                lcd_vline(pLcd, x, MIN(y3, y3_bck), ABS(y3 - y3_bck) + 1, SCOPE_COLOR_CH3);
-                lcd_vline(pLcd, x, MIN(y4, y4_bck), ABS(y4 - y4_bck) + 1, SCOPE_COLOR_CH4);
+                if( x > 0 )
+                {
+					// Draw vertical lines for signal traces with channel-specific colors
+					if( pThis->vertical.enable1 )
+						lcd_vline(pLcd, x, MIN(y1, y1_bck), ABS(y1 - y1_bck) + 1, SCOPE_COLOR_CH1);
+					if( pThis->vertical.enable2 )
+						lcd_vline(pLcd, x, MIN(y2, y2_bck), ABS(y2 - y2_bck) + 1, SCOPE_COLOR_CH2);
+					if( pThis->vertical.enable3 )
+						lcd_vline(pLcd, x, MIN(y3, y3_bck), ABS(y3 - y3_bck) + 1, SCOPE_COLOR_CH3);
+					if( pThis->vertical.enable4 )
+						lcd_vline(pLcd, x, MIN(y4, y4_bck), ABS(y4 - y4_bck) + 1, SCOPE_COLOR_CH4);
+                }
                 
                 // Update previous values for next iteration
                 y1_bck = y1;
@@ -476,8 +564,8 @@ void scope_draw_signals(tScope *pThis, tLcd *pLcd, int is_collapsed) {
     }
     else
     {
-        for( i = 0; i < pThis->len; i++ )
-        {
+    	for( i = 0; i < pLcd->width; i++ )
+    	{
             if( 1 )
             {
                 // Calculate the current sample index for the signal data
@@ -495,17 +583,23 @@ void scope_draw_signals(tScope *pThis, tLcd *pLcd, int is_collapsed) {
                 }
                 
                 // Calculate the y-coordinates for signal traces
-                y1 = pLcd_height-pThis->buffer1[n_bck]*scale;
-                y2 = pLcd_height-pThis->buffer2[n_bck]*scale;
-                y3 = pLcd_height-pThis->buffer3[n_bck]*scale;
-                y4 = pLcd_height-pThis->buffer4[n_bck]*scale;
+                y1 = pLcd_height/2 + pLcd_height - (pThis->buffer1[n_bck]-2048) * vertical_scale1_bck/1000.0f + vertical_offset1_bck;
+                y2 = pLcd_height/2 + pLcd_height - (pThis->buffer2[n_bck]-2048) * vertical_scale2_bck/1000.0f + vertical_offset2_bck;
+                y3 = pLcd_height/2 + pLcd_height - (pThis->buffer3[n_bck]-2048) * vertical_scale3_bck/1000.0f + vertical_offset3_bck;
+                y4 = pLcd_height/2 + pLcd_height - (pThis->buffer4[n_bck]-2048) * vertical_scale4_bck/1000.0f + vertical_offset4_bck;
                 
-                // Draw vertical lines for signal traces
-                lcd_vline( pLcd, x, MIN(y1,y1_bck), ABS(y1-y1_bck)+1, LCD_COLOR_BLACK );
-                lcd_vline( pLcd, x, MIN(y2,y2_bck), ABS(y2-y2_bck)+1, LCD_COLOR_BLACK );
-                lcd_vline( pLcd, x, MIN(y3,y3_bck), ABS(y3-y3_bck)+1, LCD_COLOR_BLACK );
-                lcd_vline( pLcd, x, MIN(y4,y4_bck), ABS(y4-y4_bck)+1, LCD_COLOR_BLACK );
-                
+                if( x > 0 )
+				{
+					// Draw vertical lines for signal traces
+					if( vertical_enable1_bck )
+						lcd_vline( pLcd, x, MIN(y1,y1_bck), ABS(y1-y1_bck)+1, LCD_COLOR_BLACK );
+					if( vertical_enable2_bck )
+						lcd_vline( pLcd, x, MIN(y2,y2_bck), ABS(y2-y2_bck)+1, LCD_COLOR_BLACK );
+					if( vertical_enable3_bck )
+						lcd_vline( pLcd, x, MIN(y3,y3_bck), ABS(y3-y3_bck)+1, LCD_COLOR_BLACK );
+					if( vertical_enable4_bck )
+						lcd_vline( pLcd, x, MIN(y4,y4_bck), ABS(y4-y4_bck)+1, LCD_COLOR_BLACK );
+				}
                 // Update previous values for next iteration
                 y1_bck = y1;
                 y2_bck = y2;
@@ -529,17 +623,23 @@ void scope_draw_signals(tScope *pThis, tLcd *pLcd, int is_collapsed) {
                     x = (i-2);
                 }
                 // Calculate the y-coordinates for signal traces
-                y5 = pLcd_height-pThis->buffer5[n]*scale;
-                y6 = pLcd_height-pThis->buffer6[n]*scale;
-                y7 = pLcd_height-pThis->buffer7[n]*scale;
-                y8 = pLcd_height-pThis->buffer8[n]*scale;
+                y5 = pLcd_height/2 + pLcd_height - (pThis->buffer5[n]-2048) * pThis->vertical.scale1/1000.0f + pThis->vertical.offset1;
+                y6 = pLcd_height/2 + pLcd_height - (pThis->buffer6[n]-2048) * pThis->vertical.scale2/1000.0f + pThis->vertical.offset2;
+                y7 = pLcd_height/2 + pLcd_height - (pThis->buffer7[n]-2048) * pThis->vertical.scale3/1000.0f + pThis->vertical.offset3;
+                y8 = pLcd_height/2 + pLcd_height - (pThis->buffer8[n]-2048) * pThis->vertical.scale4/1000.0f + pThis->vertical.offset4;
                 
-                // Draw vertical lines for signal traces with channel-specific colors
-                lcd_vline( pLcd, x, MIN(y5,y5_bck), ABS(y5-y5_bck)+1, SCOPE_COLOR_CH1 );
-                lcd_vline( pLcd, x, MIN(y6,y6_bck), ABS(y6-y6_bck)+1, SCOPE_COLOR_CH2 );
-                lcd_vline( pLcd, x, MIN(y7,y7_bck), ABS(y7-y7_bck)+1, SCOPE_COLOR_CH3 );
-                lcd_vline( pLcd, x, MIN(y8,y8_bck), ABS(y8-y8_bck)+1, SCOPE_COLOR_CH4 );
-                
+                if( x > 0 )
+				{
+					// Draw vertical lines for signal traces with channel-specific colors
+					if( pThis->vertical.enable1 )
+						lcd_vline( pLcd, x, MIN(y5,y5_bck), ABS(y5-y5_bck)+1, SCOPE_COLOR_CH1 );
+					if( pThis->vertical.enable2 )
+						lcd_vline( pLcd, x, MIN(y6,y6_bck), ABS(y6-y6_bck)+1, SCOPE_COLOR_CH2 );
+					if( pThis->vertical.enable3 )
+						lcd_vline( pLcd, x, MIN(y7,y7_bck), ABS(y7-y7_bck)+1, SCOPE_COLOR_CH3 );
+					if( pThis->vertical.enable4 )
+						lcd_vline( pLcd, x, MIN(y8,y8_bck), ABS(y8-y8_bck)+1, SCOPE_COLOR_CH4 );
+				}
                 // Update previous values for next iteration
                 y5_bck = y5;
                 y6_bck = y6;
@@ -548,8 +648,25 @@ void scope_draw_signals(tScope *pThis, tLcd *pLcd, int is_collapsed) {
             }
         }
     }
-    
+
     // Update the background values and trigger position for the next draw
     trigger_bck = trigger;
     is_collapsed_bck = is_collapsed;
+
+
+    vertical_enable1_bck = pThis->vertical.enable1;
+    vertical_enable2_bck = pThis->vertical.enable2;
+    vertical_enable3_bck = pThis->vertical.enable3;
+    vertical_enable4_bck = pThis->vertical.enable4;
+
+    vertical_offset1_bck = pThis->vertical.offset1;
+    vertical_offset2_bck = pThis->vertical.offset2;
+    vertical_offset3_bck = pThis->vertical.offset3;
+    vertical_offset4_bck = pThis->vertical.offset4;
+
+    vertical_scale1_bck = pThis->vertical.scale1;
+    vertical_scale2_bck = pThis->vertical.scale2;
+    vertical_scale3_bck = pThis->vertical.scale3;
+    vertical_scale4_bck = pThis->vertical.scale4;
+
 }

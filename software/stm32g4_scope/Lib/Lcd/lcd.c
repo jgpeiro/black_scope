@@ -16,6 +16,7 @@
 #define LCD_REG_COLUMN_ADDR             (0x2A)
 #define LCD_REG_PAGE_ADDR               (0x2B)
 #define LCD_REG_MEMORY_WRITE            (0x2C)
+#define LCD_REG_MEMORY_READ             (0x2E)
 
 // FMC memory-mapped address
 #define LCD_CMD_ADDR	*(volatile uint16_t*)(0x60000000)
@@ -127,6 +128,27 @@ void lcd_set_pixel( tLcd *pThis, int16_t x, int16_t y, uint16_t color )
     LCD_DATA_ADDR = color;
 }
 
+uint16_t lcd_get_pixel( tLcd *pThis, int16_t x, int16_t y )
+{
+	uint16_t color = 0;
+
+	LCD_CMD_ADDR = LCD_REG_COLUMN_ADDR;
+    LCD_DATA_ADDR =(x>>8)&0xFF;
+    LCD_DATA_ADDR = x;
+    LCD_DATA_ADDR =(x>>8)&0xFF;
+    LCD_DATA_ADDR = x;
+
+    LCD_CMD_ADDR = LCD_REG_PAGE_ADDR;
+    LCD_DATA_ADDR =(y>>8)&0xFF;
+    LCD_DATA_ADDR = y;
+    LCD_DATA_ADDR =(y>>8)&0xFF;
+    LCD_DATA_ADDR = y;
+
+    LCD_CMD_ADDR = LCD_REG_MEMORY_READ;
+    color = LCD_DATA_ADDR;
+
+    return color;
+}
 void lcd_hline( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t color )
 {
 	lcd_rect( pThis, x, y, w, 1, color );
@@ -165,4 +187,33 @@ void lcd_bmp( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_
     {
         LCD_DATA_ADDR = *buf++;
     }
+}
+
+void lcd_get_bmp( tLcd *pThis, int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *buf )
+{
+    uint32_t i = 0;
+
+    lcd_set_window( pThis, x, y, w, h );
+
+    LCD_CMD_ADDR = LCD_REG_MEMORY_READ;
+    for( i = w*h ; i ; i-- )
+    {
+    	*buf++ = LCD_DATA_ADDR;
+    }
+
+
+    for( i = 0 ; i < 100 ; i++ )
+    {
+    	buf[i] = lcd_get_pixel( pThis, x, i );
+    }
+}
+
+uint16_t lcd_get_chip_id( tLcd *pThis )
+{
+    uint16_t id = 0;
+
+    LCD_CMD_ADDR = 0x04;
+    id = LCD_DATA_ADDR;
+
+    return id;
 }
