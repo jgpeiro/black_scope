@@ -282,22 +282,21 @@ tBuffer usb_rx = {
 };
 int overflow = 0;
 
+extern uint8_t usb_buf[32];
+extern uint8_t usb_buf_flag;
+
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
-    uint16_t free = buffer_free( &usb_rx );
-    uint16_t toCopy = ( *Len < free ) ? *Len : free;
-    if( toCopy < *Len )
-    {
-    	overflow += 1;
-    }
-    buffer_push( &usb_rx, Buf, toCopy );
-
-    if( free > 512 )
-    {
-    	USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
-    	USBD_CDC_ReceivePacket(&hUsbDeviceFS);
-    }
+	int i;
+	// 'BBBhh', type, button, down, x, y
+	for( i = 0 ; i < 7 ; i++ )
+	{
+		usb_buf[i] = Buf[i];
+	}
+	usb_buf_flag = 1;
+	USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
+	USBD_CDC_ReceivePacket(&hUsbDeviceFS);
   return (USBD_OK);
   /* USER CODE END 6 */
 }

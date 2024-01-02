@@ -177,10 +177,139 @@ NK_API void nk_input_gamepad_navigation(struct nk_context *ctx) {
 }
 */
 
+
+#include <stdlib.h>
+typedef struct {
+    float x;
+    float y;
+    float z;
+} Vector3D;
+
+typedef struct {
+    Vector3D vertices[8];
+} Cube;
+
+void draw_line(tLcd *pThis, int x0, int y0, int x1, int y1, uint16_t color) {
+    int dx = abs(x1 - x0);
+    int dy = abs(y1 - y0);
+    int sx, sy, err, e2;
+
+    if (x0 < x1) {
+        sx = 1;
+    } else {
+        sx = -1;
+    }
+
+    if (y0 < y1) {
+        sy = 1;
+    } else {
+        sy = -1;
+    }
+
+    err = dx - dy;
+
+    while (1) {
+        lcd_set_pixel(pThis, x0, y0, color);
+
+        if (x0 == x1 && y0 == y1) {
+            break;
+        }
+
+        e2 = 2 * err;
+
+        if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+        }
+
+        if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
+
+void draw_cube(tLcd *pThis, Cube cube, uint16_t color) {
+    // Draw the edges of the cube
+    for (int i = 0; i < 4; ++i) {
+        int j = (i + 1) % 2;
+        draw_line(pThis, cube.vertices[i].x, cube.vertices[i].y, cube.vertices[i + 4].x, cube.vertices[i + 4].y, color);
+        draw_line(pThis, cube.vertices[j].x, cube.vertices[j].y, cube.vertices[j + 4].x, cube.vertices[j + 4].y, color);
+        draw_line(pThis, cube.vertices[i].x, cube.vertices[i].y, cube.vertices[j].x, cube.vertices[j].y, color);
+    }
+}
+
+typedef struct {
+    Cube cube;
+    float angleX;
+    float angleY;
+} CubeProperties;
+void update_cube_rotation(CubeProperties *cubeProps, float delta_time) {
+    // Rotate the cube around the X and Y axes at a constant speed
+    float rotation_speed = 0.5;  // Adjust the speed as needed
+    cubeProps->angleX += rotation_speed * delta_time;
+    cubeProps->angleY += rotation_speed * delta_time;
+}
+
+
+int main_cube( tLcd *pLcd ) {
+    // Initialize your LCD display and set up necessary parameters
+
+    CubeProperties cubeProps;
+    cubeProps.cube = (Cube){
+        .vertices = {
+            {50, 50, 50},
+            {150, 50, 50},
+            {150, 150, 50},
+            {50, 150, 50},
+            {50, 50, 150},
+            {150, 50, 150},
+            {150, 150, 150},
+            {50, 150, 150},
+        }
+    };
+    cubeProps.angleX = 0.0;
+    cubeProps.angleY = 0.0;
+
+    // Timing variables for animation
+    //clock_t prev_time = clock();
+    float frame_time = 0.0;
+
+    while (1) {
+        // Calculate delta time since the last frame
+        //clock_t current_time = clock();
+        //frame_time = (float)(current_time - prev_time) / CLOCKS_PER_SEC;
+        //prev_time = current_time;
+
+        // Clear the screen or previous frame
+
+        // Update cube rotation
+        update_cube_rotation(&cubeProps, frame_time);
+        frame_time += 1/100;
+
+        // Draw the rotated cube on the screen
+        lcd_clear( pLcd, 0x0000 );
+        draw_cube( pLcd, cubeProps.cube, 0xFFFF);  // Pass your LCD object instead of NULL
+        HAL_Delay( 10 );
+
+        // Update the screen or LCD buffer
+
+        // Add a delay or synchronization mechanism to control the frame rate
+        // For example, you can use a delay function to limit the frame rate
+        // Delay(16);  // 60 FPS (adjust as needed)
+    }
+
+    // Close your LCD display
+
+    return 0;
+}
+#define RECTS_LEN 64
+struct nk_rect rects[RECTS_LEN];
+int rects_max = 0;
+int rects_ptr = 0;
+int rects_pressed = 0;
 void StartTaskUi(void *argument)
 {
-
-
     TickType_t xLastWakeTime;
     const TickType_t xFrequency = 10;
 
@@ -200,12 +329,6 @@ void StartTaskUi(void *argument)
             LCD_BL_GPIO_Port, LCD_BL_Pin,
             480, 320
         );
-        static uint16_t chip_id = 0;
-        chip_id = lcd_get_chip_id( &lcd );
-        if( chip_id == 0x9488 )
-        {
-            chip_id = chip_id+1;
-        }
         osSemaphoreRelease( semaphoreLcdHandle );
     }
 
@@ -233,22 +356,21 @@ void StartTaskUi(void *argument)
     int cnt_hovering_max = 0;
     int cnt_hovering_bck = 0;
 
-
+    int first_pass = 1;
 
     for(;;)
     {
-
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
 
         //nk_input_gamepad_navigation(&ctx);
         // Read touch data from the TSC UI queue
-        if( osMessageQueueGet(queueTscUiHandle, &msgTscUi, NULL, portMAX_DELAY) == osOK )
+        if( !first_pass && osMessageQueueGet(queueTscUiHandle, &msgTscUi, NULL, portMAX_DELAY) == osOK )
         {
 
-            if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+            //if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
             {
-            	lcd_clear( &lcd, LCD_COLOR_BLACK );
-                osSemaphoreRelease( semaphoreLcdHandle );
+            	//	lcd_clear( &lcd, LCD_COLOR_BLACK );
+            	//    osSemaphoreRelease( semaphoreLcdHandle );
             }
 
             msgTscUi.x -= lcd.width/2;
@@ -274,22 +396,17 @@ void StartTaskUi(void *argument)
             nk_input_end( &ctx );
         }
 
-
         if( ui.cursors.is_visible ){
         	ui_erase_cursors( &ui.cursors, &lcd, ui.is_visible );
         }
-        extern struct nk_rect rects[32];
-        extern int rects_max;
-        extern int rects_max_bck;
-        extern int rects_ptr;
-        extern int rects_pressed;
+
         // Build the UI based on the NK context
         cnt_hovering = 0;
         cnt_click = 0;
         rects_max = 0;
         rects_pressed = 0;
         ui_build( &ui, &ctx );
-        rects_max_bck = rects_max;
+        //rects_max_bck = rects_max;
         cnt_hovering_max = cnt_hovering;
         //printf( "%d, %d, %d, %d,\n", cnt_on, cnt_hovering, cnt_hovering, cnt_target );
         printf( "\n" );
@@ -324,12 +441,40 @@ void StartTaskUi(void *argument)
         }
         nk_clear(&ctx);
 
+
+		struct nk_rect *bounds;
+		bounds = &rects[rects_ptr];
+		//extern tLcd lcd;
+	    if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+	    {
+	    	if( 0 <= (int)bounds->y && (int)bounds->y < 320 && 0 <= (int)bounds->y+(int)bounds->h && (int)bounds->y+(int)bounds->h < 320 )
+	    	{
+				lcd_hline( &lcd, 240+(int)bounds->x, (int)bounds->y, (int)bounds->w, LCD_COLOR_GREEN );
+				lcd_hline( &lcd, 240+(int)bounds->x, (int)bounds->y+(int)bounds->h-1, (int)bounds->w, LCD_COLOR_GREEN );
+				lcd_vline( &lcd, 240+(int)bounds->x, (int)bounds->y, (int)bounds->h, LCD_COLOR_GREEN );
+				lcd_vline( &lcd, 240+(int)bounds->x+(int)bounds->w-1, (int)bounds->y, (int)bounds->h, LCD_COLOR_GREEN );
+				//uint8_t buffer[32];
+				//snprintf( buffer, sizeof(buffer), "%d", rects_ptr );
+				//font_draw_text( &fontUbuntuBookRNormal16, 240+(int)bounds->x, (int)bounds->y, buffer, LCD_COLOR_GREEN, lcd_set_pixel, &lcd );
+				//if( rects_ptr == rects_max )
+				//{
+				//	lcd_rect( &lcd, 240+(int)bounds->x, (int)bounds->y, 5, 5, LCD_COLOR_GREEN );
+				//}
+
+				//rects[rects_max] = *bounds;
+				//rects_max += 1;
+	    	}
+	        osSemaphoreRelease( semaphoreLcdHandle );
+	    }
+
+
+
         // Handle UI visibility changes
         {
             tUi *pThis = &ui;
             if( pThis->is_visible != pThis->is_visible_bck )
             {
-                if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+                if( !first_pass && osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
                 {
                     lcd_clear( &lcd, LCD_COLOR_BLACK );
                     osSemaphoreRelease( semaphoreLcdHandle );
@@ -379,5 +524,7 @@ void StartTaskUi(void *argument)
         {
             lcd_draw_cross( &lcd, msgTscUi.x+lcd.width/2, msgTscUi.y, COLOR_UI_CROSS );
         }
+
+        first_pass = 0;
     }
 }

@@ -53,7 +53,7 @@ nk_property_behavior(nk_flags *ws, const struct nk_input *in,
 {
     nk_widget_state_reset(ws);
     if (in && *state == NK_PROPERTY_DEFAULT) {
-        if (nk_button_behavior(ws, edit, in, NK_BUTTON_DEFAULT))
+        if (0 && nk_button_behavior(ws, edit, in, NK_BUTTON_DEFAULT))
             *state = NK_PROPERTY_EDIT;
         else if (nk_input_is_mouse_click_down_in_rect(in, NK_BUTTON_LEFT, label, nk_true))
             *state = NK_PROPERTY_DRAG;

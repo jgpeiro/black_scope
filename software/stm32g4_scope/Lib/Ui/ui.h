@@ -201,6 +201,12 @@ void ui_build_wavegen( tUi_Wavegen *pThis, struct nk_context *pCtx );
 void ui_build_cursor( tUi *pThis, struct nk_context *pCtx );
 void ui_build_measurements( tUi *pThis, struct nk_context *pCtx );
 
+void ui_build2( tUi *pThis, struct nk_context *pCtx );
+void ui_build_acquire2( tUi_Acquire *pThis, struct nk_context *pCtx );
+void ui_build_horizontal2( tUi_Horizontal *pThis, struct nk_context *pCtx );
+void ui_build_vertical2( tUi_Vertical *pThis, struct nk_context *pCtx );
+void ui_build_trigger2( tUi_Trigger *pThis, struct nk_context *pCtx );
+
 void ui_build_info( tUi *pThis, struct nk_context *pCtx );
 void ui_build_color_picker( tUi *pThis, struct nk_context *pCtx );
 void ui_build_theme_chooser(struct nk_context *ctx);

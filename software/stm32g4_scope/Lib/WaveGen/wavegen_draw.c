@@ -28,11 +28,11 @@ void wavegen_stroque( tWaveGen *pThis, tLcd *pLcd, uint16_t color1, uint16_t col
 		int x;
 	    if( is_collapsed )
 	    {
-	        x = i/2;
+	        x = (i/2 * pLcd->width) / pThis->len;
 	    }
 	    else
 	    {
-	        x = i;
+	        x = (i * pLcd->width) / pThis->len;
 	    }
 		lcd_set_pixel( pLcd, x, scale*pThis->buffer1[i]+offset, color1 );
 		lcd_set_pixel( pLcd, x, scale*pThis->buffer2[i]+offset, color2 );

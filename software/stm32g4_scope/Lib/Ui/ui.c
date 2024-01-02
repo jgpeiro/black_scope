@@ -133,6 +133,9 @@ void ui_init( tUi *pThis )
 	pThis->wavegen.waveforms[1].scale = 2000;
 	pThis->wavegen.waveforms[1].frequency = 1000;
 	pThis->wavegen.waveforms[1].duty_cycle = 0;
+
+	pThis->is_visible = 1;
+	pThis->is_visible_bck = 0;
 }
 
 int nk_progress_gross_fine(struct nk_context *pCtx, int32_t min, int32_t *pValue, int32_t max) {
@@ -332,11 +335,34 @@ void ui_build_theme_chooser(struct nk_context *ctx)
     }
 }
 
-struct nk_rect rects[32];
-int rects_max = 0;
-int rects_max_bck = 0;
-int rects_ptr = 0;
-int rects_pressed = 0;
+#define RECTS_LEN 64
+extern struct nk_rect rects[RECTS_LEN];
+extern int rects_max;
+extern int rects_max_bck;
+extern int rects_ptr;
+//extern int rects_pressed = 0;
+
+int ui_menu = 0;
+void ui_build2( tUi *pThis, struct nk_context *pCtx )
+{
+	if( nk_begin( pCtx, "STM32G4 Scope ", nk_rect(0, 0, 240, 320), NK_WINDOW_MINIMIZABLE | NK_WINDOW_NO_SCROLLBAR ) )
+	{
+		pThis->is_visible = 1;
+		switch( ui_menu )
+		{
+			case 1: ui_build_acquire2( &pThis->acquire, pCtx ); break;
+			case 2: ui_build_horizontal2( &pThis->horizontal, pCtx ); break;
+			case 3: ui_build_vertical2( &pThis->vertical, pCtx ); break;
+			case 4: ui_build_trigger2( &pThis->trigger, pCtx ); break;
+			default: break;
+		}
+	}
+	else
+	{
+		pThis->is_visible = 0;
+	}
+	nk_end( pCtx );
+}
 
 void ui_build( tUi *pThis, struct nk_context *pCtx )
 {
@@ -346,7 +372,7 @@ void ui_build( tUi *pThis, struct nk_context *pCtx )
 
     	//ui_build_theme_chooser( pCtx );
     	//ui_build_color_picker( pThis, pCtx );
-    	nk_layout_row( pCtx, NK_STATIC, 30, 3, (float[]){30, 30, 30});
+    	/*nk_layout_row( pCtx, NK_STATIC, 30, 3, (float[]){30, 30, 30});
     	if( nk_button_label( pCtx, "-" ) )
     	{
     		if( rects_ptr > 0 )
@@ -376,7 +402,7 @@ void ui_build( tUi *pThis, struct nk_context *pCtx )
     		{
         		rects_ptr = 0;
     		}
-    	}
+    	}*/
 
     	ui_build_acquire( &pThis->acquire, pCtx );
         ui_build_horizontal( &pThis->horizontal, pCtx );
@@ -490,6 +516,10 @@ void ui_build_info(tUi *pThis, struct nk_context *pCtx) {
         //nk_label(pCtx, "MEM", NK_TEXT_LEFT);
         // You can add memory information here if needed
         //nk_label(pCtx, "0", NK_TEXT_RIGHT);
+
+        nk_layout_row(pCtx, NK_STATIC, 60, 1, (float[]){94+94});
+        static int property_int = 0;
+        nk_property_int(pCtx, "Int:", 0, &property_int, 100, 1, 1);
 
         nk_tree_pop(pCtx);
     }

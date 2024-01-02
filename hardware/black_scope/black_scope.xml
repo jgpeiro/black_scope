@@ -2,7 +2,7 @@
 <export version="E">
   <design>
     <source>C:\git\black_scope\hardware\black_scope\black_scope.kicad_sch</source>
-    <date>7/20/2023 8:38:12 PM</date>
+    <date>8/17/2023 9:18:08 PM</date>
     <tool>Eeschema 7.0.6</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -28,6 +28,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -39,6 +41,8 @@
       <value>10p</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -50,6 +54,8 @@
       <value>10p</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -61,6 +67,8 @@
       <value>270n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -72,6 +80,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -83,6 +93,8 @@
       <value>270n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -94,6 +106,8 @@
       <value>270n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -105,6 +119,8 @@
       <value>270n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -116,6 +132,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -127,6 +145,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -138,6 +158,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -149,6 +171,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -160,6 +184,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -171,6 +197,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -182,6 +210,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -193,6 +223,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -204,6 +236,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -215,6 +249,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -226,6 +262,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -237,6 +275,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -248,6 +288,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -259,6 +301,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -270,6 +314,8 @@
       <value>100p</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -281,6 +327,8 @@
       <value>100p</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -292,6 +340,8 @@
       <value>100p</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -303,6 +353,8 @@
       <value>100p</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -314,6 +366,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -325,6 +379,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -336,6 +392,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -347,6 +405,8 @@
       <value>100n</value>
       <footprint>Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -357,7 +417,12 @@
     <comp ref="D1">
       <value>D_Schottky</value>
       <footprint>Diode_SMD:D_1206_3216Metric_Pad1.42x1.75mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">512-SS24FL</field>
+      </fields>
       <libsource lib="Device" part="D_Schottky" description="Schottky diode"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="512-SS24FL"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Schottky diode"/>
@@ -369,6 +434,8 @@
       <value>LED</value>
       <footprint>Diode_SMD:D_0603_1608Metric_Pad1.05x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="LED" description="Light emitting diode"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Light emitting diode"/>
@@ -379,7 +446,12 @@
     <comp ref="D3">
       <value>D_Schottky</value>
       <footprint>Diode_SMD:D_1206_3216Metric_Pad1.42x1.75mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">512-SS24FL</field>
+      </fields>
       <libsource lib="Device" part="D_Schottky" description="Schottky diode"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="512-SS24FL"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Schottky diode"/>
@@ -390,7 +462,12 @@
     <comp ref="D4">
       <value>D_Schottky_Dual_CommonCathode_AAK_Parallel</value>
       <footprint>Package_TO_SOT_SMD:SOT-23</footprint>
+      <fields>
+        <field name="Mouser REF">750-BAT54C-HF</field>
+      </fields>
       <libsource lib="Device" part="D_Schottky_Dual_CommonCathode_AAK_Parallel" description="Dual Schottky diode, common anode on pin 1"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="750-BAT54C-HF"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Dual Schottky diode, common anode on pin 1"/>
@@ -402,7 +479,12 @@
       <value>Conn_ARM_JTAG_SWD_10</value>
       <footprint>Connector_PinHeader_1.27mm:PinHeader_2x05_P1.27mm_Vertical_SMD</footprint>
       <datasheet>http://infocenter.arm.com/help/topic/com.arm.doc.ddi0314h/DDI0314H_coresight_components_trm.pdf</datasheet>
+      <fields>
+        <field name="Mouser REF">649-221121-00010T4LF</field>
+      </fields>
       <libsource lib="Connector" part="Conn_ARM_JTAG_SWD_10" description="Cortex Debug Connector, standard ARM Cortex-M SWD and JTAG interface"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="649-221121-00010T4LF"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Cortex Debug Connector, standard ARM Cortex-M SWD and JTAG interface"/>
@@ -413,7 +495,12 @@
     <comp ref="J2">
       <value>Conn_02x06_Odd_Even</value>
       <footprint>Connector_PinHeader_2.54mm:PinHeader_2x06_P2.54mm_Vertical_SMD</footprint>
+      <fields>
+        <field name="Mouser REF">200-TSM10302LDH</field>
+      </fields>
       <libsource lib="Connector_Generic" part="Conn_02x06_Odd_Even" description="Generic connector, double row, 02x06, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="200-TSM10302LDH"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Generic connector, double row, 02x06, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)"/>
@@ -425,6 +512,8 @@
       <value>Conn_01x02</value>
       <footprint>Connector_JST:JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical</footprint>
       <libsource lib="Connector_Generic" part="Conn_01x02" description="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
@@ -436,6 +525,8 @@
       <value>Conn_02x04_Odd_Even</value>
       <footprint>Connector_PinHeader_2.54mm:PinHeader_2x04_P2.54mm_Horizontal</footprint>
       <libsource lib="Connector_Generic" part="Conn_02x04_Odd_Even" description="Generic connector, double row, 02x04, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Generic connector, double row, 02x04, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)"/>
@@ -447,6 +538,8 @@
       <value>Conn_02x02_Odd_Even</value>
       <footprint>Connector_PinHeader_2.54mm:PinHeader_2x02_P2.54mm_Horizontal</footprint>
       <libsource lib="Connector_Generic" part="Conn_02x02_Odd_Even" description="Generic connector, double row, 02x02, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Generic connector, double row, 02x02, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)"/>
@@ -457,7 +550,12 @@
     <comp ref="L1">
       <value>47u</value>
       <footprint>Inductor_SMD:L_0603_1608Metric_Pad1.05x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">80-L0603B470KPWFT</field>
+      </fields>
       <libsource lib="Device" part="L" description="Inductor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="80-L0603B470KPWFT"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Inductor"/>
@@ -468,7 +566,12 @@
     <comp ref="L2">
       <value>47u</value>
       <footprint>Inductor_SMD:L_0603_1608Metric_Pad1.05x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">80-L0603B470KPWFT</field>
+      </fields>
       <libsource lib="Device" part="L" description="Inductor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="80-L0603B470KPWFT"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Inductor"/>
@@ -480,7 +583,12 @@
       <value>USB_C_Plug_USB2.0</value>
       <footprint>Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12</footprint>
       <datasheet>https://www.usb.org/sites/default/files/documents/usb_type-c.zip</datasheet>
+      <fields>
+        <field name="Mouser REF">640-USB4105-GF-A</field>
+      </fields>
       <libsource lib="Connector" part="USB_C_Plug_USB2.0" description="USB 2.0-only Type-C Plug connector"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="640-USB4105-GF-A"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="USB 2.0-only Type-C Plug connector"/>
@@ -492,7 +600,12 @@
       <value>Q_NPN_BEC</value>
       <footprint>Package_TO_SOT_SMD:SOT-23</footprint>
       <datasheet>https://www.mouser.es/datasheet/2/80/SS8050_G_RevA181526-2506539.pdf</datasheet>
+      <fields>
+        <field name="Mouser REF">750-SS8050-G</field>
+      </fields>
       <libsource lib="Device" part="Q_NPN_BEC" description="NPN transistor, base/emitter/collector"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="750-SS8050-G"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="NPN transistor, base/emitter/collector"/>
@@ -504,6 +617,8 @@
       <value>22</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -515,6 +630,8 @@
       <value>10k</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -526,6 +643,8 @@
       <value>6.8k</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -537,6 +656,8 @@
       <value>1k</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -547,7 +668,12 @@
     <comp ref="R5">
       <value>8k2</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">667-ERJ-3RBD8201V</field>
+      </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="667-ERJ-3RBD8201V"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -558,7 +684,12 @@
     <comp ref="R6">
       <value>8k2</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">667-ERJ-3RBD8201V</field>
+      </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="667-ERJ-3RBD8201V"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -569,7 +700,12 @@
     <comp ref="R7">
       <value>8k2</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">667-ERJ-3RBD8201V</field>
+      </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="667-ERJ-3RBD8201V"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -580,7 +716,12 @@
     <comp ref="R8">
       <value>8k2</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">667-ERJ-3RBD8201V</field>
+      </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="667-ERJ-3RBD8201V"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -592,6 +733,8 @@
       <value>51</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -603,6 +746,8 @@
       <value>51</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -613,7 +758,12 @@
     <comp ref="R11">
       <value>2k7</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">667-ERJ-3RBD2701V</field>
+      </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="667-ERJ-3RBD2701V"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -624,7 +774,12 @@
     <comp ref="R12">
       <value>4k3</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">667-ERJ-3RBD4301V</field>
+      </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="667-ERJ-3RBD4301V"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -635,7 +790,12 @@
     <comp ref="R13">
       <value>2k7</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">667-ERJ-3RBD2701V</field>
+      </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="667-ERJ-3RBD2701V"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -646,7 +806,12 @@
     <comp ref="R14">
       <value>4k3</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">667-ERJ-3RBD4301V</field>
+      </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="667-ERJ-3RBD4301V"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -657,7 +822,12 @@
     <comp ref="R15">
       <value>2k7</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">667-ERJ-3RBD2701V</field>
+      </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="667-ERJ-3RBD2701V"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -668,7 +838,12 @@
     <comp ref="R16">
       <value>4k3</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">667-ERJ-3RBD4301V</field>
+      </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="667-ERJ-3RBD4301V"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -679,7 +854,12 @@
     <comp ref="R17">
       <value>2k7</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">667-ERJ-3RBD2701V</field>
+      </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="667-ERJ-3RBD2701V"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -690,7 +870,12 @@
     <comp ref="R18">
       <value>4k3</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
+      <fields>
+        <field name="Mouser REF">667-ERJ-3RBD4301V</field>
+      </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="667-ERJ-3RBD4301V"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -702,6 +887,8 @@
       <value>22</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -710,9 +897,11 @@
       <tstamps>d30c0237-0320-4698-9ca9-4d15569310dd</tstamps>
     </comp>
     <comp ref="R20">
-      <value>51</value>
+      <value>27</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -721,9 +910,11 @@
       <tstamps>33769807-c1d3-4571-a6f9-76067c404c5d</tstamps>
     </comp>
     <comp ref="R21">
-      <value>51</value>
+      <value>27</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -735,6 +926,8 @@
       <value>1k</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -746,6 +939,8 @@
       <value>10k</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -757,6 +952,8 @@
       <value>10k</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -768,6 +965,8 @@
       <value>10k</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -779,6 +978,8 @@
       <value>10k</value>
       <footprint>Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder</footprint>
       <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -789,7 +990,12 @@
     <comp ref="SW1">
       <value>SW_Push</value>
       <footprint>Button_Switch_SMD:SW_Push_SPST_NO_Alps_SKRK</footprint>
+      <fields>
+        <field name="Mouser REF">688-SKRKAHE010</field>
+      </fields>
       <libsource lib="Switch" part="SW_Push" description="Push button switch, generic, two pins"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="688-SKRKAHE010"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Push button switch, generic, two pins"/>
@@ -800,7 +1006,12 @@
     <comp ref="SW2">
       <value>SW_Push</value>
       <footprint>Button_Switch_SMD:SW_Push_SPST_NO_Alps_SKRK</footprint>
+      <fields>
+        <field name="Mouser REF">688-SKRKAHE010</field>
+      </fields>
       <libsource lib="Switch" part="SW_Push" description="Push button switch, generic, two pins"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="688-SKRKAHE010"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Push button switch, generic, two pins"/>
@@ -812,6 +1023,8 @@
       <value>TestPoint</value>
       <footprint>TestPoint:TestPoint_Pad_D1.0mm</footprint>
       <libsource lib="Connector" part="TestPoint" description="test point"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="test point"/>
@@ -823,6 +1036,8 @@
       <value>TestPoint</value>
       <footprint>TestPoint:TestPoint_Pad_D1.0mm</footprint>
       <libsource lib="Connector" part="TestPoint" description="test point"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="test point"/>
@@ -834,6 +1049,8 @@
       <value>TestPoint</value>
       <footprint>TestPoint:TestPoint_Pad_D1.0mm</footprint>
       <libsource lib="Connector" part="TestPoint" description="test point"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="test point"/>
@@ -845,6 +1062,8 @@
       <value>TestPoint</value>
       <footprint>TestPoint:TestPoint_Pad_D1.0mm</footprint>
       <libsource lib="Connector" part="TestPoint" description="test point"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value=""/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="test point"/>
@@ -856,7 +1075,12 @@
       <value>MCP73831-2-OT</value>
       <footprint>Package_TO_SOT_SMD:SOT-23-5</footprint>
       <datasheet>http://ww1.microchip.com/downloads/en/DeviceDoc/20001984g.pdf</datasheet>
+      <fields>
+        <field name="Mouser REF">579-MCP73831T-2DCIOT</field>
+      </fields>
       <libsource lib="Battery_Management" part="MCP73831-2-OT" description="Single cell, Li-Ion/Li-Po charge management controller, 4.20V, Tri-State Status Output, in SOT23-5 package"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="579-MCP73831T-2DCIOT"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Single cell, Li-Ion/Li-Po charge management controller, 4.20V, Tri-State Status Output, in SOT23-5 package"/>
@@ -868,7 +1092,12 @@
       <value>XC6206PxxxMR</value>
       <footprint>Package_TO_SOT_SMD:SOT-23-3</footprint>
       <datasheet>https://www.torexsemi.com/file/xc6206/XC6206.pdf</datasheet>
+      <fields>
+        <field name="Mouser REF">579-MCP1700T3302E/TT</field>
+      </fields>
       <libsource lib="Regulator_Linear" part="XC6206PxxxMR" description="Positive 60-250mA Low Dropout Regulator, Fixed Output, SOT-23"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="579-MCP1700T3302E/TT"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Positive 60-250mA Low Dropout Regulator, Fixed Output, SOT-23"/>
@@ -879,7 +1108,12 @@
     <comp ref="U3">
       <value>STM32G473VE</value>
       <footprint>Package_QFP:LQFP-100_14x14mm_P0.5mm</footprint>
+      <fields>
+        <field name="Mouser REF">511-STM32G473VET6</field>
+      </fields>
       <libsource lib="Purple_Pill" part="STM32G473VE" description=""/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="511-STM32G473VET6"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <sheetpath names="/" tstamps="/"/>
@@ -889,7 +1123,12 @@
       <value>LMV358</value>
       <footprint>Package_SO:TSSOP-8_4.4x3mm_P0.65mm</footprint>
       <datasheet>http://www.ti.com/lit/ds/symlink/lmv324.pdf</datasheet>
+      <fields>
+        <field name="Mouser REF">595-LMV358IDR</field>
+      </fields>
       <libsource lib="Amplifier_Operational" part="LMV358" description="Dual Low-Voltage Rail-to-Rail Output Operational Amplifiers, SOIC-8/SSOP-8"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="595-LMV358IDR"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Dual Low-Voltage Rail-to-Rail Output Operational Amplifiers, SOIC-8/SSOP-8"/>
@@ -901,7 +1140,12 @@
       <value>XPT2046TS</value>
       <footprint>Package_SO:TSSOP-16_4.4x5mm_P0.65mm</footprint>
       <datasheet>http://www.xptek.cn/uploadfile/download/201707171401161883.pdf</datasheet>
+      <fields>
+        <field name="Mouser REF">595-TSC2046EIPWR</field>
+      </fields>
       <libsource lib="Driver_Display" part="XPT2046TS" description="Single-supply, 12bit, 4 ch, touch screen driver, 2.2 - 5.25 VDD, -40 to +85 C, QSPI, SPI, 3-wire serial interface, TSSOP-16"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="595-TSC2046EIPWR"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Single-supply, 12bit, 4 ch, touch screen driver, 2.2 - 5.25 VDD, -40 to +85 C, QSPI, SPI, 3-wire serial interface, TSSOP-16"/>
@@ -912,7 +1156,12 @@
     <comp ref="U6">
       <value>TFT035IPS</value>
       <footprint>Connector_FFC-FPC:Hirose_FH12-50S-0.5SH_1x50-1MP_P0.50mm_Horizontal</footprint>
+      <fields>
+        <field name="Mouser REF">649-62684-50210E9ALF</field>
+      </fields>
       <libsource lib="New_Library" part="TFT035IPS" description=""/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="649-62684-50210E9ALF"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <sheetpath names="/" tstamps="/"/>
@@ -921,7 +1170,12 @@
     <comp ref="U7">
       <value>QSPI_PSRAM</value>
       <footprint>Package_SO:SOIC-8_3.9x4.9mm_P1.27mm</footprint>
+      <fields>
+        <field name="Mouser REF">878-APS6404L-3SQR-SN</field>
+      </fields>
       <libsource lib="New_Library" part="QSPI_PSRAM" description=""/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="878-APS6404L-3SQR-SN"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <sheetpath names="/" tstamps="/"/>
@@ -931,7 +1185,12 @@
       <value>LMV324</value>
       <footprint>Package_SO:TSSOP-14_4.4x5mm_P0.65mm</footprint>
       <datasheet>http://www.ti.com/lit/ds/symlink/lmv324.pdf</datasheet>
+      <fields>
+        <field name="Mouser REF">595-OPA4322AIPWR</field>
+      </fields>
       <libsource lib="Amplifier_Operational" part="LMV324" description="Quad Low-Voltage Rail-to-Rail Output Operational Amplifier, SOIC-14/SSOP-14"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="595-OPA4322AIPWR"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Quad Low-Voltage Rail-to-Rail Output Operational Amplifier, SOIC-14/SSOP-14"/>
@@ -942,7 +1201,12 @@
     <comp ref="Y1">
       <value>Crystal_GND24</value>
       <footprint>Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm</footprint>
+      <fields>
+        <field name="Mouser REF">732-322524F20GAC0</field>
+      </fields>
       <libsource lib="Device" part="Crystal_GND24" description="Four pin crystal, GND on pins 2 and 4"/>
+      <property name="External REF" value=""/>
+      <property name="Mouser REF" value="732-322524F20GAC0"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="black_scope.kicad_sch"/>
       <property name="ki_description" value="Four pin crystal, GND on pins 2 and 4"/>

@@ -132,7 +132,8 @@ nk_widget_has_mouse_click_down(struct nk_context *ctx, enum nk_buttons btn, nk_b
     return nk_input_has_mouse_click_down_in_rect(&ctx->input, btn, bounds, down);
 }
 
-extern struct nk_rect rects[32];
+#define RECTS_LEN 64
+extern struct nk_rect rects[RECTS_LEN];
 extern int rects_max;
 extern int rects_ptr;
 extern int rects_pressed;
@@ -196,26 +197,26 @@ nk_widget(struct nk_rect *bounds, const struct nk_context *ctx)
 
     cnt_hovering += 1;
 
-    if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
+    //if( osSemaphoreAcquire( semaphoreLcdHandle, portMAX_DELAY ) == osOK )
     {
-    	if( 0 <= (int)bounds->y && (int)bounds->y < 320 && 0 <= (int)bounds->y+(int)bounds->h && (int)bounds->y+(int)bounds->h < 320 )
+    	//if( 0 <= (int)bounds->y && (int)bounds->y < 320 && 0 <= (int)bounds->y+(int)bounds->h && (int)bounds->y+(int)bounds->h < 320 )
     	{
-			lcd_hline( &lcd, (int)bounds->x, (int)bounds->y, (int)bounds->w, LCD_COLOR_WHITE );
-			lcd_hline( &lcd, (int)bounds->x, (int)bounds->y+(int)bounds->h, (int)bounds->w, LCD_COLOR_WHITE );
-			lcd_vline( &lcd, (int)bounds->x, (int)bounds->y, (int)bounds->h, LCD_COLOR_WHITE );
-			lcd_vline( &lcd, (int)bounds->x+(int)bounds->w, (int)bounds->y, (int)bounds->h, LCD_COLOR_WHITE );
-			uint8_t buffer[32];
-			snprintf( buffer, sizeof(buffer), "%d", rects_max );
-			font_draw_text( &fontUbuntuBookRNormal16, (int)bounds->x, (int)bounds->y, buffer, LCD_COLOR_WHITE, lcd_set_pixel, &lcd );
+			//lcd_hline( &lcd, (int)bounds->x, (int)bounds->y, (int)bounds->w, LCD_COLOR_WHITE );
+			//lcd_hline( &lcd, (int)bounds->x, (int)bounds->y+(int)bounds->h, (int)bounds->w, LCD_COLOR_WHITE );
+			//lcd_vline( &lcd, (int)bounds->x, (int)bounds->y, (int)bounds->h, LCD_COLOR_WHITE );
+			//lcd_vline( &lcd, (int)bounds->x+(int)bounds->w, (int)bounds->y, (int)bounds->h, LCD_COLOR_WHITE );
+			//uint8_t buffer[32];
+			//snprintf( buffer, sizeof(buffer), "%d", rects_max );
+			//font_draw_text( &fontUbuntuBookRNormal16, (int)bounds->x, (int)bounds->y, buffer, LCD_COLOR_WHITE, lcd_set_pixel, &lcd );
 			if( rects_ptr == rects_max )
 			{
-				lcd_rect( &lcd, (int)bounds->x, (int)bounds->y, 5, 5, LCD_COLOR_GREEN );
+			//	lcd_rect( &lcd, (int)bounds->x, (int)bounds->y, 5, 5, LCD_COLOR_GREEN );
 			}
 
 			rects[rects_max] = *bounds;
 			rects_max += 1;
     	}
-        osSemaphoreRelease( semaphoreLcdHandle );
+        //osSemaphoreRelease( semaphoreLcdHandle );
     }
 
 

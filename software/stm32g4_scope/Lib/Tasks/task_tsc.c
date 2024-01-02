@@ -59,7 +59,8 @@ void StartTaskTsc(void *argument) {
     TickType_t xLastWakeTime;
 
     struct sQueueTscUi msg = {0};
-    int slow_cnt = 0;
+    int slow_cnt1 = 0;
+    int slow_cnt2 = 0;
     int msg_p_bck = 0;
 
     // Calibration coefficients
@@ -78,6 +79,11 @@ void StartTaskTsc(void *argument) {
         40   // cnt_max
     );
 
+    msg.p = 0;
+    msg.x = 0;
+    msg.y = 0;
+    //osMessageQueuePut(queueTscUiHandle, &msg, 0U, portMAX_DELAY);
+
     xLastWakeTime = xTaskGetTickCount();
     for(;;) {
         // Wait for a fixed time interval
@@ -85,43 +91,29 @@ void StartTaskTsc(void *argument) {
 
         // Read touch data from the TSC2046
         tsc_read(&tsc, &msg.x, &msg.y, &msg.p);
-#include "nuklear.h"
-        extern struct nk_rect rects[32];
-        extern int rects_max;
-        extern int rects_ptr;
-        extern int rects_pressed;
-        static int rects_pressed_bck = 0;
-        if( rects_pressed && !rects_pressed_bck )
-        {
-        	msg.p = 1;
-        	msg.x = rects[rects_ptr].x+240 + 10;
-			msg.y = rects[rects_ptr].y + 10;
-			osMessageQueuePut(queueTscUiHandle, &msg, 0U, portMAX_DELAY);
-        }
-        if( !rects_pressed && rects_pressed_bck )
-		{
-			msg.p = 0;
-			msg.x = rects[rects_ptr].x+240 + 10;
-			msg.y = rects[rects_ptr].y + 10;
-			osMessageQueuePut(queueTscUiHandle, &msg, 0U, portMAX_DELAY);
-		}
-
-        rects_pressed_bck = rects_pressed;
 
         // Handle pressure detection and slow count
         if( msg.p && !msg_p_bck ) {
             // Pressure detected, send data with maximum delay
             osMessageQueuePut(queueTscUiHandle, &msg, 0U, portMAX_DELAY);
-            slow_cnt = 0;
+            slow_cnt1 = 0;
+            slow_cnt2 = 0;
         } else if( msg.p ) {
             // Pressure detected, increment slow count
-            if( slow_cnt < 10 ) {
-                slow_cnt += 1;
-            } else {
-                // Slow count threshold reached, send data with no delay
-                osMessageQueuePut(queueTscUiHandle, &msg, 0U, 0);
-                slow_cnt = 0;
-            }
+        	if( slow_cnt1 < 250 )
+        	{
+        		slow_cnt1 += 1;
+        	}
+        	else
+        	{
+				if( slow_cnt2 < 10 ) {
+					slow_cnt2 += 1;
+				} else {
+					// Slow count threshold reached, send data with no delay
+					osMessageQueuePut(queueTscUiHandle, &msg, 0U, 0);
+					slow_cnt2 = 0;
+				}
+        	}
         } else if( !msg.p && msg_p_bck ) {
             // Pressure not detected, send data with maximum delay
             osMessageQueuePut(queueTscUiHandle, &msg, 0U, portMAX_DELAY);

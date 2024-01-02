@@ -1,6 +1,12 @@
 #include "nuklear.h"
 #include "nuklear_internal.h"
 
+#define RECTS_LEN 64
+extern struct nk_rect rects[RECTS_LEN];
+extern int rects_max;
+extern int rects_ptr;
+extern int rects_pressed;
+
 /* ===============================================================
  *
  *                              PANEL
@@ -247,6 +253,9 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
                 header.x += button.w + style->window.header.spacing.x + style->window.header.padding.x;
             }
 
+			rects[rects_max] = button;
+			rects_max += 1;
+
             if (nk_do_button_symbol(&ws, &win->buffer, button,
                 style->window.header.close_symbol, NK_BUTTON_DEFAULT,
                 &style->window.header.close_button, in, style->font) && !(win->flags & NK_WINDOW_ROM))
@@ -270,6 +279,10 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
                 button.x = header.x;
                 header.x += button.w + style->window.header.spacing.x + style->window.header.padding.x;
             }
+
+			rects[rects_max] = button;
+			rects_max += 1;
+
             if (nk_do_button_symbol(&ws, &win->buffer, button, (layout->flags & NK_WINDOW_MINIMIZED)?
                 style->window.header.maximize_symbol: style->window.header.minimize_symbol,
                 NK_BUTTON_DEFAULT, &style->window.header.minimize_button, in, style->font) && !(win->flags & NK_WINDOW_ROM))
@@ -458,6 +471,10 @@ nk_panel_end(struct nk_context *ctx)
             scroll_step = scroll.h * 0.10f;
             scroll_inc = scroll.h * 0.01f;
             scroll_target = (float)(int)(layout->at_y - scroll.y);
+
+			rects[rects_max] = scroll;
+			rects_max += 1;
+
             scroll_offset = nk_do_scrollbarv(&state, out, scroll, scroll_has_scrolling,
                 scroll_offset, scroll_target, scroll_step, scroll_inc,
                 &ctx->style.scrollv, in, style->font);
@@ -477,6 +494,10 @@ nk_panel_end(struct nk_context *ctx)
             scroll_target = (float)(int)(layout->max_x - scroll.x);
             scroll_step = layout->max_x * 0.05f;
             scroll_inc = layout->max_x * 0.005f;
+
+			rects[rects_max] = scroll;
+			rects_max += 1;
+
             scroll_offset = nk_do_scrollbarh(&state, out, scroll, scroll_has_scrolling,
                 scroll_offset, scroll_target, scroll_step, scroll_inc,
                 &ctx->style.scrollh, in, style->font);
